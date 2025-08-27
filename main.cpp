@@ -22,7 +22,7 @@ int main(int, char**)
     // Create window with SDL_Renderer graphics context
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL3+SDL_Renderer example", (int)(1280 * main_scale), (int)(720 * main_scale), window_flags);
+    SDL_Window* window = SDL_CreateWindow("Goldenland Editor", (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -82,6 +82,8 @@ int main(int, char**)
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
+        // ImGui::ShowDemoWindow();
+
         static bool show_settings_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
@@ -95,62 +97,63 @@ int main(int, char**)
         }
 
         if (show_settings_window) {
-            static float font_size = 18.0f;
-            static int selected_font = 0;
-            static std::vector<std::string> font_names;
-            static std::vector<std::string> font_paths;
-            static bool fonts_loaded = false;
-            static bool font_applied = false;
+            ImGuiStyle& style = ImGui::GetStyle();
+            static float fontSize = style.FontSizeBase;
+            static int selectedFontIndex = 0;
+            static std::vector<std::string> fontNames;
+            static std::vector<std::string> fontPaths;
+            static bool fontsLoaded = false;
 
             // Загружаем шрифты из системной папки Windows
-            if (!fonts_loaded) {
-                std::string font_dir = "C:/Windows/Fonts";
-                for (const auto& entry : std::filesystem::directory_iterator(font_dir)) {
+            if (!fontsLoaded) {
+                for (const auto& entry : std::filesystem::directory_iterator("C:/Windows/Fonts")) {
                     if (entry.path().extension() == ".ttf") {
-                        font_paths.push_back(entry.path().string());
-                        font_names.push_back(entry.path().filename().string());
+                        fontPaths.push_back(entry.path().string());
+                        fontNames.push_back(entry.path().stem().string());
                     }
                 }
-                fonts_loaded = true;
+                fontsLoaded = true;
             }
+            static ImFont* selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
 
             ImGui::Begin("Font Settings", &show_settings_window);
 
-            if (!font_names.empty()) {
-                const char* current_font = font_names[selected_font].c_str();
-                if (ImGui::BeginCombo("Font", current_font)) {
-                    for (int i = 0; i < font_names.size(); ++i) {
-                        bool is_selected = (i == selected_font);
-                        if (ImGui::Selectable(font_names[i].c_str(), is_selected)) {
-                            selected_font = i;
+            if (!fontNames.empty()) {
+                const char* currentFont = fontNames[selectedFontIndex].c_str();
+                if (ImGui::BeginCombo("Font", currentFont)) {
+                    for (int i = 0; i < fontNames.size(); ++i) {
+                        bool isSelected = (i == selectedFontIndex);
+                        if (ImGui::Selectable(fontNames[i].c_str(), isSelected)) {
+                            selectedFontIndex = i;
+                            selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
                         }
-                        if (is_selected) {
+                        if (isSelected) {
                             ImGui::SetItemDefaultFocus();
                         }
                     }
                     ImGui::EndCombo();
                 }
 
-                ImGui::SliderFloat("Size", &font_size, 10.0f, 36.0f, "%.1f");
+                ImGui::SliderFloat("Size", &fontSize, 8.0f, 48.0f, "%.0f");
 
-                if (ImGui::Button("Apply Font")) {
-                    ImGuiIO& io = ImGui::GetIO();
-                    io.Fonts->Clear();
+                if (selectedFont) {
+                    ImGui::PushFont(selectedFont, fontSize);
+                    ImGui::Text("The quick brown fox jumps over the lazy dog. 1234567890");
+                    ImGui::Text("Съешь же ещё этих мягких французских булок, да выпей чаю.");
+                    ImGui::PopFont();
+                }
 
-                    ImFont* new_font = io.Fonts->AddFontFromFileTTF(font_paths[selected_font].c_str(), font_size);
-                    if (new_font) {
-                        io.FontDefault = new_font;
-                        font_applied = true;
+                if (ImGui::Button("Apply")) {
+                    style.FontSizeBase = fontSize;
+                    style._NextFrameFontSizeBase = style.FontSizeBase;
+
+                    ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
+                    if (newFont) {
+                        io.FontDefault = newFont;
                     } else {
-                        SDL_Log("Failed to load font: %s", font_paths[selected_font].c_str());
+                        SDL_Log("Failed to load font: %s", fontPaths[selectedFontIndex].c_str());
                     }
                 }
-
-                if (font_applied) {
-                    ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Font applied!");
-                }
-            } else {
-                ImGui::Text("No TTF fonts found in C:/Windows/Fonts");
             }
 
             ImGui::End();
