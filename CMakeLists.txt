@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(SDL3 REQUIRED CONFIG)
 include(external/imgui.cmake)
 
-add_executable(GoldenLandEditor main.cpp)
+add_executable(GoldenLandEditor
+    src/main.cpp
+    src/settings/FontSettings.h
+    src/settings/FontSettings.cpp
+)
 
 target_include_directories(GoldenLandEditor PUBLIC imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
