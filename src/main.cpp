@@ -8,6 +8,7 @@
 
 #include "ini.h"
 
+#include "Level.h"
 #include "Resources.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
@@ -95,6 +96,7 @@ int main(int, char**)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    Level level;
 
     // Main loop
     bool done = false;
@@ -146,7 +148,7 @@ int main(int, char**)
             FontSettings::update(show_settings_window);
 
         if (show_levels_window)
-            LevelPicker::update(show_levels_window, levelNames);
+            LevelPicker::update(show_levels_window, resourcesRootDirectory, levelNames, level);
 
         // Rendering
         ImGui::Render();

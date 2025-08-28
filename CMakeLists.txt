@@ -17,6 +17,12 @@ add_executable(GoldenLandEditor
     src/ImguiHelper.cpp
     src/windows/LevelPicker.h
     src/windows/LevelPicker.cpp
+    src/parsers/SEF_Parser.h
+    src/parsers/SEF_Parser.cpp
+    src/Level.h
+    src/Level.cpp
+    src/StringUtils.h
+    src/StringUtils.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)

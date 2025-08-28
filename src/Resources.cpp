@@ -24,7 +24,4 @@ std::vector<std::string> Resources::levelNames() const
     return results;
 }
 
-std::string Resources::levelSef(std::string_view level, std::string_view levelType) const
-{
-    return std::format("{0}/levels/{1}/{2}/{2}.sef", m_rootDirectory, levelType, level);
-}
+
