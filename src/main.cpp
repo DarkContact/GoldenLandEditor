@@ -8,8 +8,9 @@
 
 #include "ini.h"
 
-#include "settings/FontSettings.h"
 #include "Resources.h"
+#include "windows/FontSettings.h"
+#include "windows/LevelPicker.h"
 
 int main(int, char**)
 {
@@ -117,12 +118,18 @@ int main(int, char**)
         // ImGui::ShowDemoWindow();
 
         static bool show_settings_window = false;
+        static bool show_levels_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Pick resources folder")) {
 
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Levels")) {
+                show_levels_window = true;
                 ImGui::EndMenu();
             }
 
@@ -135,9 +142,11 @@ int main(int, char**)
             ImGui::EndMainMenuBar();
         }
 
-        if (show_settings_window) {
+        if (show_settings_window)
             FontSettings::update(show_settings_window);
-        }
+
+        if (show_levels_window)
+            LevelPicker::update(show_levels_window, levelNames);
 
         // Rendering
         ImGui::Render();

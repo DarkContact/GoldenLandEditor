@@ -9,12 +9,14 @@ include(external/imgui.cmake)
 
 add_executable(GoldenLandEditor
     src/main.cpp
-    src/settings/FontSettings.h
-    src/settings/FontSettings.cpp
+    src/windows/FontSettings.h
+    src/windows/FontSettings.cpp
     src/Resources.h
     src/Resources.cpp
     src/ImguiHelper.h
     src/ImguiHelper.cpp
+    src/windows/LevelPicker.h
+    src/windows/LevelPicker.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)
