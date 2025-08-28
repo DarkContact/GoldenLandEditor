@@ -13,6 +13,7 @@ add_executable(GoldenLandEditor
     src/settings/FontSettings.cpp
 )
 
+target_include_directories(GoldenLandEditor PUBLIC external/mINI)
 target_include_directories(GoldenLandEditor PUBLIC imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
 

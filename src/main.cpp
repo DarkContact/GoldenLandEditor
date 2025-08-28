@@ -7,9 +7,32 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 #include "settings/FontSettings.h"
+#include "ini.h"
 
 int main(int, char**)
 {
+    std::string fontFilepath;
+    int fontSize = 13;
+
+    std::string resourcesRootDirectory;
+
+    auto settingsFilename = "settings.ini";
+    mINI::INIFile settingsFile(settingsFilename);
+    mINI::INIStructure settingsFileIni;
+    if (std::filesystem::exists(settingsFilename)) {
+        settingsFile.read(settingsFileIni);
+        fontFilepath = settingsFileIni.get("fonts").get("filepath");
+        auto fontSizeString = settingsFileIni.get("fonts").get("size");
+        if (!fontSizeString.empty())
+            fontSize = std::stoi(fontSizeString);
+
+        resourcesRootDirectory = settingsFileIni.get("resources").get("root_dir");
+    } else {
+        settingsFileIni["fonts"]["filepath"] = fontFilepath;
+        settingsFileIni["fonts"]["size"] = fontSize;
+        settingsFile.write(settingsFileIni, true);
+    }
+
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
@@ -56,9 +79,15 @@ int main(int, char**)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
+    // Применение настроек из ini файла
+    if (!fontFilepath.empty()) {
+        ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontFilepath.c_str(), fontSize);
+        io.FontDefault = newFont;
+    }
+    style.FontSizeBase = fontSize;
+    style._NextFrameFontSizeBase = style.FontSizeBase;
+
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
@@ -85,8 +114,15 @@ int main(int, char**)
         static bool show_settings_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
-            if (ImGui::BeginMenu("Menu")) {
-                if (ImGui::MenuItem("Settings")) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Pick resources folder")) {
+
+                }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Settings")) {
+                if (ImGui::MenuItem("Fonts")) {
                     show_settings_window = true;
                 }
                 ImGui::EndMenu();
