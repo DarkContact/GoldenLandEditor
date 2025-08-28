@@ -11,6 +11,8 @@ add_executable(GoldenLandEditor
     src/main.cpp
     src/settings/FontSettings.h
     src/settings/FontSettings.cpp
+    src/Resources.h
+    src/Resources.cpp
 )
 
 target_include_directories(GoldenLandEditor PUBLIC external/mINI)

@@ -6,8 +6,10 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "settings/FontSettings.h"
 #include "ini.h"
+
+#include "settings/FontSettings.h"
+#include "Resources.h"
 
 int main(int, char**)
 {
@@ -32,6 +34,9 @@ int main(int, char**)
         settingsFileIni["fonts"]["size"] = fontSize;
         settingsFile.write(settingsFileIni, true);
     }
+
+    Resources resources(resourcesRootDirectory);
+    auto levelNames = resources.levelNames();
 
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
