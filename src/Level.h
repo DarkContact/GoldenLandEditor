@@ -5,6 +5,7 @@
 #include "parsers/SEF_Parser.h"
 
 struct LevelData {
+    std::string name;
     SDL_Texture* background = nullptr;
     SEF_Data sefData;
 };

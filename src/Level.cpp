@@ -6,6 +6,8 @@
 #include "StringUtils.h"
 
 bool Level::loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
+    m_data.name = level;
+
     std::string sefPath = levelSef(rootDirectory, level, levelType);
 
     SEF_Parser sefParser(sefPath);
