@@ -6,7 +6,7 @@
 #include "imgui.h"
 #include "ImguiHelper.h"
 
-void LevelPicker::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& levelNames, Level& level)
+void LevelPicker::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& levelNames, Level& level)
 {
     static int selectedLevelIndex = 0;
 
@@ -18,7 +18,7 @@ void LevelPicker::update(bool& showWindow, std::string_view rootDirectory, const
         }
 
         if (ImGui::Button("Load")) {
-            level.loadLevel(rootDirectory, levelNames[selectedLevelIndex]);
+            level.loadLevel(renderer, rootDirectory, levelNames[selectedLevelIndex]);
             showWindow = false;
         }
     }

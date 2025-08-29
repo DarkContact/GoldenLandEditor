@@ -1,5 +1,7 @@
 #include "StringUtils.h"
 
+#include <algorithm>
+
 std::string StringUtils::extractQuotedValue(const std::string& line) {
     size_t firstQuote = line.find('"');
     size_t lastQuote  = line.rfind('"');
@@ -9,4 +11,11 @@ std::string StringUtils::extractQuotedValue(const std::string& line) {
     }
 
     return {};
+}
+
+std::string StringUtils::toLower(std::string_view input) {
+    std::string result(input);
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return result;
 }

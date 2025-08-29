@@ -148,14 +148,24 @@ int main(int, char**)
             FontSettings::update(show_settings_window);
 
         if (show_levels_window)
-            LevelPicker::update(show_levels_window, resourcesRootDirectory, levelNames, level);
+            LevelPicker::update(show_levels_window, renderer, resourcesRootDirectory, levelNames, level);
+
+        // if (level.data().background) {
+        //     ImGui::Text("%s", std::to_string(level.data().background->w).c_str());
+        //     ImGui::Text("%s", std::to_string(level.data().background->h).c_str());
+        // }
 
         // Rendering
         ImGui::Render();
         SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
         SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         SDL_RenderClear(renderer);
+
+        if (level.data().background)
+            SDL_RenderTexture(renderer, level.data().background, nullptr, nullptr);
+
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+
         SDL_RenderPresent(renderer);
     }
 

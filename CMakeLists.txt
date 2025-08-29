@@ -23,10 +23,13 @@ add_executable(GoldenLandEditor
     src/Level.cpp
     src/StringUtils.h
     src/StringUtils.cpp
+    src/TextureLoader.h
+    src/TextureLoader.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)
+target_include_directories(GoldenLandEditor PRIVATE external/stb)
 target_include_directories(GoldenLandEditor PRIVATE imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
 
