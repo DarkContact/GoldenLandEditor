@@ -81,8 +81,10 @@ bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* 
     }
 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (texture == nullptr)
-        fprintf(stderr, "Failed to create SDL texture: %s\n", SDL_GetError());
+    if (texture == nullptr) {
+        fprintf(stderr, "Failed to create SDL texture %s: %s\n", file_name, SDL_GetError());
+        fprintf(stderr, "Surface dimensions: %dx%d\n", surface->w, surface->h);
+    }
 
     *out_texture = texture;
 

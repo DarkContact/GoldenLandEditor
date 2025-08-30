@@ -38,7 +38,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     {
         ImGui::BeginGroup();
 
-        ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
+        ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
         if (csxTexture)
             ImGui::ImageWithBg((ImTextureID)csxTexture, ImVec2((float)csxTexture->w, (float)csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
         ImGui::EndChild();
