@@ -1,14 +1,11 @@
 #include "LevelPicker.h"
 
-#include <vector>
-#include <string>
-
 #include "imgui.h"
 #include "ImguiHelper.h"
 
-void LevelPicker::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& levelNames, Level& level)
+bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& levelNames, int& selectedLevelIndex)
 {
-    static int selectedLevelIndex = 0;
+    bool pressLoadButton = false;
 
     ImGui::Begin("Level picker", &showWindow);
 
@@ -18,10 +15,12 @@ void LevelPicker::update(bool& showWindow, SDL_Renderer* renderer, std::string_v
         }
 
         if (ImGui::Button("Load")) {
-            level.loadLevel(renderer, rootDirectory, levelNames[selectedLevelIndex]);
             showWindow = false;
+            pressLoadButton = true;
         }
     }
 
     ImGui::End();
+
+    return pressLoadButton;
 }

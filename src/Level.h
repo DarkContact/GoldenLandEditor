@@ -13,7 +13,14 @@ struct LevelData {
 class Level
 {
 public:
-    bool loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType = "single");
+    Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType = "single");
+    ~Level();
+
+    Level(const Level&) = delete;
+    Level& operator=(const Level&) = delete;
+
+    Level(Level&& other) noexcept;
+    Level& operator=(Level&& other) noexcept;
 
     LevelData data() const;
 

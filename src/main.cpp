@@ -107,7 +107,7 @@ int main(int, char**)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    Level level;
+    std::vector<Level> levels;
 
     // Main loop
     bool done = false;
@@ -152,22 +152,38 @@ int main(int, char**)
             ImGui::EndMainMenuBar();
         }
 
-        if (show_settings_window)
+        if (show_settings_window) {
             FontSettings::update(show_settings_window);
+        }
 
-        if (show_levels_window)
-            LevelPicker::update(show_levels_window, renderer, resourcesRootDirectory, levelNames, level);
+        static int selectedLevelIndex = 0;
+        if (show_levels_window) {
+            if (LevelPicker::update(show_levels_window, levelNames, selectedLevelIndex)) {
+                levels.emplace_back(renderer, resourcesRootDirectory, levelNames[selectedLevelIndex]);
+            }
+        }
 
-        if (level.data().background) {
-            ImGui::Begin(level.data().name.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar);
+        for (auto it = levels.begin(); it != levels.end();) {
+            bool openLevel = true;
+            const Level& level = *it;
+            if (level.data().background) {
+                ImGui::Begin(level.data().name.c_str(), &openLevel, ImGuiWindowFlags_HorizontalScrollbar);
 
-            ImVec2 pos = ImGui::GetCursorScreenPos();
-            ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
+                ImVec2 pos = ImGui::GetCursorScreenPos();
+                ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
-            ImGui::SetCursorScreenPos(pos);
-            ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
+                ImGui::SetCursorScreenPos(pos);
+                ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
-            ImGui::End();
+                ImGui::End();
+
+                if (!openLevel) {
+                    it = levels.erase(it);
+                    continue;
+                }
+
+                ++it;
+            }
         }
 
         // Rendering
