@@ -4,6 +4,7 @@
 #include <format>
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
@@ -128,7 +129,7 @@ int main(int, char**)
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+        ImGuiID mainDockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
         //ImGui::ShowDemoWindow();
 
@@ -156,10 +157,13 @@ int main(int, char**)
             FontSettings::update(show_settings_window);
         }
 
+        std::string loadedLevelName;
         static int selectedLevelIndex = 0;
         if (show_levels_window) {
             if (LevelPicker::update(show_levels_window, levelNames, selectedLevelIndex)) {
                 levels.emplace_back(renderer, resourcesRootDirectory, levelNames[selectedLevelIndex]);
+
+                loadedLevelName = levelNames[selectedLevelIndex];
             }
         }
 
@@ -176,6 +180,12 @@ int main(int, char**)
                 ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
                 ImGui::End();
+
+                if (loadedLevelName == level.data().name) {
+                    // Можно задокать только первое окно
+                    ImGui::DockBuilderDockWindow(levels.front().data().name.c_str(), mainDockSpace);
+                    loadedLevelName.clear();
+                }
 
                 if (!openLevel) {
                     it = levels.erase(it);
