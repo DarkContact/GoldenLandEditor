@@ -118,21 +118,18 @@ int main(int, char**)
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        // ImGui::ShowDemoWindow();
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+
+        //ImGui::ShowDemoWindow();
 
         static bool show_settings_window = false;
         static bool show_levels_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Pick resources folder")) {
-
+                if (ImGui::MenuItem("Levels")) {
+                    show_levels_window = true;
                 }
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Levels")) {
-                show_levels_window = true;
                 ImGui::EndMenu();
             }
 
@@ -154,8 +151,11 @@ int main(int, char**)
         if (level.data().background) {
             ImGui::Begin(level.data().name.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar);
 
-            ImGui::Text("%s", std::format("{}x{}", level.data().background->w, level.data().background->h).c_str());
+            ImVec2 pos = ImGui::GetCursorScreenPos();
             ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
+
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
             ImGui::End();
         }
