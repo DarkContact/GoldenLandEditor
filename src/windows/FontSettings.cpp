@@ -32,8 +32,8 @@ void FontSettings::update(bool& showWindow)
     if (showWindow)
         ImGui::OpenPopup("Font Settings");
 
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
-    ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.35f), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.3f, 0.0f), ImGuiCond_Always);
 
     if (ImGui::BeginPopupModal("Font Settings", &showWindow, ImGuiWindowFlags_NoResize)) {
 
@@ -44,6 +44,7 @@ void FontSettings::update(bool& showWindow)
 
             ImGui::SliderInt("Size", &fontSize, 8, 32, "%d", ImGuiSliderFlags_ClampOnInput);
 
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
             if (ImGui::Button("Apply")) {
                 style.FontSizeBase = fontSize;
                 style._NextFrameFontSizeBase = style.FontSizeBase;
@@ -55,18 +56,19 @@ void FontSettings::update(bool& showWindow)
                     printf("Failed to load font: %s", fontPaths[selectedFontIndex].c_str());
                 }
             }
+            ImGui::PopStyleVar();
 
             if (selectedFont) {
-                ImGui::Separator();
+                ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.6f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
 
-                ImGui::BeginChild("Font Preview", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::Begin("Font Preview", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-                ImGui::PushFont(selectedFont, fontSize);
-                ImGui::Text("The quick brown fox jumps over the lazy dog. 1234567890");
-                ImGui::Text("Съешь же ещё этих мягких французских булок, да выпей чаю.");
-                ImGui::PopFont();
+                    ImGui::PushFont(selectedFont, fontSize);
+                    ImGui::Text("The quick brown fox jumps over the lazy dog. 1234567890");
+                    ImGui::Text("Съешь же ещё этих мягких французских булок, да выпей чаю.");
+                    ImGui::PopFont();
 
-                ImGui::EndChild();
+                ImGui::End();
             }
         }
 

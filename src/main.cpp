@@ -83,6 +83,16 @@ int main(int, char**)
     style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
     style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
+    // style.FrameRounding = 3.0f;
+    // style.WindowRounding = 5.0f;
+    // style.GrabRounding = 2.0f;
+
+    style.ScrollbarSize = 12.0f;
+    style.ScrollbarRounding = 3.0f;
+
+    style.WindowTitleAlign.x = 0.5f;
+    style.WindowTitleAlign.y = 0.75f;
+
     // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
