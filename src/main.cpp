@@ -14,6 +14,7 @@
 #include "Resources.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
+#include "windows/CsxViewer.h"
 
 int main(int, char**)
 {
@@ -41,6 +42,7 @@ int main(int, char**)
 
     Resources resources(resourcesRootDirectory);
     auto levelNames = resources.levelNames();
+    auto csxFiles = resources.csxFiles();
 
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
@@ -135,11 +137,15 @@ int main(int, char**)
 
         static bool show_settings_window = false;
         static bool show_levels_window = false;
+        static bool show_csx_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Levels")) {
                     show_levels_window = true;
+                }
+                if (ImGui::MenuItem("CSX Viewer")) {
+                    show_csx_window = true;
                 }
                 ImGui::EndMenu();
             }
@@ -155,6 +161,10 @@ int main(int, char**)
 
         if (show_settings_window) {
             FontSettings::update(show_settings_window);
+        }
+
+        if (show_csx_window) {
+            CsxViewer::update(show_settings_window, renderer, resourcesRootDirectory, csxFiles);
         }
 
         std::string loadedLevelName;

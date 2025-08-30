@@ -27,6 +27,8 @@ add_executable(GoldenLandEditor
     src/TextureLoader.cpp
     src/parsers/CSX_Parser.h
     src/parsers/CSX_Parser.cpp
+    src/windows/CsxViewer.h
+    src/windows/CsxViewer.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)
