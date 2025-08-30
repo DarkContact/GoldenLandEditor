@@ -161,9 +161,20 @@ int main(int, char**)
         static int selectedLevelIndex = 0;
         if (show_levels_window) {
             if (LevelPicker::update(show_levels_window, levelNames, selectedLevelIndex)) {
-                levels.emplace_back(renderer, resourcesRootDirectory, levelNames[selectedLevelIndex]);
-
                 loadedLevelName = levelNames[selectedLevelIndex];
+                bool alreadyLoaded = false;
+                for (const auto& level : levels) {
+                    if (level.data().name == loadedLevelName) {
+                        alreadyLoaded = true;
+                        break;
+                    }
+                }
+
+                if (alreadyLoaded) {
+                    ImGui::SetWindowFocus(loadedLevelName.c_str());
+                } else {
+                    levels.emplace_back(renderer, resourcesRootDirectory, loadedLevelName);
+                }
             }
         }
 
@@ -181,10 +192,9 @@ int main(int, char**)
 
                 ImGui::End();
 
-                if (loadedLevelName == level.data().name) {
+                if (level.data().name == loadedLevelName) {
                     // Можно задокать только первое окно
                     ImGui::DockBuilderDockWindow(levels.front().data().name.c_str(), mainDockSpace);
-                    loadedLevelName.clear();
                 }
 
                 if (!openLevel) {
