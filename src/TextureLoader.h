@@ -8,4 +8,5 @@ public:
 
     static bool loadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture);
     static bool loadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture);
+    static bool loadTextureFromCsxFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture);
 };

@@ -5,6 +5,8 @@
 #include "TextureLoader.h"
 #include "StringUtils.h"
 
+#include "parsers/SEF_Parser.h"
+
 Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
     m_data.name = level;
 
@@ -13,26 +15,34 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     SEF_Parser sefParser(sefPath);
     m_data.sefData = sefParser.data();
 
-    std::string bgPath = levelBackground(rootDirectory, StringUtils::toLower(m_data.sefData.pack));
+    std::string bgPath = levelBackground(rootDirectory, m_data.sefData.pack);
     TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, &m_data.background);
+
+    std::string minimapPath = levelMinimap(rootDirectory, m_data.sefData.pack);
+    TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, &m_data.minimap);
 }
 
 Level::~Level()
 {
     if (m_data.background)
         SDL_DestroyTexture(m_data.background);
+
+    if (m_data.minimap)
+        SDL_DestroyTexture(m_data.minimap);
 }
 
 Level::Level(Level&& other) noexcept
 {
     m_data = other.m_data;
     other.m_data.background = nullptr;
+    other.m_data.minimap = nullptr;
 }
 
 Level& Level::operator=(Level&& other) noexcept
 {
     m_data = other.m_data;
     other.m_data.background = nullptr;
+    other.m_data.minimap = nullptr;
     return *this;
 }
 
@@ -44,6 +54,11 @@ std::string Level::levelSef(std::string_view rootDirectory, std::string_view lev
 std::string Level::levelBackground(std::string_view rootDirectory, std::string_view levelPack) const
 {
     return std::format("{}/levels/pack/{}/bitmaps/layer.jpg", rootDirectory, levelPack);
+}
+
+std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const
+{
+    return std::format("{}/levels/pack/{}/bitmaps/minimap.csx", rootDirectory, levelPack);
 }
 
 LevelData Level::data() const

@@ -7,6 +7,7 @@
 struct LevelData {
     std::string name;
     SDL_Texture* background = nullptr;
+    SDL_Texture* minimap = nullptr;
     SEF_Data sefData;
 };
 
@@ -27,6 +28,7 @@ public:
 private:
     std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType) const;
     std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack) const;
+    std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const;
 
     LevelData m_data;
 };

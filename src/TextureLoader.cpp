@@ -5,6 +5,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "parsers/CSX_Parser.h"
+
 bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture)
 {
     int image_width = 0;
@@ -52,4 +54,38 @@ bool TextureLoader::loadTextureFromFile(const char* file_name, SDL_Renderer* ren
     bool ret = loadTextureFromMemory(file_data, file_size, renderer, out_texture);
     IM_FREE(file_data);
     return ret;
+}
+
+bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture)
+{
+    FILE* f = fopen(file_name, "rb");
+    if (f == NULL)
+        return false;
+    fseek(f, 0, SEEK_END);
+    size_t file_size = (size_t)ftell(f);
+    if (file_size == -1)
+        return false;
+    fseek(f, 0, SEEK_SET);
+    void* file_data = IM_ALLOC(file_size);
+    fread(file_data, 1, file_size, f);
+    fclose(f);
+
+    CSX_Parser csxParser((const uint8_t*)file_data, file_size);
+    SDL_Surface* surface = csxParser.parse();
+
+    IM_FREE(file_data);
+
+    if (surface == nullptr) {
+        fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());
+        return false;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (texture == nullptr)
+        fprintf(stderr, "Failed to create SDL texture: %s\n", SDL_GetError());
+
+    *out_texture = texture;
+
+    SDL_DestroySurface(surface);
+    return true;
 }

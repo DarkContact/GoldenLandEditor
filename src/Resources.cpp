@@ -18,7 +18,7 @@ std::vector<std::string> Resources::levelNames() const
             }
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        fprintf(stderr, "Filesystem error: %s", e.what());
+        fprintf(stderr, "Filesystem error: %s\n", e.what());
     }
 
     return results;

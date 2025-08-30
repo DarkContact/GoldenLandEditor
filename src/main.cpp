@@ -190,6 +190,9 @@ int main(int, char**)
                 ImGui::SetCursorScreenPos(pos);
                 ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
+                // ImGui::SetCursorScreenPos(pos);
+                // ImGui::Image((ImTextureID)level.data().minimap, ImVec2((float)level.data().minimap->w, (float)level.data().minimap->h));
+
                 ImGui::End();
 
                 if (level.data().name == loadedLevelName) {

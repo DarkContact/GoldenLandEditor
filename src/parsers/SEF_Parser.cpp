@@ -8,7 +8,7 @@
 SEF_Parser::SEF_Parser(std::string_view sefPath) {
     std::ifstream file(sefPath.data());
     if (!file) {
-        fprintf(stderr, "Error: cannot open file: %s", sefPath);
+        fprintf(stderr, "Error: cannot open file: %s\n", sefPath);
         return;
     }
 
