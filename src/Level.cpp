@@ -65,3 +65,8 @@ LevelData Level::data() const
 {
     return m_data;
 }
+
+LevelData& Level::data()
+{
+    return m_data;
+}

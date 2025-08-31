@@ -164,7 +164,7 @@ int main(int, char**)
         }
 
         if (show_csx_window) {
-            CsxViewer::update(show_settings_window, renderer, resourcesRootDirectory, csxFiles);
+            CsxViewer::update(show_csx_window, renderer, resourcesRootDirectory, csxFiles);
         }
 
         std::string loadedLevelName;
@@ -190,9 +190,20 @@ int main(int, char**)
 
         for (auto it = levels.begin(); it != levels.end();) {
             bool openLevel = true;
-            const Level& level = *it;
+            Level& level = *it;
             if (level.data().background) {
-                ImGui::Begin(level.data().name.c_str(), &openLevel, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::Begin(level.data().name.c_str(), &openLevel, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+
+                if (ImGui::BeginMenuBar()) {
+                    if (ImGui::BeginMenu("View")) {
+                        if (ImGui::MenuItem("Minimap", NULL, level.data().imgui.showMinimap)) {
+                            level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
+                        }
+                        ImGui::EndMenu();
+                    }
+
+                    ImGui::EndMenuBar();
+                }
 
                 ImVec2 pos = ImGui::GetCursorScreenPos();
                 ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
@@ -200,8 +211,10 @@ int main(int, char**)
                 ImGui::SetCursorScreenPos(pos);
                 ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
-                // ImGui::SetCursorScreenPos(pos);
-                // ImGui::Image((ImTextureID)level.data().minimap, ImVec2((float)level.data().minimap->w, (float)level.data().minimap->h));
+                if (level.data().imgui.showMinimap) {
+                    ImGui::SetCursorScreenPos(pos);
+                    ImGui::Image((ImTextureID)level.data().minimap, ImVec2((float)level.data().minimap->w, (float)level.data().minimap->h));
+                }
 
                 ImGui::End();
 
