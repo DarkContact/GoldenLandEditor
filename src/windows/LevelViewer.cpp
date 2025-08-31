@@ -151,7 +151,62 @@ void LevelViewer::updateMinimap(Level& level)
                                  viewTopLeft.y + viewSize.y * scaleY);
 
         // Рисуем рамку
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        drawList->AddRect(viewTopLeft, viewBottomRight, IM_COL32(255, 255, 0, 220), 0.0f, 0, 2.0f);
+        {
+            ImVec2 size = ImVec2(viewBottomRight.x - viewTopLeft.x, viewBottomRight.y - viewTopLeft.y);
+            float gap = ImMin(size.x, size.y) * 0.15f;
+
+            const float thickness = 2.0f;
+            const ImU32 opaque = IM_COL32(255, 255, 0, 220);
+            const ImU32 transparent = IM_COL32(255, 255, 255, 0);
+
+            float cornerLengthX = (size.x - gap) * 0.5f;
+            float cornerLengthY = (size.y - gap) * 0.5f;
+
+            ImDrawList* draw = ImGui::GetWindowDrawList();
+
+            // Top-left
+            draw->AddRectFilledMultiColor(
+                viewTopLeft,
+                ImVec2(viewTopLeft.x + cornerLengthX, viewTopLeft.y + thickness),
+                opaque, transparent, transparent, opaque);
+            draw->AddRectFilledMultiColor(
+                viewTopLeft,
+                ImVec2(viewTopLeft.x + thickness, viewTopLeft.y + cornerLengthY),
+                opaque, opaque, transparent, transparent);
+
+            // Top-right
+            ImVec2 topRight = ImVec2(viewBottomRight.x, viewTopLeft.y);
+            draw->AddRectFilledMultiColor(
+                ImVec2(topRight.x - cornerLengthX, topRight.y),
+                ImVec2(topRight.x, topRight.y + thickness),
+                transparent, opaque, opaque, transparent);
+            draw->AddRectFilledMultiColor(
+                topRight,
+                ImVec2(topRight.x + thickness, topRight.y + cornerLengthY),
+                opaque, opaque, transparent, transparent);
+
+            // Bottom-left
+            ImVec2 bottomLeft = ImVec2(viewTopLeft.x, viewBottomRight.y);
+            draw->AddRectFilledMultiColor(
+                ImVec2(bottomLeft.x, bottomLeft.y - thickness),
+                ImVec2(bottomLeft.x + cornerLengthX, bottomLeft.y),
+                opaque, transparent, transparent, opaque);
+            draw->AddRectFilledMultiColor(
+                ImVec2(bottomLeft.x, bottomLeft.y - cornerLengthY),
+                ImVec2(bottomLeft.x + thickness, bottomLeft.y),
+                transparent, transparent, opaque, opaque);
+
+            // Bottom-right
+            ImVec2 bottomRight = viewBottomRight;
+            draw->AddRectFilledMultiColor(
+                ImVec2(bottomRight.x - cornerLengthX, bottomRight.y - thickness),
+                ImVec2(bottomRight.x, bottomRight.y),
+                transparent, opaque, opaque, transparent);
+            draw->AddRectFilledMultiColor(
+                ImVec2(bottomRight.x, bottomRight.y - cornerLengthY),
+                ImVec2(bottomRight.x + thickness, bottomRight.y),
+                transparent, transparent, opaque, opaque);
+
+        }
     }
 }
