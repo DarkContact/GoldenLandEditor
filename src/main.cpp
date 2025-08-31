@@ -215,7 +215,7 @@ int main(int, char**)
                 // ImGui::SetCursorScreenPos(pos);
                 // ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
 
-                if (level.data().imgui.showMinimap)
+                if (level.data().minimap && level.data().imgui.showMinimap)
                 {
                     float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
                     float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
