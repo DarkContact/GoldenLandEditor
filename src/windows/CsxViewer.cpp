@@ -51,6 +51,10 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             bgColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
         }
         ImGui::SameLine();
+        if (ImGui::Button("Gray")) {
+            bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+        }
+        ImGui::SameLine();
         if (ImGui::Button("White")) {
             bgColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
         }
