@@ -92,6 +92,7 @@ void LevelViewer::updateMinimap(Level& level)
         // Начало перетаскивания рамки
         if (!imgui.draggingMinimap && hoveredView && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             imgui.draggingMinimap = true;
+            imgui.minimapAnimating = false; // Останавливаем анимацию
             imgui.dragOffset = ImVec2(io.MousePos.x - viewTopLeft.x, io.MousePos.y - viewTopLeft.y);
         }
 
@@ -124,8 +125,23 @@ void LevelViewer::updateMinimap(Level& level)
             centerX = ImClamp(centerX, 0.0f, mapWidth - viewSize.x);
             centerY = ImClamp(centerY, 0.0f, mapHeight - viewSize.y);
 
-            ImGui::SetScrollX(centerX);
-            ImGui::SetScrollY(centerY);
+            imgui.minimapScrollStart = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+            imgui.minimapScrollTarget = ImVec2(centerX, centerY);
+            imgui.minimapAnimTime = 0.0f;
+            imgui.minimapAnimating = true;
+        }
+
+        // Плавное перемещение scroll при клике
+        if (imgui.minimapAnimating) {
+            imgui.minimapAnimTime += io.DeltaTime * 6.0f;
+            if (imgui.minimapAnimTime >= 1.0f) {
+                imgui.minimapAnimTime = 1.0f;
+                imgui.minimapAnimating = false;
+            }
+
+            ImVec2 scroll = ImLerp(imgui.minimapScrollStart, imgui.minimapScrollTarget, imgui.minimapAnimTime);
+            ImGui::SetScrollX(scroll.x);
+            ImGui::SetScrollY(scroll.y);
         }
 
         // Обновим рамку
