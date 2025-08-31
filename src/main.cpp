@@ -213,7 +213,14 @@ int main(int, char**)
 
                 if (level.data().imgui.showMinimap) {
                     ImGui::SetCursorScreenPos(pos);
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
+
                     ImGui::Image((ImTextureID)level.data().minimap, ImVec2((float)level.data().minimap->w, (float)level.data().minimap->h));
+
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
                 }
 
                 ImGui::End();

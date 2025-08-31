@@ -5,7 +5,7 @@
 #include "parsers/SEF_Parser.h"
 
 struct LevelImgui {
-    bool showMinimap = false;
+    bool showMinimap = true;
 };
 
 struct LevelData {
