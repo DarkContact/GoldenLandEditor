@@ -63,7 +63,7 @@ void LevelViewer::updateMinimap(Level& level)
         ImGui::PopStyleVar();
     }
 
-    // Рисуем рамку области видимости
+    // Рисуем рамку области видимости и обрабатываем drag / клик
     {
         float mapWidth = (float)level.data().background->w;
         float mapHeight = (float)level.data().background->h;
@@ -75,9 +75,66 @@ void LevelViewer::updateMinimap(Level& level)
         float scaleX = minimapSize.x / mapWidth;
         float scaleY = minimapSize.y / mapHeight;
 
-        ImVec2 viewTopLeft = ImVec2(minimapPosition.x + ImGui::GetScrollX() * scaleX, minimapPosition.y + ImGui::GetScrollY() * scaleY);
-        ImVec2 viewBottomRight = ImVec2(viewTopLeft.x + viewSize.x * scaleX, viewTopLeft.y + viewSize.y * scaleY);
+        ImVec2 viewTopLeft = ImVec2(minimapPosition.x + ImGui::GetScrollX() * scaleX,
+                                    minimapPosition.y + ImGui::GetScrollY() * scaleY);
+        ImVec2 viewBottomRight = ImVec2(viewTopLeft.x + viewSize.x * scaleX,
+                                        viewTopLeft.y + viewSize.y * scaleY);
 
+        ImGuiIO& io = ImGui::GetIO();
+        ImRect viewRect(viewTopLeft, viewBottomRight);
+        ImRect minimapRect(minimapPosition, ImVec2(minimapPosition.x + minimapSize.x, minimapPosition.y + minimapSize.y));
+
+        auto& imgui = level.data().imgui;
+
+        bool hoveredView = viewRect.Contains(io.MousePos);
+        bool hoveredMinimap = minimapRect.Contains(io.MousePos);
+
+        // Начало перетаскивания рамки
+        if (!imgui.draggingMinimap && hoveredView && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            imgui.draggingMinimap = true;
+            imgui.dragOffset = ImVec2(io.MousePos.x - viewTopLeft.x, io.MousePos.y - viewTopLeft.y);
+        }
+
+        // Завершение перетаскивания
+        if (imgui.draggingMinimap && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+            imgui.draggingMinimap = false;
+        }
+
+        // Обработка перемещения при drag
+        if (imgui.draggingMinimap) {
+            ImVec2 newTopLeft = ImVec2(io.MousePos.x - imgui.dragOffset.x, io.MousePos.y - imgui.dragOffset.y);
+
+            float newScrollX = (newTopLeft.x - minimapPosition.x) / scaleX;
+            float newScrollY = (newTopLeft.y - minimapPosition.y) / scaleY;
+
+            newScrollX = ImClamp(newScrollX, 0.0f, mapWidth - viewSize.x);
+            newScrollY = ImClamp(newScrollY, 0.0f, mapHeight - viewSize.y);
+
+            ImGui::SetScrollX(newScrollX);
+            ImGui::SetScrollY(newScrollY);
+        }
+        // Одиночный клик по миникарте (вне рамки)
+        else if (!imgui.draggingMinimap && hoveredMinimap && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            ImVec2 clickPos = ImVec2(io.MousePos.x - minimapPosition.x,
+                                     io.MousePos.y - minimapPosition.y);
+
+            float centerX = clickPos.x / scaleX - viewSize.x * 0.5f;
+            float centerY = clickPos.y / scaleY - viewSize.y * 0.5f;
+
+            centerX = ImClamp(centerX, 0.0f, mapWidth - viewSize.x);
+            centerY = ImClamp(centerY, 0.0f, mapHeight - viewSize.y);
+
+            ImGui::SetScrollX(centerX);
+            ImGui::SetScrollY(centerY);
+        }
+
+        // Обновим рамку
+        viewTopLeft = ImVec2(minimapPosition.x + ImGui::GetScrollX() * scaleX,
+                             minimapPosition.y + ImGui::GetScrollY() * scaleY);
+        viewBottomRight = ImVec2(viewTopLeft.x + viewSize.x * scaleX,
+                                 viewTopLeft.y + viewSize.y * scaleY);
+
+        // Рисуем рамку
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         drawList->AddRect(viewTopLeft, viewBottomRight, IM_COL32(255, 255, 0, 220), 0.0f, 0, 2.0f);
     }

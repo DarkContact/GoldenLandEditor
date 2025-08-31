@@ -1,11 +1,14 @@
 #pragma once
 #include <string_view>
 
+#include "imgui.h"
 #include "SDL3/SDL_render.h"
 #include "parsers/SEF_Parser.h"
 
 struct LevelImgui {
     bool showMinimap = true;
+    bool draggingMinimap = false;
+    ImVec2 dragOffset = ImVec2(0, 0);
 };
 
 struct LevelData {
