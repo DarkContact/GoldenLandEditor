@@ -1,5 +1,6 @@
 #include "CsxViewer.h"
 
+#include <array>
 #include <format>
 
 #include "TextureLoader.h"
@@ -12,6 +13,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static int selectedIndex = 0;
     static SDL_Texture* csxTexture = nullptr;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+    static std::array<bool, 4> activeButtons = {true, false, false, false};
 
     ImGui::Begin("CSX Viewer", &showWindow);
 
@@ -43,20 +45,28 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::ImageWithBg((ImTextureID)csxTexture, ImVec2((float)csxTexture->w, (float)csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
         ImGui::EndChild();
 
-        if (ImGui::Button("Transparent")) {
+        if (ImGui::RadioButton("Transparent", activeButtons[0])) {
             bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+            activeButtons.fill(false);
+            activeButtons[0] = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("Black")) {
+        if (ImGui::RadioButton("Black", activeButtons[1])) {
             bgColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+            activeButtons.fill(false);
+            activeButtons[1] = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("Gray")) {
+        if (ImGui::RadioButton("Gray", activeButtons[2])) {
             bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+            activeButtons.fill(false);
+            activeButtons[2] = true;
         }
         ImGui::SameLine();
-        if (ImGui::Button("White")) {
+        if (ImGui::RadioButton("White", activeButtons[3])) {
             bgColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+            activeButtons.fill(false);
+            activeButtons[3] = true;
         }
 
         ImGui::EndGroup();
