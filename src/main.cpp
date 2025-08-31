@@ -169,7 +169,7 @@ int main(int, char**)
 
         std::string loadedLevelName;
         static int selectedLevelIndex = 0;
-        if (show_levels_window) {
+        if (show_levels_window && !levelNames.empty()) {
             if (LevelPicker::update(show_levels_window, levelNames, selectedLevelIndex)) {
                 loadedLevelName = levelNames[selectedLevelIndex];
                 bool alreadyLoaded = false;

@@ -12,16 +12,12 @@ bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& level
 
     ImGui::Begin("Level picker", &showWindow, ImGuiWindowFlags_AlwaysAutoResize);
 
-    if (!levelNames.empty()) {
-        if (ImguiHelper::ComboBoxWithIndex("Levels", levelNames, selectedLevelIndex)) {
-
-        }
+        ImguiHelper::ComboBoxWithIndex("Levels", levelNames, selectedLevelIndex);
 
         if (ImGui::Button("Load")) {
             showWindow = false;
             pressLoadButton = true;
         }
-    }
 
     ImGui::End();
 

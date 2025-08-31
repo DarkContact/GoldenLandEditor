@@ -3,7 +3,6 @@
 #include <format>
 
 #include "TextureLoader.h"
-#include "StringUtils.h"
 
 #include "parsers/SEF_Parser.h"
 
