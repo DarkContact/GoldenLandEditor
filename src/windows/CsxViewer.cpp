@@ -13,7 +13,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static int selectedIndex = 0;
     static SDL_Texture* csxTexture = nullptr;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
-    static std::array<bool, 4> activeButtons = {true, false, false, false};
+    static std::array<bool, 5> activeButtons = {true, false, false, false, false};
 
     ImGui::Begin("CSX Viewer", &showWindow);
 
@@ -67,6 +67,15 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             bgColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
             activeButtons.fill(false);
             activeButtons[3] = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Custom", activeButtons[4])) {
+            activeButtons.fill(false);
+            activeButtons[4] = true;
+        }
+        ImGui::SameLine();
+        if (activeButtons[4]) {
+            ImGui::ColorEdit4("Color", (float*)&bgColor, ImGuiColorEditFlags_NoInputs);
         }
 
         ImGui::EndGroup();
