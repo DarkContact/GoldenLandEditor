@@ -14,23 +14,30 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static SDL_Texture* csxTexture = nullptr;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static std::array<bool, 5> activeButtons = {true, false, false, false, false};
+    static ImGuiTextFilter textFilter;
 
     ImGui::Begin("CSX Viewer", &showWindow);
 
     // Left
     {
         ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
-        for (int i = 0; i < static_cast<int>(csxFiles.size()); ++i)
-        {
-            if (ImGui::Selectable(csxFiles[i].c_str(), selectedIndex == i)) {
-                selectedIndex = i;
+        textFilter.Draw();
+        ImGui::Separator();
+            ImGui::BeginChild("file list");
+            for (int i = 0; i < static_cast<int>(csxFiles.size()); ++i)
+            {
+                if (textFilter.PassFilter(csxFiles[i].c_str())
+                    && ImGui::Selectable(csxFiles[i].c_str(), selectedIndex == i))
+                {
+                    selectedIndex = i;
 
-                if (csxTexture)
-                    SDL_DestroyTexture(csxTexture);
+                    if (csxTexture)
+                        SDL_DestroyTexture(csxTexture);
 
-                TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, &csxTexture);
+                    TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, &csxTexture);
+                }
             }
-        }
+            ImGui::EndChild();
         ImGui::EndChild();
     }
 
