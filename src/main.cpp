@@ -235,6 +235,23 @@ int main(int, char**)
 
                     ImGui::PopStyleColor();
                     ImGui::PopStyleVar();
+
+                    // Рисуем рамку области видимости
+                    float mapWidth = (float)level.data().background->w;
+                    float mapHeight = (float)level.data().background->h;
+
+                    ImVec2 contentMin = ImGui::GetCurrentWindow()->ContentRegionRect.Min;
+                    ImVec2 contentMax = ImGui::GetCurrentWindow()->ContentRegionRect.Max;
+                    ImVec2 viewSize = ImVec2(contentMax.x - contentMin.x, contentMax.y - contentMin.y);
+
+                    float scaleX = imageSize.x / mapWidth;
+                    float scaleY = imageSize.y / mapHeight;
+
+                    ImVec2 viewTopLeft = ImVec2(imagePos.x + ImGui::GetScrollX() * scaleX, imagePos.y + ImGui::GetScrollY() * scaleY);
+                    ImVec2 viewBottomRight = ImVec2(viewTopLeft.x + viewSize.x * scaleX, viewTopLeft.y + viewSize.y * scaleY);
+
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    drawList->AddRect(viewTopLeft, viewBottomRight, IM_COL32(255, 255, 0, 220), 0.0f, 0, 2.0f);
                 }
 
                 ImGui::End();
