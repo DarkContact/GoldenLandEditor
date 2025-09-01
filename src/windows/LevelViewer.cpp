@@ -11,13 +11,17 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("Minimap", NULL, level.data().imgui.showMinimap)) {
+            if (ImGui::MenuItem("Minimap", "Tab", level.data().imgui.showMinimap)) {
                 level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
             }
             ImGui::EndMenu();
         }
 
         ImGui::EndMenuBar();
+    }
+
+    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
+        level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
     }
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
