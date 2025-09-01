@@ -14,6 +14,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Minimap", "Tab", level.data().imgui.showMinimap)) {
                 level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
             }
+            if (ImGui::MenuItem("Info", "I", level.data().imgui.showMetaInfo)) {
+                level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
+            }
             ImGui::EndMenu();
         }
 
@@ -24,7 +27,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
     }
 
-    ImVec2 pos = ImGui::GetCursorScreenPos();
+    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_I, false)) {
+        level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
+    }
+
+    //ImVec2 pos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
     if (level.data().imgui.showMinimap)
@@ -32,8 +39,10 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         updateMinimap(level);
     }
 
-    // ImGui::SetCursorScreenPos(pos);
-    // ImGui::Text("%dx%d", level.data().background->w, level.data().background->h);
+    if (level.data().imgui.showMetaInfo)
+    {
+        updateInfo(level);
+    }
 
     ImGui::End();
     return true;
@@ -229,4 +238,35 @@ void LevelViewer::updateMinimap(Level& level)
 
         }
     }
+}
+
+void LevelViewer::updateInfo(Level& level)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    const ImVec2 infoSize = ImVec2(200.0f, 80.0f);
+
+    float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
+    float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
+
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    ImVec2 infoPosition = ImVec2(windowPos.x + windowSize.x - infoSize.x - scrollbar_width - 8.0f,
+                                 windowPos.y + menu_bar_height + 26.0f + 200.0f);
+    ImGui::SetCursorScreenPos(infoPosition);
+
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+
+    float border = 4.0f;
+
+    draw->AddRectFilled(
+        ImVec2(infoPosition.x - border, infoPosition.y - border),
+        ImVec2(infoPosition.x + infoSize.x + border, infoPosition.y + infoSize.y + border),
+        IM_COL32(0, 0, 0, 96));
+
+    ImGui::BeginGroup();
+    ImGui::Text("Size: %dx%d", level.data().background->w, level.data().background->h);
+    ImGui::Text("Pack: %s", level.data().sefData.pack.c_str());
+    ImGui::EndGroup();
 }

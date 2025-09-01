@@ -7,6 +7,7 @@
 
 struct LevelImgui {
     bool showMinimap = true;
+
     bool draggingMinimap = false;
     ImVec2 dragOffset = ImVec2(0, 0);
 
@@ -14,6 +15,8 @@ struct LevelImgui {
     ImVec2 minimapScrollStart = ImVec2(0, 0);
     ImVec2 minimapScrollTarget = ImVec2(0, 0);
     float minimapAnimTime = 0.0f;
+
+    bool showMetaInfo = false;
 };
 
 struct LevelData {

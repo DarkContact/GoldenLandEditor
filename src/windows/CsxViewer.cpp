@@ -10,7 +10,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 {
     if (csxFiles.empty()) return false;
 
-    static int selectedIndex = 0;
+    static int selectedIndex = -1;
     static SDL_Texture* csxTexture = nullptr;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static std::array<bool, 5> activeButtons = {true, false, false, false, false};
