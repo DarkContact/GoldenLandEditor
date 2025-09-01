@@ -153,14 +153,15 @@ void LevelViewer::updateMinimap(Level& level)
         // Рисуем рамку
         {
             ImVec2 size = ImVec2(viewBottomRight.x - viewTopLeft.x, viewBottomRight.y - viewTopLeft.y);
-            float gap = ImMin(size.x, size.y) * 0.15f;
+            float gapW = size.x * 0.25f;
+            float gapH = size.y * 0.25f;
 
-            const float thickness = 2.0f;
-            const ImU32 opaque = IM_COL32(255, 255, 0, 220);
-            const ImU32 transparent = IM_COL32(255, 255, 255, 0);
+            const float thickness = 1.0f;
+            const ImU32 opaque = IM_COL32(255, 255, 0, 255);
+            const ImU32 transparent = IM_COL32(255, 255, 0, 48);
 
-            float cornerLengthX = (size.x - gap) * 0.5f;
-            float cornerLengthY = (size.y - gap) * 0.5f;
+            float cornerLengthX = (size.x - gapW) * 0.5f;
+            float cornerLengthY = (size.y - gapH) * 0.5f;
 
             ImDrawList* draw = ImGui::GetWindowDrawList();
 
