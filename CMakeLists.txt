@@ -31,6 +31,8 @@ add_executable(GoldenLandEditor
     src/windows/CsxViewer.cpp
     src/windows/LevelViewer.h
     src/windows/LevelViewer.cpp
+    src/parsers/LVL_Parser.h
+    src/parsers/LVL_Parser.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)
