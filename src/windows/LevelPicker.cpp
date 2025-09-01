@@ -7,10 +7,13 @@ bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& level
 {
     bool pressLoadButton = false;
 
+    if (showWindow)
+        ImGui::OpenPopup("Level picker");
+
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
-    ImGui::Begin("Level picker", &showWindow, ImGuiWindowFlags_AlwaysAutoResize);
+    if (ImGui::BeginPopupModal("Level picker", &showWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         ImguiHelper::ComboBoxWithIndex("Levels", levelNames, selectedLevelIndex);
 
@@ -19,7 +22,8 @@ bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& level
             pressLoadButton = true;
         }
 
-    ImGui::End();
+        ImGui::EndPopup();
+    }
 
     return pressLoadButton;
 }
