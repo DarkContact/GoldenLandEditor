@@ -11,5 +11,6 @@ public:
 private:
     static void updateMinimap(Level& level);
     static void updateInfo(Level& level);
+    static void drawMask(Level& level);
 };
 

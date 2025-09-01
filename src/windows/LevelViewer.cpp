@@ -17,6 +17,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Info", "I", level.data().imgui.showMetaInfo)) {
                 level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
             }
+            if (ImGui::MenuItem("Mask", "M", level.data().imgui.showMask)) {
+                level.data().imgui.showMask = !level.data().imgui.showMask;
+            }
             ImGui::EndMenu();
         }
 
@@ -26,12 +29,13 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
         level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
     }
-
     if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_I, false)) {
         level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
     }
+    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
+        level.data().imgui.showMask = !level.data().imgui.showMask;
+    }
 
-    //ImVec2 pos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
     if (level.data().imgui.showMinimap)
@@ -42,6 +46,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (level.data().imgui.showMetaInfo)
     {
         updateInfo(level);
+    }
+
+    if (level.data().imgui.showMask)
+    {
+        drawMask(level);
     }
 
     ImGui::End();
@@ -244,7 +253,7 @@ void LevelViewer::updateInfo(Level& level)
 {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    const ImVec2 infoSize = ImVec2(200.0f, 80.0f);
+    const ImVec2 infoSize = ImVec2(200.0f, 100.0f);
 
     float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
     float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
@@ -268,5 +277,52 @@ void LevelViewer::updateInfo(Level& level)
     ImGui::BeginGroup();
     ImGui::Text("Size: %dx%d", level.data().background->w, level.data().background->h);
     ImGui::Text("Pack: %s", level.data().sefData.pack.c_str());
+    ImGui::SeparatorText("LVL");
+    ImGui::Text("Version: %s", level.data().lvlData.version.c_str());
+    ImGui::Text("Big Cells: %dx%d", level.data().lvlData.maskHDR.width, level.data().lvlData.maskHDR.height);
     ImGui::EndGroup();
+}
+
+void LevelViewer::drawMask(Level& level)
+{
+    ImGui::SetCursorScreenPos(ImVec2(0, 64)); // FIXME: Выбрать корректную точку отображения
+    int tileWidth = 12;
+    int tileHeight = 9;
+    int offsetX = ImGui::GetScrollX();
+    int offsetY = ImGui::GetScrollY();
+
+    const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
+    if (maskHDR.chunks.empty()) return;
+
+    const int chunkSize = 2; // 2x2 tiles per chunk
+    int chunksPerColumn = static_cast<int>(maskHDR.height);
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 winPos = ImGui::GetCursorScreenPos();
+
+    for (size_t chunkIndex = 0; chunkIndex < maskHDR.chunks.size(); ++chunkIndex) {
+        const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
+
+        int correctX = (chunkIndex / chunksPerColumn) * chunkSize * tileWidth - offsetX;
+        int correctY = (chunkIndex % chunksPerColumn) * chunkSize * tileHeight - offsetY;
+
+        for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
+            const MHDRTile& tile = chunk[tileIndex];
+
+            int objX = correctX + static_cast<int>(tileIndex / chunkSize) * tileWidth;
+            int objY = correctY + static_cast<int>(tileIndex % chunkSize) * tileHeight;
+
+            ImVec2 p0 = ImVec2(winPos.x + objX, winPos.y + objY);
+            ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
+
+            ImU32 col = (tile.maskNumber < 2000)
+                            ? IM_COL32(0, 255, 0, 64)  // зелёный с прозрачностью (alpha = 64/255)
+                            : IM_COL32(255, 0, 0, 64); // красный
+
+            drawList->AddRectFilled(p0, p1, col);
+
+            // ImGui::SetCursorScreenPos(p0);
+            // ImGui::Text("%u", tile.param2);
+        }
+    }
 }
