@@ -27,7 +27,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     ImVec2 pos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
-    if (level.data().minimap && level.data().imgui.showMinimap)
+    if (level.data().imgui.showMinimap)
     {
         updateMinimap(level);
     }
@@ -39,9 +39,22 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     return true;
 }
 
+ImVec2 computeMinimapSize(const Level& level, bool hasMinimap) {
+    if (hasMinimap) {
+        return ImVec2(level.data().minimap->w,
+                      level.data().minimap->h);
+    } else {
+        const float scale = 200.0f / level.data().background->w;
+        return ImVec2(scale * level.data().background->w,
+                      scale * level.data().background->h);
+    }
+}
+
 void LevelViewer::updateMinimap(Level& level)
 {
-    const ImVec2 minimapSize = ImVec2(level.data().minimap->w, level.data().minimap->h);
+    bool hasMinimap = (level.data().minimap != nullptr);
+
+    const ImVec2 minimapSize = computeMinimapSize(level, hasMinimap);
     ImVec2 minimapPosition;
 
     // Миникарта и белая обводка
@@ -61,7 +74,9 @@ void LevelViewer::updateMinimap(Level& level)
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
 
-        ImGui::Image((ImTextureID)level.data().minimap, minimapSize);
+        ImGui::Image((ImTextureID)(hasMinimap ? level.data().minimap
+                                              : level.data().background),
+                     minimapSize);
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
