@@ -74,9 +74,9 @@ void LevelViewer::updateMinimap(Level& level)
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
 
-        ImGui::Image((ImTextureID)(hasMinimap ? level.data().minimap
-                                              : level.data().background),
-                     minimapSize);
+        ImGui::ImageWithBg((ImTextureID)(hasMinimap ? level.data().minimap
+                                                    : level.data().background),
+                           minimapSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 1));
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
