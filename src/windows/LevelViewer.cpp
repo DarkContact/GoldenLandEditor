@@ -36,11 +36,12 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         level.data().imgui.showMask = !level.data().imgui.showMask;
     }
 
+    ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
     if (level.data().imgui.showMask)
     {
-        drawMask(level);
+        drawMask(level, startPos);
     }
 
     if (level.data().imgui.showMinimap)
@@ -244,7 +245,6 @@ void LevelViewer::updateMinimap(Level& level)
                 ImVec2(bottomRight.x, bottomRight.y - cornerLengthY),
                 ImVec2(bottomRight.x + thickness, bottomRight.y),
                 transparent, transparent, opaque, opaque);
-
         }
     }
 }
@@ -283,13 +283,13 @@ void LevelViewer::updateInfo(Level& level)
     ImGui::EndGroup();
 }
 
-void LevelViewer::drawMask(Level& level)
+void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 {
-    ImGui::SetCursorScreenPos(ImVec2(0, 64)); // FIXME: Выбрать корректную точку отображения
+    ImGui::SetCursorScreenPos(drawPosition);
     int tileWidth = 12;
     int tileHeight = 9;
-    int offsetX = ImGui::GetScrollX();
-    int offsetY = ImGui::GetScrollY();
+    int offsetX = 0;
+    int offsetY = 0;
 
     const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
     if (maskHDR.chunks.empty()) return;
@@ -316,8 +316,8 @@ void LevelViewer::drawMask(Level& level)
             ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
 
             ImU32 col = (tile.maskNumber < 2000)
-                            ? IM_COL32(0, 255, 0, 64)  // зелёный с прозрачностью (alpha = 64/255)
-                            : IM_COL32(255, 0, 0, 64); // красный
+                            ? IM_COL32(0, 255, 0, 64)
+                            : IM_COL32(255, 0, 0, 64);
 
             drawList->AddRectFilled(p0, p1, col);
 
