@@ -358,13 +358,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 {
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
-                    //ImGui::Begin()
+                    ImGui::SetTooltip("Mask: %u\nParam2: %u\nType: %u", tile.maskNumber, tile.param2, tile.tileType);
                 }
-
-                // ImGui::SetCursorScreenPos(p0);
-                // ImGui::PushFont(NULL, 8.0f);
-                // ImGui::Text("%u", tile.maskNumber);
-                // ImGui::PopFont();
             }
         }
     }
