@@ -299,12 +299,25 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 winPos = ImGui::GetCursorScreenPos();
+    ImVec2 clipMin = ImGui::GetWindowPos();
+    ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
+                            clipMin.y + ImGui::GetContentRegionAvail().y + 36 + 8);
 
     for (size_t chunkIndex = 0; chunkIndex < maskHDR.chunks.size(); ++chunkIndex) {
         const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
 
         int correctX = (chunkIndex / chunksPerColumn) * chunkSize * tileWidth - offsetX;
         int correctY = (chunkIndex % chunksPerColumn) * chunkSize * tileHeight - offsetY;
+
+        ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
+        ImVec2 chunkMax = ImVec2(chunkMin.x + chunkSize * tileWidth,
+                                 chunkMin.y + chunkSize * tileHeight);
+
+        // Отбрасываем чанк, если он не попадает в область видимости
+        if (chunkMax.x < clipMin.x || chunkMin.x > clipMax.x ||
+            chunkMax.y < clipMin.y || chunkMin.y > clipMax.y) {
+            continue;
+        }
 
         for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
             const MHDRTile& tile = chunk[tileIndex];
@@ -322,7 +335,7 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
             drawList->AddRectFilled(p0, p1, col);
 
             // ImGui::SetCursorScreenPos(p0);
-            // ImGui::PushFont(NULL, 9.0f);
+            // ImGui::PushFont(NULL, 8.0f);
             // ImGui::Text("%u", tile.maskNumber);
             // ImGui::PopFont();
         }
