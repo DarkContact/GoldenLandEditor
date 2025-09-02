@@ -42,7 +42,7 @@ public:
     Level(Level&& other) noexcept;
     Level& operator=(Level&& other) noexcept;
 
-    LevelData data() const;
+    const LevelData& data() const;
     LevelData& data();
 
 private:

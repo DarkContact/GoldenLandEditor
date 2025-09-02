@@ -66,7 +66,7 @@ std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view
     return std::format("{}/levels/pack/{}/bitmaps/minimap.csx", rootDirectory, levelPack);
 }
 
-LevelData Level::data() const
+const LevelData& Level::data() const
 {
     return m_data;
 }
