@@ -3,7 +3,7 @@ import urllib.request
 import zipfile
 import shutil
 
-VERSION = "3.2.20"
+VERSION = "3.2.22"
 ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
 URL = f"https://www.libsdl.org/release/{ZIP_NAME}"
 ZIP_PATH = os.path.join(".", ZIP_NAME)
