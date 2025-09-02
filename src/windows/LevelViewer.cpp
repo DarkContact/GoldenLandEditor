@@ -330,6 +330,13 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
             ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
             ImVec2 chunkMax = ImVec2(chunkMin.x + chunkPixelWidth, chunkMin.y + chunkPixelHeight);
 
+            ImVec2 mousePos = ImGui::GetMousePos();
+            if (mousePos.x >= chunkMin.x && mousePos.x < chunkMax.x &&
+                mousePos.y >= chunkMin.y && mousePos.y < chunkMax.y)
+            {
+                drawList->AddRect(chunkMin, chunkMax, IM_COL32(255, 255, 0, 128));
+            }
+
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
                 const MHDRTile& tile = chunk[tileIndex];
 
@@ -345,6 +352,15 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
                 drawList->AddRectFilled(p0, p1, color);
 
+                ImVec2 mousePos = ImGui::GetMousePos();
+                if (mousePos.x >= p0.x && mousePos.x < p1.x &&
+                    mousePos.y >= p0.y && mousePos.y < p1.y)
+                {
+                    drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
+
+                    //ImGui::Begin()
+                }
+
                 // ImGui::SetCursorScreenPos(p0);
                 // ImGui::PushFont(NULL, 8.0f);
                 // ImGui::Text("%u", tile.maskNumber);
@@ -353,4 +369,3 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
         }
     }
 }
-

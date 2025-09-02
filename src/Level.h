@@ -18,7 +18,7 @@ struct LevelImgui {
     float minimapAnimTime = 0.0f;
 
     bool showMetaInfo = false;
-    bool showMask = true;
+    bool showMask = false;
 };
 
 struct LevelData {
