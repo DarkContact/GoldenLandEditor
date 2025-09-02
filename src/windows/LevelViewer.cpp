@@ -283,13 +283,14 @@ void LevelViewer::updateInfo(Level& level)
     ImGui::EndGroup();
 }
 
+// Чанки и тайлы начинают отсчёт слева сверху и дальше идут по столбцам:
+// [0] [2]
+// [1] [3]
 void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 {
     ImGui::SetCursorScreenPos(drawPosition);
-    int tileWidth = 12;
-    int tileHeight = 9;
-    int offsetX = 0;
-    int offsetY = 0;
+    const int tileWidth = 12;
+    const int tileHeight = 9;
 
     const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
     if (maskHDR.chunks.empty()) return;
@@ -306,8 +307,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
     for (size_t chunkIndex = 0; chunkIndex < maskHDR.chunks.size(); ++chunkIndex) {
         const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
 
-        int correctX = (chunkIndex / chunksPerColumn) * chunkSize * tileWidth - offsetX;
-        int correctY = (chunkIndex % chunksPerColumn) * chunkSize * tileHeight - offsetY;
+        int correctX = (chunkIndex / chunksPerColumn) * chunkSize * tileWidth;
+        int correctY = (chunkIndex % chunksPerColumn) * chunkSize * tileHeight;
 
         ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
         ImVec2 chunkMax = ImVec2(chunkMin.x + chunkSize * tileWidth,
@@ -328,11 +329,11 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
             ImVec2 p0 = ImVec2(winPos.x + objX, winPos.y + objY);
             ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
 
-            ImU32 col = (tile.maskNumber < 2000)
-                            ? IM_COL32(0, 255, 0, 64)
-                            : IM_COL32(255, 0, 0, 64);
+            ImU32 color = (tile.maskNumber < 2000)
+                              ? IM_COL32(0, 255, 0, 64)
+                              : IM_COL32(255, 0, 0, 64);
 
-            drawList->AddRectFilled(p0, p1, col);
+            drawList->AddRectFilled(p0, p1, color);
 
             // ImGui::SetCursorScreenPos(p0);
             // ImGui::PushFont(NULL, 8.0f);
