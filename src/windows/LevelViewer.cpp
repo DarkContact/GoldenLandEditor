@@ -291,12 +291,13 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
     ImGui::SetCursorScreenPos(drawPosition);
     const int tileWidth = 12;
     const int tileHeight = 9;
+    const int chunkSize = 2; // 2x2 tiles per chunk
 
     const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
     if (maskHDR.chunks.empty()) return;
 
-    const int chunkSize = 2; // 2x2 tiles per chunk
-    int chunksPerColumn = static_cast<int>(maskHDR.height);
+    const int chunksPerColumn = static_cast<int>(maskHDR.height);
+    const int chunksPerRow = static_cast<int>(maskHDR.width);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 winPos = ImGui::GetCursorScreenPos();
@@ -304,41 +305,52 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
                             clipMin.y + ImGui::GetContentRegionAvail().y + 36 + 8);
 
-    for (size_t chunkIndex = 0; chunkIndex < maskHDR.chunks.size(); ++chunkIndex) {
-        const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
+    const int chunkPixelWidth = chunkSize * tileWidth;
+    const int chunkPixelHeight = chunkSize * tileHeight;
 
-        int correctX = (chunkIndex / chunksPerColumn) * chunkSize * tileWidth;
-        int correctY = (chunkIndex % chunksPerColumn) * chunkSize * tileHeight;
+    // Вычисляем диапазон видимых чанков
+    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - winPos.x) / chunkPixelWidth));
+    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - winPos.x) / chunkPixelWidth));
 
-        ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
-        ImVec2 chunkMax = ImVec2(chunkMin.x + chunkSize * tileWidth,
-                                 chunkMin.y + chunkSize * tileHeight);
+    int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - winPos.y) / chunkPixelHeight));
+    int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - winPos.y) / chunkPixelHeight));
 
-        // Отбрасываем чанк, если он не попадает в область видимости
-        if (chunkMax.x < clipMin.x || chunkMin.x > clipMax.x ||
-            chunkMax.y < clipMin.y || chunkMin.y > clipMax.y) {
-            continue;
-        }
+    for (int col = minVisibleCol; col <= maxVisibleCol; ++col)
+    {
+        for (int row = minVisibleRow; row <= maxVisibleRow; ++row)
+        {
+            size_t chunkIndex = col * chunksPerColumn + row;
+            if (chunkIndex >= maskHDR.chunks.size()) continue;
 
-        for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
-            const MHDRTile& tile = chunk[tileIndex];
+            const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
 
-            int objX = correctX + static_cast<int>(tileIndex / chunkSize) * tileWidth;
-            int objY = correctY + static_cast<int>(tileIndex % chunkSize) * tileHeight;
+            int correctX = col * chunkPixelWidth;
+            int correctY = row * chunkPixelHeight;
 
-            ImVec2 p0 = ImVec2(winPos.x + objX, winPos.y + objY);
-            ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
+            ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
+            ImVec2 chunkMax = ImVec2(chunkMin.x + chunkPixelWidth, chunkMin.y + chunkPixelHeight);
 
-            ImU32 color = (tile.maskNumber < 2000)
-                              ? IM_COL32(0, 255, 0, 64)
-                              : IM_COL32(255, 0, 0, 64);
+            for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
+                const MHDRTile& tile = chunk[tileIndex];
 
-            drawList->AddRectFilled(p0, p1, color);
+                int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * tileWidth;
+                int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * tileHeight;
 
-            // ImGui::SetCursorScreenPos(p0);
-            // ImGui::PushFont(NULL, 8.0f);
-            // ImGui::Text("%u", tile.maskNumber);
-            // ImGui::PopFont();
+                ImVec2 p0 = ImVec2(winPos.x + tileX, winPos.y + tileY);
+                ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
+
+                ImU32 color = (tile.maskNumber < 2000)
+                                  ? IM_COL32(0, 255, 0, 64)
+                                  : IM_COL32(255, 0, 0, 64);
+
+                drawList->AddRectFilled(p0, p1, color);
+
+                // ImGui::SetCursorScreenPos(p0);
+                // ImGui::PushFont(NULL, 8.0f);
+                // ImGui::Text("%u", tile.maskNumber);
+                // ImGui::PopFont();
+            }
         }
     }
 }
+
