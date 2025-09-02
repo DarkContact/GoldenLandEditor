@@ -38,6 +38,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
 
+    if (level.data().imgui.showMask)
+    {
+        drawMask(level);
+    }
+
     if (level.data().imgui.showMinimap)
     {
         updateMinimap(level);
@@ -46,11 +51,6 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (level.data().imgui.showMetaInfo)
     {
         updateInfo(level);
-    }
-
-    if (level.data().imgui.showMask)
-    {
-        drawMask(level);
     }
 
     ImGui::End();
@@ -322,7 +322,9 @@ void LevelViewer::drawMask(Level& level)
             drawList->AddRectFilled(p0, p1, col);
 
             // ImGui::SetCursorScreenPos(p0);
-            // ImGui::Text("%u", tile.param2);
+            // ImGui::PushFont(NULL, 9.0f);
+            // ImGui::Text("%u", tile.maskNumber);
+            // ImGui::PopFont();
         }
     }
 }
