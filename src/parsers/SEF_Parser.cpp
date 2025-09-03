@@ -20,7 +20,7 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
     }
 }
 
-SEF_Data SEF_Parser::data() const
+const SEF_Data& SEF_Parser::data() const
 {
     return m_data;
 }

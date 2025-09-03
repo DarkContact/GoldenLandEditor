@@ -24,17 +24,16 @@ std::vector<std::string> Resources::levelNames() const
     return results;
 }
 
-std::vector<std::string> Resources::csxFiles() const
+std::vector<std::string> Resources::filesWithExtension(std::string_view extension) const
 {
-    std::vector<std::string> csxFiles;
+    std::vector<std::string> files;
 
     for (const auto& entry : fs::recursive_directory_iterator(m_rootDirectory)) {
-        if (entry.path().extension() == ".csx") {
-            csxFiles.push_back(entry.path().lexically_relative(m_rootDirectory).string());
+        if (entry.path().extension() == extension) {
+            files.push_back(entry.path().lexically_relative(m_rootDirectory).string());
         }
     }
 
-    return csxFiles;
+    return files;
 }
-
 

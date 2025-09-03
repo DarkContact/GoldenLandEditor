@@ -1,6 +1,7 @@
 #include "LVL_Parser.h"
 
-#include <fstream>
+#include "FileLoader.h"
+#include "StringUtils.h"
 
 LVL_Parser::LVL_Parser(std::string_view lvlPath) :
     m_filePath(lvlPath)
@@ -8,21 +9,11 @@ LVL_Parser::LVL_Parser(std::string_view lvlPath) :
 
 }
 
-LVL_Data LVL_Parser::parse() {
-    auto buffer = loadFile();
+LVL_Data& LVL_Parser::parse() {
+    auto buffer = FileLoader::loadFile(m_filePath);
     extractBlocks(buffer);
     m_data = interpretData();
     return m_data;
-}
-
-std::vector<uint8_t> LVL_Parser::loadFile() {
-    std::ifstream in(m_filePath, std::ios::binary | std::ios::ate);
-    if (!in) throw std::runtime_error("Cannot open file " + m_filePath);
-    auto size = in.tellg();
-    in.seekg(0, std::ios::beg);
-    std::vector<uint8_t> buf(size);
-    in.read(reinterpret_cast<char*>(buf.data()), size);
-    return buf;
 }
 
 void LVL_Parser::extractBlocks(const std::vector<uint8_t>& dataBuf) {
@@ -55,16 +46,6 @@ LVL_Data LVL_Parser::interpretData() {
         // else ignore or keep raw
     }
     return d;
-}
-
-std::string LVL_Parser::readStringWithLength(const std::vector<uint8_t>& block, size_t& offset) {
-    if (offset + 4 > block.size()) return "";
-    uint32_t len = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
-    if (offset + len > block.size()) return "";
-    std::string s(reinterpret_cast<const char*>(&block[offset]), len);
-    offset += len;
-    return s;
 }
 
 std::string LVL_Parser::parseVersion(const std::vector<uint8_t>& block) {
@@ -160,7 +141,7 @@ std::vector<LVLDescription> LVL_Parser::parseStructuredBlock(const std::vector<u
         desc.position.x = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
         desc.position.y = *reinterpret_cast<const uint32_t*>(&block[offset + 12]);
         offset += 16;
-        desc.name = readStringWithLength(block, offset);
+        desc.name = StringUtils::readStringWithLength(block, offset);
         result.push_back(desc);
     }
 
@@ -176,12 +157,12 @@ std::vector<Door> LVL_Parser::parseDoors(const std::vector<uint8_t>& block) {
 
     for (uint32_t i = 0; i < count; ++i) {
         Door d;
-        d.sefName = readStringWithLength(block, offset);
-        d.openAction = readStringWithLength(block, offset);
-        d.closeAction = readStringWithLength(block, offset);
-        d.cellGroup = readStringWithLength(block, offset);
-        d.param1 = readStringWithLength(block, offset);
-        d.staticName = readStringWithLength(block, offset);
+        d.sefName = StringUtils::readStringWithLength(block, offset);
+        d.openAction = StringUtils::readStringWithLength(block, offset);
+        d.closeAction = StringUtils::readStringWithLength(block, offset);
+        d.cellGroup = StringUtils::readStringWithLength(block, offset);
+        d.param1 = StringUtils::readStringWithLength(block, offset);
+        d.staticName = StringUtils::readStringWithLength(block, offset);
         result.push_back(d);
     }
 
@@ -196,7 +177,7 @@ CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
     offset += 4;
 
     for (uint32_t i = 0; i < groupCount; ++i) {
-        std::string groupName = readStringWithLength(block, offset);
+        std::string groupName = StringUtils::readStringWithLength(block, offset);
         if (offset + 4 > block.size()) break;
         uint32_t groupSize = *reinterpret_cast<const uint32_t*>(&block[offset]);
         offset += 4;
@@ -229,13 +210,13 @@ EnvironmentSounds LVL_Parser::parseSENV(const std::vector<uint8_t>& block) {
     uint32_t soundCount = *reinterpret_cast<const uint32_t*>(&block[offset]);
     offset += 4;
 
-    result.levelTheme = readStringWithLength(block, offset);
-    result.dayAmbience = readStringWithLength(block, offset);
-    result.nightAmbience = readStringWithLength(block, offset);
+    result.levelTheme = StringUtils::readStringWithLength(block, offset);
+    result.dayAmbience = StringUtils::readStringWithLength(block, offset);
+    result.nightAmbience = StringUtils::readStringWithLength(block, offset);
 
     for (uint32_t i = 0; i < soundCount; ++i) {
         ExtraSound s;
-        s.path = readStringWithLength(block, offset);
+        s.path = StringUtils::readStringWithLength(block, offset);
         if (offset + 48 > block.size()) break;
         for (int p = 0; p < 8; ++p)
             reinterpret_cast<uint32_t*>(&s.param1)[p] = *reinterpret_cast<const uint32_t*>(&block[offset + p * 4]);

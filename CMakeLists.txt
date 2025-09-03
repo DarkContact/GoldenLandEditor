@@ -33,6 +33,10 @@ add_executable(GoldenLandEditor
     src/windows/LevelViewer.cpp
     src/parsers/LVL_Parser.h
     src/parsers/LVL_Parser.cpp
+    src/parsers/SDB_Parser.h
+    src/parsers/SDB_Parser.cpp
+    src/FileLoader.h src/FileLoader.cpp
+    src/windows/SdbViewer.h src/windows/SdbViewer.cpp
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)

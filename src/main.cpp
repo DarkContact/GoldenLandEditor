@@ -16,6 +16,7 @@
 #include "windows/LevelPicker.h"
 #include "windows/LevelViewer.h"
 #include "windows/CsxViewer.h"
+#include "windows/SdbViewer.h"
 
 int main(int, char**)
 {
@@ -43,7 +44,8 @@ int main(int, char**)
 
     Resources resources(resourcesRootDirectory);
     auto levelNames = resources.levelNames();
-    auto csxFiles = resources.csxFiles();
+    auto csxFiles = resources.filesWithExtension(".csx");
+    auto sdbFiles = resources.filesWithExtension(".sdb");
 
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
@@ -141,6 +143,7 @@ int main(int, char**)
         static bool show_settings_window = false;
         static bool show_levels_window = false;
         static bool show_csx_window = false;
+        static bool show_sdb_window = false;
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
@@ -149,6 +152,9 @@ int main(int, char**)
                 }
                 if (ImGui::MenuItem("CSX Viewer")) {
                     show_csx_window = true;
+                }
+                if (ImGui::MenuItem("SDB Viewer")) {
+                    show_sdb_window = true;
                 }
                 ImGui::EndMenu();
             }
@@ -165,9 +171,11 @@ int main(int, char**)
         if (show_settings_window) {
             FontSettings::update(show_settings_window);
         }
-
         if (show_csx_window) {
             CsxViewer::update(show_csx_window, renderer, resourcesRootDirectory, csxFiles);
+        }
+        if (show_sdb_window) {
+            SdbViewer::update(show_sdb_window, resourcesRootDirectory, sdbFiles);
         }
 
         std::string loadedLevelName;

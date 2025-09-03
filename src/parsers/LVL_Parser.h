@@ -58,18 +58,12 @@ class LVL_Parser
 public:
     LVL_Parser(std::string_view lvlPath);
 
-    LVL_Data parse();
-
-    LVL_Data data() const;
+    LVL_Data& parse();
 
 private:
-    std::vector<uint8_t> loadFile();
-
     void extractBlocks(const std::vector<uint8_t>& dataBuf);
 
     LVL_Data interpretData();
-
-    std::string readStringWithLength(const std::vector<uint8_t>& block, size_t& offset);
 
     std::string parseVersion(const std::vector<uint8_t>& block);
     MapSize parseMapSize(const std::vector<uint8_t>& block);

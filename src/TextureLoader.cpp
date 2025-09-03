@@ -45,8 +45,10 @@ bool TextureLoader::loadTextureFromFile(const char* file_name, SDL_Renderer* ren
         return false;
     fseek(f, 0, SEEK_END);
     size_t file_size = (size_t)ftell(f);
-    if (file_size == -1)
+    if (file_size == -1) {
+        fclose(f);
         return false;
+    }
     fseek(f, 0, SEEK_SET);
     void* file_data = IM_ALLOC(file_size);
     fread(file_data, 1, file_size, f);
@@ -63,8 +65,10 @@ bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* 
         return false;
     fseek(f, 0, SEEK_END);
     size_t file_size = (size_t)ftell(f);
-    if (file_size == -1)
+    if (file_size == -1) {
+        fclose(f);
         return false;
+    }
     fseek(f, 0, SEEK_SET);
     void* file_data = IM_ALLOC(file_size);
     fread(file_data, 1, file_size, f);
