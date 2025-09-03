@@ -11,19 +11,20 @@ bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
     static int selectedIndex = -1;
     static SDB_Data sdbRecords;
-    static ImGuiTextFilter textFilter;
+    static ImGuiTextFilter textFilterFile;
+    static ImGuiTextFilter textFilterString;
 
     ImGui::Begin("SDB Viewer", &showWindow);
 
     // Left
     {
         ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
-        textFilter.Draw();
+        textFilterFile.Draw();
         ImGui::Separator();
             ImGui::BeginChild("file list");
             for (int i = 0; i < static_cast<int>(files.size()); ++i)
             {
-                if (textFilter.PassFilter(files[i].c_str())
+                if (textFilterFile.PassFilter(files[i].c_str())
                     && ImGui::Selectable(files[i].c_str(), selectedIndex == i))
                 {
                     selectedIndex = i;
@@ -40,18 +41,26 @@ bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
     // Right
     {
-        ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::BeginChild("item view");
+        textFilterString.Draw();
         if (!sdbRecords.strings.empty()) {
-            //if (ImGui::BeginTable("content", 2)) {
+            if (ImGui::BeginTable("content", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+                ImGui::TableSetupColumn("ID");
+                ImGui::TableSetupColumn("Текст");
+                ImGui::TableHeadersRow();
+
                 for (const auto& [id, text] : sdbRecords.strings) {
-                    ImGui::Text("%d: %s", id, text.c_str());
-                    // ImGui::Text("%d", id);
-                    // ImGui::TableNextColumn();
-                    // ImGui::Text("%s", text.c_str());
-                    //ImGui::TableNextRow();
+                    if (textFilterString.PassFilter(std::format("{} {}", id, text).c_str())) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%d", id);
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", text.c_str());
+                    }
                 }
-                //ImGui::EndTable();
-            //}
+                ImGui::EndTable();
+            }
         }
         ImGui::EndChild();
     }
