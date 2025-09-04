@@ -79,16 +79,19 @@ ImVec2 LevelViewer::computeMinimapSize(const Level& level, bool hasMinimap) {
 
 ImVec2 LevelViewer::computeMinimapPosition(const Level& level, ImVec2 minimapSize)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
+    const ImGuiStyle& style = ImGui::GetStyle();
 
-    float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
-    float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
+    const float titleBarHeight = ImGui::GetCurrentWindow()->TitleBarHeight;
+    const float menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight;
+    const float scrollbarWidth = ImGui::GetCurrentWindow()->ScrollbarY ? (style.ScrollbarSize + style.ScrollbarPadding) : 0.0f;
 
-    ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 windowSize = ImGui::GetWindowSize();
+    const ImVec2 windowPos = ImGui::GetWindowPos();
+    const ImVec2 windowSize = ImGui::GetWindowSize();
+    const float offset = 4.0f;
+    const float borderOffset = 1.0f;
 
-    return ImVec2(windowPos.x + windowSize.x - minimapSize.x - scrollbar_width - 8.0f,
-                  windowPos.y + menu_bar_height + 26.0f);
+    return ImVec2(windowPos.x + windowSize.x - minimapSize.x - scrollbarWidth - offset - borderOffset,
+                  windowPos.y + titleBarHeight + menuBarHeight + offset);
 }
 
 void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
