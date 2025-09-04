@@ -13,4 +13,3 @@ private:
     static void updateInfo(Level& level);
     static void drawMask(Level& level, ImVec2 drawPosition);
 };
-
