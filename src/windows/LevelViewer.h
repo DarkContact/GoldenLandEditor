@@ -1,6 +1,8 @@
 #pragma once
 #include "Level.h"
 
+struct ImRect;
+
 class LevelViewer
 {
 public:
@@ -9,7 +11,10 @@ public:
     static bool update(bool& showWindow, Level& level);
 
 private:
-    static void updateMinimap(Level& level);
-    static void updateInfo(Level& level);
+    static ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);
+    static ImVec2 computeMinimapPosition(const Level& level, ImVec2 minimapSize);
+
+    static void updateMinimap(Level& level, ImRect& minimapRect);
+    static void updateInfo(Level& level, ImVec2 drawPosition);
     static void drawMask(Level& level, ImVec2 drawPosition);
 };

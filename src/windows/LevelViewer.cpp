@@ -37,28 +37,36 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     }
 
     ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)level.data().background, ImVec2((float)level.data().background->w, (float)level.data().background->h));
+    ImGui::Image((ImTextureID)level.data().background, ImVec2(level.data().background->w, level.data().background->h));
 
     if (level.data().imgui.showMask)
     {
         drawMask(level, startPos);
     }
 
-    if (level.data().imgui.showMinimap)
-    {
-        updateMinimap(level);
+    ImRect minimapRect;
+    if (level.data().imgui.showMinimap) {
+        updateMinimap(level, minimapRect);
+        minimapRect.Max.y += 16.0f;
+    } else {
+        ImVec2 minimapSize = {200.0f, 0.0f};
+        ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+
+        minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
+                                         minimapPosition.y + minimapSize.y + 8.0f}};
     }
 
     if (level.data().imgui.showMetaInfo)
     {
-        updateInfo(level);
+        updateInfo(level, {minimapRect.GetBL().x, minimapRect.GetBL().y});
     }
 
     ImGui::End();
     return true;
 }
 
-ImVec2 computeMinimapSize(const Level& level, bool hasMinimap) {
+
+ImVec2 LevelViewer::computeMinimapSize(const Level& level, bool hasMinimap) {
     if (hasMinimap) {
         return ImVec2(level.data().minimap->w,
                       level.data().minimap->h);
@@ -69,25 +77,29 @@ ImVec2 computeMinimapSize(const Level& level, bool hasMinimap) {
     }
 }
 
-void LevelViewer::updateMinimap(Level& level)
+ImVec2 LevelViewer::computeMinimapPosition(const Level& level, ImVec2 minimapSize)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
+    float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
+
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+
+    return ImVec2(windowPos.x + windowSize.x - minimapSize.x - scrollbar_width - 8.0f,
+                  windowPos.y + menu_bar_height + 26.0f);
+}
+
+void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
 {
     bool hasMinimap = (level.data().minimap != nullptr);
 
     const ImVec2 minimapSize = computeMinimapSize(level, hasMinimap);
-    ImVec2 minimapPosition;
+    const ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
 
     // Миникарта и белая обводка
     {
-        ImGuiStyle& style = ImGui::GetStyle();
-
-        float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
-        float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
-
-        ImVec2 windowPos = ImGui::GetWindowPos();
-        ImVec2 windowSize = ImGui::GetWindowSize();
-
-        minimapPosition = ImVec2(windowPos.x + windowSize.x - minimapSize.x - scrollbar_width - 8.0f,
-                                 windowPos.y + menu_bar_height + 26.0f);
         ImGui::SetCursorScreenPos(minimapPosition);
 
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
@@ -120,7 +132,7 @@ void LevelViewer::updateMinimap(Level& level)
 
         ImGuiIO& io = ImGui::GetIO();
         ImRect viewRect(viewTopLeft, viewBottomRight);
-        ImRect minimapRect(minimapPosition, ImVec2(minimapPosition.x + minimapSize.x, minimapPosition.y + minimapSize.y));
+        minimapRect = ImRect(minimapPosition, ImVec2(minimapPosition.x + minimapSize.x, minimapPosition.y + minimapSize.y));
 
         auto& imgui = level.data().imgui;
 
@@ -249,29 +261,17 @@ void LevelViewer::updateMinimap(Level& level)
     }
 }
 
-void LevelViewer::updateInfo(Level& level)
+void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
-
     const ImVec2 infoSize = ImVec2(200.0f, 100.0f);
+    const float border = 4.0f;
 
-    float menu_bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
-    float scrollbar_width = (ImGui::GetCurrentWindow()->ScrollbarY ? style.ScrollbarSize : 0.0f);
-
-    ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 windowSize = ImGui::GetWindowSize();
-
-    ImVec2 infoPosition = ImVec2(windowPos.x + windowSize.x - infoSize.x - scrollbar_width - 8.0f,
-                                 windowPos.y + menu_bar_height + 26.0f + 200.0f);
-    ImGui::SetCursorScreenPos(infoPosition);
+    ImGui::SetCursorScreenPos(drawPosition);
 
     ImDrawList* draw = ImGui::GetWindowDrawList();
-
-    float border = 4.0f;
-
     draw->AddRectFilled(
-        ImVec2(infoPosition.x - border, infoPosition.y - border),
-        ImVec2(infoPosition.x + infoSize.x + border, infoPosition.y + infoSize.y + border),
+        ImVec2(drawPosition.x - border, drawPosition.y - border),
+        ImVec2(drawPosition.x + infoSize.x + border, drawPosition.y + infoSize.y + border),
         IM_COL32(0, 0, 0, 96));
 
     ImGui::BeginGroup();
