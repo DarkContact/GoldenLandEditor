@@ -36,8 +36,29 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         level.data().imgui.showMask = !level.data().imgui.showMask;
     }
 
+    // Отрисовка уровня
     ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2(level.data().background->w, level.data().background->h));
+
+    // Отрисовка персонажей
+    // TODO: Отключение отображения по кнопке "P"
+    // TODO: Доработка отрисовки (Более визуально заметно)
+    // TODO: Вынести в отдельный метод
+    ImGui::SetCursorScreenPos(startPos);
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    const int tileWidth = 12;
+    const int tileHeight = 9;
+    for (const SEF_Person& person : level.data().sefData.persons) {
+        ImVec2 position;
+        position.x = person.position.x * tileWidth - ImGui::GetScrollX();
+        position.y = person.position.y * tileHeight - ImGui::GetScrollY();
+
+        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, 192));
+
+        ImGui::SetCursorScreenPos({position.x + tileWidth + 2.0f, position.y + 4.0f});
+        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, 1.0f), "%s", person.literaryName.c_str());
+    }
+    // --
 
     if (level.data().imgui.showMask)
     {
