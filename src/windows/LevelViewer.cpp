@@ -304,9 +304,9 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 winPos = ImGui::GetCursorScreenPos();
-    ImVec2 clipMin = ImGui::GetWindowPos();
+    ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
-                            clipMin.y + ImGui::GetContentRegionAvail().y + 36 + 8);
+                            clipMin.y + ImGui::GetContentRegionAvail().y);
 
     const int chunkPixelWidth = chunkSize * tileWidth;
     const int chunkPixelHeight = chunkSize * tileHeight;
