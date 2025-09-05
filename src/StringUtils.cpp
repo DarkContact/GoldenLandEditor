@@ -49,6 +49,23 @@ std::string StringUtils::extractQuotedValue(const std::string& line) {
     return {};
 }
 
+std::vector<std::string> StringUtils::splitBySpaces(const std::string& line) {
+    std::vector<std::string> tokens;
+    std::string current;
+    for (char ch : line) {
+        if (std::isspace(ch)) {
+            if (!current.empty()) {
+                tokens.push_back(current);
+                current.clear();
+            }
+        } else {
+            current += ch;
+        }
+    }
+    if (!current.empty()) tokens.push_back(current);
+    return tokens;
+}
+
 std::string StringUtils::readStringWithLength(const std::vector<uint8_t>& block, size_t& offset) {
     if (offset + 4 > block.size()) return "";
     uint32_t len = *reinterpret_cast<const uint32_t*>(&block[offset]);
