@@ -114,7 +114,7 @@ MaskHDR LVL_Parser::parseMaskHDR(const std::vector<uint8_t>& block) {
             if (offset + tileSize > block.size()) break;
             MHDRTile tile;
             tile.maskNumber = *reinterpret_cast<const uint16_t*>(&block[offset]);
-            tile.param2     = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
+            tile.soundType  = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
             tile.tileType   = *reinterpret_cast<const uint16_t*>(&block[offset + 4]);
             chunk.push_back(tile);
             offset += tileSize;

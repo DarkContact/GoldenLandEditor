@@ -366,6 +366,11 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
                 drawList->AddRectFilled(p0, p1, color);
 
+                // ImGui::SetCursorScreenPos({p0.x + 3.0f, p0.y});
+                // ImGui::PushFont(NULL, 10.0f);
+                // ImGui::Text("%u", tile.soundType);
+                // ImGui::PopFont();
+
                 ImVec2 mousePos = ImGui::GetMousePos();
                 if (ImGui::IsWindowFocused() &&
                     ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
@@ -374,7 +379,7 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 {
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
-                    ImGui::SetTooltip("Mask: %u\nParam2: %u\nType: %u", tile.maskNumber, tile.param2, tile.tileType);
+                    ImGui::SetTooltip("Mask: %u\nSound: %u\nType: %u", tile.maskNumber, tile.soundType, tile.tileType);
                 }
             }
 

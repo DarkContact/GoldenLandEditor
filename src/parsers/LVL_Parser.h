@@ -33,7 +33,7 @@ struct EnvironmentSounds {
     std::vector<ExtraSound> otherSounds;
 };
 
-struct MHDRTile { uint16_t maskNumber=0, param2=0, tileType=0; };
+struct MHDRTile { uint16_t maskNumber=0, soundType=0, tileType=0; };
 using MHDRChunk = std::vector<MHDRTile>; // 4 tiles per chunk
 struct MaskHDR {
     uint32_t width = 1, height = 1;
