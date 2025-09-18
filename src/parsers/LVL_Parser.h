@@ -43,14 +43,16 @@ struct MaskHDR {
 struct LVL_Data {
     std::string version = "-1";
     MapSize mapSize;
-    Weather weather;
-    uint32_t levelFloors = 0;
-    std::vector<LVLDescription> staticDescriptions, animationDescriptions, triggerDescription;
-    std::vector<MaskDescription> maskDescriptions;
-    CellGroups cellGroups;
-    std::vector<Door> doors;
-    EnvironmentSounds environmentSounds;
     MaskHDR maskHDR;
+    std::vector<MaskDescription> maskDescriptions;
+    std::vector<LVLDescription> staticDescriptions;
+    std::vector<LVLDescription> animationDescriptions;
+    std::vector<LVLDescription> triggerDescription;
+    CellGroups cellGroups;
+    EnvironmentSounds environmentSounds;
+    Weather weather;
+    std::vector<Door> doors;
+    uint32_t levelFloors = 0;
 };
 
 class LVL_Parser
@@ -67,14 +69,14 @@ private:
 
     std::string parseVersion(const std::vector<uint8_t>& block);
     MapSize parseMapSize(const std::vector<uint8_t>& block);
-    Weather parseWeather(const std::vector<uint8_t>& block);
-    uint32_t parseLevelFloors(const std::vector<uint8_t>& block);
-    std::vector<MaskDescription> parseMaskDescriptions(const std::vector<uint8_t>& block);
     MaskHDR parseMaskHDR(const std::vector<uint8_t>& block);
+    std::vector<MaskDescription> parseMaskDescriptions(const std::vector<uint8_t>& block);
     std::vector<LVLDescription> parseStructuredBlock(const std::vector<uint8_t>& block);
-    std::vector<Door> parseDoors(const std::vector<uint8_t>& block);
     CellGroups parseCellGroups(const std::vector<uint8_t>& block);
     EnvironmentSounds parseSENV(const std::vector<uint8_t>& block);
+    Weather parseWeather(const std::vector<uint8_t>& block);
+    std::vector<Door> parseDoors(const std::vector<uint8_t>& block);
+    uint32_t parseLevelFloors(const std::vector<uint8_t>& block);
 
     std::string m_filePath;
     std::map<std::string, std::vector<uint8_t>> m_blocks;

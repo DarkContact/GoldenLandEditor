@@ -29,21 +29,19 @@ void LVL_Parser::extractBlocks(const std::vector<uint8_t>& dataBuf) {
 }
 
 LVL_Data LVL_Parser::interpretData() {
-    LVL_Data d = m_data; // defaults
+    LVL_Data d = m_data;
     for (auto& [name, block]: m_blocks) {
         if      (name == "BLK_LVER") d.version = parseVersion(block);
         else if (name == "BLK_MPSZ") d.mapSize = parseMapSize(block);
-        else if (name == "BLK_WTHR") d.weather = parseWeather(block);
-        else if (name == "BLK_LFLS") d.levelFloors = parseLevelFloors(block);
-        else if (name == "BLK_CGRP") d.cellGroups = parseCellGroups(block);
-        else if (name == "BLK_DOOR") d.doors = parseDoors(block);
-        else if (name == "BLK_SENV") d.environmentSounds = parseSENV(block);
+        else if (name == "BLK_MHDR") d.maskHDR = parseMaskHDR(block);
+        else if (name == "BLK_MDSC") d.maskDescriptions = parseMaskDescriptions(block);
         else if (name == "BLK_SDSC") d.staticDescriptions = parseStructuredBlock(block);
         else if (name == "BLK_ADSC") d.animationDescriptions = parseStructuredBlock(block);
         else if (name == "BLK_TDSC") d.triggerDescription = parseStructuredBlock(block);
-        else if (name == "BLK_MDSC") d.maskDescriptions = parseMaskDescriptions(block);
-        else if (name == "BLK_MHDR") d.maskHDR = parseMaskHDR(block);
-        // else ignore or keep raw
+        else if (name == "BLK_CGRP") d.cellGroups = parseCellGroups(block);
+        else if (name == "BLK_SENV") d.environmentSounds = parseSENV(block);
+        else if (name == "BLK_WTHR") d.weather = parseWeather(block);
+        else if (name == "BLK_DOOR") d.doors = parseDoors(block);
     }
     return d;
 }
@@ -61,38 +59,6 @@ MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
         *reinterpret_cast<const uint32_t*>(&block[0]),
         *reinterpret_cast<const uint32_t*>(&block[4])
     };
-}
-
-Weather LVL_Parser::parseWeather(const std::vector<uint8_t>& block) {
-    if (block.size() < 4) return {};
-    return {
-        *reinterpret_cast<const uint16_t*>(&block[0]),
-        *reinterpret_cast<const uint16_t*>(&block[2])
-    };
-}
-
-uint32_t LVL_Parser::parseLevelFloors(const std::vector<uint8_t>& block) {
-    if (block.size() < 4) return 0;
-    return *reinterpret_cast<const uint32_t*>(&block[0]);
-}
-
-std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector<uint8_t>& block) {
-    std::vector<MaskDescription> result;
-    if (block.size() < 4) return result;
-    size_t offset = 0;
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
-
-    for (uint32_t i = 0; i < count && offset + 16 <= block.size(); ++i) {
-        offset += 4; // skip padding
-        MaskDescription m;
-        m.number = *reinterpret_cast<const uint32_t*>(&block[offset]);
-        m.x      = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
-        m.y      = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
-        offset += 12;
-        result.push_back(m);
-    }
-    return result;
 }
 
 MaskHDR LVL_Parser::parseMaskHDR(const std::vector<uint8_t>& block) {
@@ -125,6 +91,25 @@ MaskHDR LVL_Parser::parseMaskHDR(const std::vector<uint8_t>& block) {
     return hdr;
 }
 
+std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector<uint8_t>& block) {
+    std::vector<MaskDescription> result;
+    if (block.size() < 4) return result;
+    size_t offset = 0;
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
+    offset += 4;
+
+    for (uint32_t i = 0; i < count && offset + 16 <= block.size(); ++i) {
+        offset += 4; // skip padding
+        MaskDescription m;
+        m.number = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        m.x      = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
+        m.y      = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
+        offset += 12;
+        result.push_back(m);
+    }
+    return result;
+}
+
 std::vector<LVLDescription> LVL_Parser::parseStructuredBlock(const std::vector<uint8_t>& block) {
     std::vector<LVLDescription> result;
     if (block.size() < 4) return result;
@@ -143,27 +128,6 @@ std::vector<LVLDescription> LVL_Parser::parseStructuredBlock(const std::vector<u
         offset += 16;
         desc.name = StringUtils::readStringWithLength(block, offset);
         result.push_back(desc);
-    }
-
-    return result;
-}
-
-std::vector<Door> LVL_Parser::parseDoors(const std::vector<uint8_t>& block) {
-    std::vector<Door> result;
-    if (block.size() < 4) return result;
-    size_t offset = 0;
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
-
-    for (uint32_t i = 0; i < count; ++i) {
-        Door d;
-        d.sefName = StringUtils::readStringWithLength(block, offset);
-        d.openAction = StringUtils::readStringWithLength(block, offset);
-        d.closeAction = StringUtils::readStringWithLength(block, offset);
-        d.cellGroup = StringUtils::readStringWithLength(block, offset);
-        d.param1 = StringUtils::readStringWithLength(block, offset);
-        d.staticName = StringUtils::readStringWithLength(block, offset);
-        result.push_back(d);
     }
 
     return result;
@@ -229,4 +193,38 @@ EnvironmentSounds LVL_Parser::parseSENV(const std::vector<uint8_t>& block) {
     }
 
     return result;
+}
+
+Weather LVL_Parser::parseWeather(const std::vector<uint8_t>& block) {
+    if (block.size() < 4) return {};
+    return {
+        *reinterpret_cast<const uint16_t*>(&block[0]),
+        *reinterpret_cast<const uint16_t*>(&block[2])
+    };
+}
+
+std::vector<Door> LVL_Parser::parseDoors(const std::vector<uint8_t>& block) {
+    std::vector<Door> result;
+    if (block.size() < 4) return result;
+    size_t offset = 0;
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
+    offset += 4;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        Door d;
+        d.sefName = StringUtils::readStringWithLength(block, offset);
+        d.openAction = StringUtils::readStringWithLength(block, offset);
+        d.closeAction = StringUtils::readStringWithLength(block, offset);
+        d.cellGroup = StringUtils::readStringWithLength(block, offset);
+        d.param1 = StringUtils::readStringWithLength(block, offset);
+        d.staticName = StringUtils::readStringWithLength(block, offset);
+        result.push_back(d);
+    }
+
+    return result;
+}
+
+uint32_t LVL_Parser::parseLevelFloors(const std::vector<uint8_t>& block) {
+    if (block.size() < 4) return 0;
+    return *reinterpret_cast<const uint32_t*>(&block[0]);
 }
