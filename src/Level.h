@@ -19,6 +19,7 @@ struct LevelImgui {
 
     bool showMetaInfo = false;
     bool showMask = false;
+    bool showPersons = true;
 };
 
 struct LevelData {

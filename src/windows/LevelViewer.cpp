@@ -20,6 +20,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Mask", "M", level.data().imgui.showMask)) {
                 level.data().imgui.showMask = !level.data().imgui.showMask;
             }
+            if (ImGui::MenuItem("Persons", "P", level.data().imgui.showPersons)) {
+                level.data().imgui.showPersons = !level.data().imgui.showPersons;
+            }
             ImGui::EndMenu();
         }
 
@@ -35,30 +38,19 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
         level.data().imgui.showMask = !level.data().imgui.showMask;
     }
+    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
+        level.data().imgui.showPersons = !level.data().imgui.showPersons;
+    }
 
     // Отрисовка уровня
     ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2(level.data().background->w, level.data().background->h));
 
     // Отрисовка персонажей
-    // TODO: Отключение отображения по кнопке "P"
-    // TODO: Доработка отрисовки (Более визуально заметно)
-    // TODO: Вынести в отдельный метод
-    ImGui::SetCursorScreenPos(startPos);
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    const int tileWidth = 12;
-    const int tileHeight = 9;
-    for (const SEF_Person& person : level.data().sefData.persons) {
-        ImVec2 position;
-        position.x = person.position.x * tileWidth - ImGui::GetScrollX();
-        position.y = person.position.y * tileHeight - ImGui::GetScrollY();
-
-        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, 192));
-
-        ImGui::SetCursorScreenPos({position.x + tileWidth + 2.0f, position.y + 4.0f});
-        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, 1.0f), "%s", person.literaryName.c_str());
+    if (level.data().imgui.showPersons)
+    {
+        drawPersons(level, startPos);
     }
-    // --
 
     if (level.data().imgui.showMask)
     {
@@ -312,19 +304,19 @@ void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
 // [1] [3]
 void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 {
+    const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
+    if (maskHDR.chunks.empty()) return;
+
     ImGui::SetCursorScreenPos(drawPosition);
+
     const int tileWidth = 12;
     const int tileHeight = 9;
     const int chunkSize = 2; // 2x2 tiles per chunk
-
-    const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
-    if (maskHDR.chunks.empty()) return;
 
     const int chunksPerColumn = static_cast<int>(maskHDR.height);
     const int chunksPerRow = static_cast<int>(maskHDR.width);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 winPos = ImGui::GetCursorScreenPos();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
                             clipMin.y + ImGui::GetContentRegionAvail().y);
@@ -333,11 +325,11 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
     const int chunkPixelHeight = chunkSize * tileHeight;
 
     // Вычисляем диапазон видимых чанков
-    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - winPos.x) / chunkPixelWidth));
-    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - winPos.x) / chunkPixelWidth));
+    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / chunkPixelWidth));
+    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - drawPosition.x) / chunkPixelWidth));
 
-    int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - winPos.y) / chunkPixelHeight));
-    int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - winPos.y) / chunkPixelHeight));
+    int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - drawPosition.y) / chunkPixelHeight));
+    int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - drawPosition.y) / chunkPixelHeight));
 
     for (int col = minVisibleCol; col <= maxVisibleCol; ++col)
     {
@@ -357,7 +349,7 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * tileWidth;
                 int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * tileHeight;
 
-                ImVec2 p0 = ImVec2(winPos.x + tileX, winPos.y + tileY);
+                ImVec2 p0 = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
                 ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
 
                 ImU32 color = (tile.maskNumber < 2000)
@@ -383,7 +375,7 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 }
             }
 
-            ImVec2 chunkMin = ImVec2(winPos.x + correctX, winPos.y + correctY);
+            ImVec2 chunkMin = ImVec2(drawPosition.x + correctX, drawPosition.y + correctY);
             ImVec2 chunkMax = ImVec2(chunkMin.x + chunkPixelWidth, chunkMin.y + chunkPixelHeight);
 
             ImVec2 mousePos = ImGui::GetMousePos();
@@ -395,5 +387,23 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 drawList->AddRect(chunkMin, chunkMax, IM_COL32(255, 228, 0, 180));
             }
         }
+    }
+}
+
+void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
+{
+    // TODO: Доработка отрисовки (Более визуально заметно)
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    const int tileWidth = 12;
+    const int tileHeight = 9;
+    for (const SEF_Person& person : level.data().sefData.persons) {
+        ImVec2 position;
+        position.x = drawPosition.x + person.position.x * tileWidth;
+        position.y = drawPosition.y + person.position.y * tileHeight;
+
+        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, 192));
+
+        ImGui::SetCursorScreenPos({position.x + tileWidth + 2.0f, position.y + 4.0f});
+        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, 1.0f), "%s", person.literaryName.c_str());
     }
 }

@@ -17,4 +17,5 @@ private:
     static void updateMinimap(Level& level, ImRect& minimapRect);
     static void updateInfo(Level& level, ImVec2 drawPosition);
     static void drawMask(Level& level, ImVec2 drawPosition);
+    static void drawPersons(Level& level, ImVec2 drawPosition);
 };
