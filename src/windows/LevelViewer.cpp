@@ -1,5 +1,7 @@
 #include "LevelViewer.h"
 
+#include <format>
+
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -279,24 +281,28 @@ void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
 
 void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
 {
-    const ImVec2 infoSize = ImVec2(200.0f, 100.0f);
-    const float border = 4.0f;
+    auto infoMessage =
+        std::format("Size: {}x{}\n"
+                    "Pack: {}\n"
+                    "Big Cells: {}x{}\n"
+                    "Triggers: {}\n",
+                    level.data().background->w, level.data().background->h,
+                    level.data().sefData.pack,
+                    level.data().lvlData.maskHDR.width, level.data().lvlData.maskHDR.height,
+                    level.data().lvlData.environmentSounds);
 
-    ImGui::SetCursorScreenPos(drawPosition);
+    const float offset = 4.0f;
+    const ImVec2 textSize = ImGui::CalcTextSize(infoMessage.c_str());
+    const ImVec2 infoSize = {std::max(textSize.x + offset, 200.0f), textSize.y + offset};
 
     ImDrawList* draw = ImGui::GetWindowDrawList();
     draw->AddRectFilled(
-        ImVec2(drawPosition.x - border, drawPosition.y - border),
-        ImVec2(drawPosition.x + infoSize.x + border, drawPosition.y + infoSize.y + border),
+        ImVec2(drawPosition.x, drawPosition.y),
+        ImVec2(drawPosition.x + infoSize.x, drawPosition.y + infoSize.y),
         IM_COL32(0, 0, 0, 96));
 
-    ImGui::BeginGroup();
-    ImGui::Text("Size: %dx%d", level.data().background->w, level.data().background->h);
-    ImGui::Text("Pack: %s", level.data().sefData.pack.c_str());
-    ImGui::SeparatorText("LVL");
-    ImGui::Text("Version: %s", level.data().lvlData.version.c_str());
-    ImGui::Text("Big Cells: %dx%d", level.data().lvlData.maskHDR.width, level.data().lvlData.maskHDR.height);
-    ImGui::EndGroup();
+    ImGui::SetCursorScreenPos({drawPosition.x + offset, drawPosition.y + offset});
+    ImGui::Text("%s", infoMessage.c_str());
 }
 
 // Чанки и тайлы начинают отсчёт слева сверху и дальше идут по столбцам:
