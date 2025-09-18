@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 #include <map>
 
 struct MapSize { uint32_t width = 1, height = 1; };
@@ -33,17 +34,23 @@ struct EnvironmentSounds {
     std::vector<ExtraSound> otherSounds;
 };
 
-struct MHDRTile { uint16_t maskNumber=0, soundType=0, tileType=0; };
-using MHDRChunk = std::vector<MHDRTile>; // 4 tiles per chunk
+struct MHDRTile {
+    uint16_t maskNumber = 0;
+    uint16_t soundType = 0;
+    uint16_t tileType = 0;
+};
+
+using MHDRChunk = std::array<MHDRTile, 4>; // 4 tiles per chunk
 struct MaskHDR {
-    uint32_t width = 1, height = 1;
+    uint32_t width = 0;
+    uint32_t height = 0;
     std::vector<MHDRChunk> chunks;
 };
 
 struct LVL_Data {
-    std::string version = "-1";
-    MapSize mapSize;
-    MaskHDR maskHDR;
+    std::string version;
+    MapSize mapSize; // Размер в фона в пикселях
+    MaskHDR mapData;
     std::vector<MaskDescription> maskDescriptions;
     std::vector<LVLDescription> staticDescriptions;
     std::vector<LVLDescription> animationDescriptions;
@@ -69,11 +76,11 @@ private:
 
     std::string parseVersion(const std::vector<uint8_t>& block);
     MapSize parseMapSize(const std::vector<uint8_t>& block);
-    MaskHDR parseMaskHDR(const std::vector<uint8_t>& block);
+    MaskHDR parseMapData(const std::vector<uint8_t>& block);
     std::vector<MaskDescription> parseMaskDescriptions(const std::vector<uint8_t>& block);
     std::vector<LVLDescription> parseStructuredBlock(const std::vector<uint8_t>& block);
     CellGroups parseCellGroups(const std::vector<uint8_t>& block);
-    EnvironmentSounds parseSENV(const std::vector<uint8_t>& block);
+    EnvironmentSounds parseSoundEnv(const std::vector<uint8_t>& block);
     Weather parseWeather(const std::vector<uint8_t>& block);
     std::vector<Door> parseDoors(const std::vector<uint8_t>& block);
     uint32_t parseLevelFloors(const std::vector<uint8_t>& block);

@@ -33,15 +33,16 @@ LVL_Data LVL_Parser::interpretData() {
     for (auto& [name, block]: m_blocks) {
         if      (name == "BLK_LVER") d.version = parseVersion(block);
         else if (name == "BLK_MPSZ") d.mapSize = parseMapSize(block);
-        else if (name == "BLK_MHDR") d.maskHDR = parseMaskHDR(block);
+        else if (name == "BLK_MHDR") d.mapData = parseMapData(block);
         else if (name == "BLK_MDSC") d.maskDescriptions = parseMaskDescriptions(block);
         else if (name == "BLK_SDSC") d.staticDescriptions = parseStructuredBlock(block);
         else if (name == "BLK_ADSC") d.animationDescriptions = parseStructuredBlock(block);
         else if (name == "BLK_TDSC") d.triggerDescription = parseStructuredBlock(block);
         else if (name == "BLK_CGRP") d.cellGroups = parseCellGroups(block);
-        else if (name == "BLK_SENV") d.environmentSounds = parseSENV(block);
+        else if (name == "BLK_SENV") d.environmentSounds = parseSoundEnv(block);
         else if (name == "BLK_WTHR") d.weather = parseWeather(block);
         else if (name == "BLK_DOOR") d.doors = parseDoors(block);
+        else if (name == "BLK_LFLS") d.levelFloors = parseLevelFloors(block);
     }
     return d;
 }
@@ -61,29 +62,24 @@ MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
     };
 }
 
-MaskHDR LVL_Parser::parseMaskHDR(const std::vector<uint8_t>& block) {
+MaskHDR LVL_Parser::parseMapData(const std::vector<uint8_t>& block) {
     MaskHDR hdr;
     if (block.size() < 8) return hdr;
     hdr.width  = *reinterpret_cast<const uint32_t*>(&block[0]);
     hdr.height = *reinterpret_cast<const uint32_t*>(&block[4]);
 
-    const size_t tileSize = 6;
-    const size_t chunkSize = 4;
-    const size_t offsetStart = 8;
-
-    size_t numChunks = (block.size() - offsetStart) / (tileSize * chunkSize);
-    size_t offset = offsetStart;
-
+    size_t offset = 8;
+    const size_t numChunks = hdr.width * hdr.height;
+    hdr.chunks.reserve(numChunks);
     for (size_t i = 0; i < numChunks; ++i) {
         MHDRChunk chunk;
-        for (size_t j = 0; j < chunkSize; ++j) {
-            if (offset + tileSize > block.size()) break;
+        for (size_t j = 0; j < chunk.size(); ++j) {
             MHDRTile tile;
             tile.maskNumber = *reinterpret_cast<const uint16_t*>(&block[offset]);
             tile.soundType  = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
             tile.tileType   = *reinterpret_cast<const uint16_t*>(&block[offset + 4]);
-            chunk.push_back(tile);
-            offset += tileSize;
+            chunk[j] = tile;
+            offset += 6;
         }
         hdr.chunks.push_back(chunk);
     }
@@ -160,7 +156,7 @@ CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
     return groups;
 }
 
-EnvironmentSounds LVL_Parser::parseSENV(const std::vector<uint8_t>& block) {
+EnvironmentSounds LVL_Parser::parseSoundEnv(const std::vector<uint8_t>& block) {
     EnvironmentSounds result;
     if (block.size() < 16) return result;
     size_t offset = 0;

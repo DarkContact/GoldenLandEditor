@@ -284,12 +284,16 @@ void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
     auto infoMessage =
         std::format("Size: {}x{}\n"
                     "Pack: {}\n"
-                    "Big Cells: {}x{}\n"
-                    "Triggers: {}\n",
+                    "Big cells: {}x{}\n"
+                    "Animations count: {}\n"
+                    "Triggers count: {}\n"
+                    "Floors: {}",
                     level.data().background->w, level.data().background->h,
                     level.data().sefData.pack,
-                    level.data().lvlData.maskHDR.width, level.data().lvlData.maskHDR.height,
-                    level.data().lvlData.environmentSounds);
+                    level.data().lvlData.mapData.width, level.data().lvlData.mapData.height,
+                    level.data().lvlData.animationDescriptions.size(),
+                    level.data().lvlData.triggerDescription.size(),
+                    level.data().lvlData.levelFloors);
 
     const float offset = 4.0f;
     const ImVec2 textSize = ImGui::CalcTextSize(infoMessage.c_str());
@@ -310,7 +314,7 @@ void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
 // [1] [3]
 void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 {
-    const MaskHDR& maskHDR = level.data().lvlData.maskHDR;
+    const MaskHDR& maskHDR = level.data().lvlData.mapData;
     if (maskHDR.chunks.empty()) return;
 
     ImGui::SetCursorScreenPos(drawPosition);
