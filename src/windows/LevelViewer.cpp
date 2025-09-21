@@ -392,7 +392,10 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 {
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
-                    ImGui::SetTooltip("Mask: %u\nSound: %u\nType: %u", tile.maskNumber, tile.soundType, tile.tileType);
+                    ImGui::SetTooltip("Mask: %u\n"
+                                      "Sound: %u\n"
+                                      "Type: %u",
+                                      tile.maskNumber, tile.soundType, tile.tileType);
                 }
             }
 
@@ -413,7 +416,6 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 {
-    // TODO: Доработка отрисовки (Более визуально заметно)
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     const int tileWidth = 12;
     const int tileHeight = 9;
@@ -422,9 +424,35 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
         position.x = drawPosition.x + person.position.x * tileWidth;
         position.y = drawPosition.y + person.position.y * tileHeight;
 
-        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, 192));
+        bool fullAlpha = true;
+        ImVec2 mousePos = ImGui::GetMousePos();
+        if (ImGui::IsWindowFocused() &&
+            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            mousePos.x >= position.x && mousePos.x < (position.x + tileWidth) &&
+            mousePos.y >= position.y && mousePos.y < (position.y + tileHeight))
+        {
+            ImGui::SetTooltip("index: %d\n"
+                              "tribe: %s\n"
+                              "scr_dialog: %s\n"
+                              "scr_inv: %s",
+                              person.literaryNameIndex,
+                              person.tribe.c_str(),
+                              person.scriptDialog.c_str(),
+                              person.scriptInventory.c_str());
+        } else if (ImGui::IsWindowFocused() &&
+                   ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            fullAlpha = false;
+        }
 
-        ImGui::SetCursorScreenPos({position.x + tileWidth + 2.0f, position.y + 4.0f});
-        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, 1.0f), "%s", person.literaryName.c_str());
+        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
+        drawList->AddRect(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+
+        const ImVec2 textPos = {position.x + tileWidth + 2.0f, position.y + 4.0f};
+        const ImVec2 textSize = ImGui::CalcTextSize(person.literaryName.c_str());
+        drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+
+        ImGui::SetCursorScreenPos(textPos);
+        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", person.literaryName.c_str());
     }
 }
