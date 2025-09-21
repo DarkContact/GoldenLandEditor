@@ -362,9 +362,20 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 ImVec2 p0 = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
                 ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
 
-                ImU32 color = (tile.maskNumber < 2000)
-                                  ? IM_COL32(0, 255, 0, 64)
-                                  : IM_COL32(255, 0, 0, 64);
+                ImU32 color;
+                if (tile.maskNumber <= 1000) {
+                    color = IM_COL32(0, 255, 0, 64);
+                } else if (tile.maskNumber <= 2000) {
+                    color = IM_COL32(0, 140, 0, 88);
+                } else if (tile.maskNumber <= 15000) {
+                    color = IM_COL32(140, 0, 0, 88);
+                } else if (tile.maskNumber <= 35000) {
+                    color = IM_COL32(180, 0, 0, 96);
+                } else if (tile.maskNumber <= 55000) {
+                    color = IM_COL32(220, 0, 0, 96);
+                } else {
+                    color = IM_COL32(255, 0, 0, 104);
+                }
 
                 drawList->AddRectFilled(p0, p1, color);
 

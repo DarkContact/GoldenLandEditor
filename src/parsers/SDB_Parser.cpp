@@ -54,7 +54,6 @@ SDB_Data& SDB_Parser::parse()
             }
         }
 
-        // Добавление строки в карту (обрезаем пробелы справа)
         std::string text(textData.begin(), textData.end());
         text = StringUtils::decodeWin1251ToUtf8(text);
         text = StringUtils::trim(text);
