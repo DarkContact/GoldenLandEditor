@@ -70,6 +70,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
         minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
                                          minimapPosition.y + minimapSize.y + 8.0f}};
+        level.data().imgui.minimapHovered = false;
     }
 
     if (level.data().imgui.showMetaInfo)
@@ -183,6 +184,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
 
         bool hoveredView = viewRect.Contains(io.MousePos);
         bool hoveredMinimap = minimapRect.Contains(io.MousePos);
+        level.data().imgui.minimapHovered = hoveredMinimap;
 
         // Начало перетаскивания рамки
         if (!imgui.draggingMinimap && hoveredView && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
@@ -408,7 +410,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 // ImGui::PopFont();
 
                 ImVec2 mousePos = ImGui::GetMousePos();
-                if (ImGui::IsWindowFocused() &&
+                if (!level.data().imgui.minimapHovered &&
+                    ImGui::IsWindowFocused() &&
                     ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
                     mousePos.x >= p0.x && mousePos.x < p1.x &&
                     mousePos.y >= p0.y && mousePos.y < p1.y)
@@ -426,7 +429,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
             ImVec2 chunkMax = ImVec2(chunkMin.x + chunkPixelWidth, chunkMin.y + chunkPixelHeight);
 
             ImVec2 mousePos = ImGui::GetMousePos();
-            if (ImGui::IsWindowFocused() &&
+            if (!level.data().imgui.minimapHovered &&
+                ImGui::IsWindowFocused() &&
                 ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
                 mousePos.x >= chunkMin.x && mousePos.x < chunkMax.x &&
                 mousePos.y >= chunkMin.y && mousePos.y < chunkMax.y)
@@ -446,13 +450,15 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 
         bool fullAlpha = true;
         ImVec2 mousePos = ImGui::GetMousePos();
-        if (ImGui::IsWindowFocused() &&
+        if (!level.data().imgui.minimapHovered &&
+            ImGui::IsWindowFocused() &&
             ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
             ImGui::SetTooltip("%s", personInfo(person).c_str());
-        } else if (ImGui::IsWindowFocused() &&
+        } else if (!level.data().imgui.minimapHovered &&
+                   ImGui::IsWindowFocused() &&
                    ImGui::IsMouseDown(ImGuiMouseButton_Left))
         {
             fullAlpha = false;

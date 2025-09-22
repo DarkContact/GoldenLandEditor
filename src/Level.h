@@ -17,6 +17,8 @@ struct LevelImgui {
     ImVec2 minimapScrollTarget = ImVec2(0, 0);
     float minimapAnimTime = 0.0f;
 
+    bool minimapHovered = false;
+
     bool showMetaInfo = false;
     bool showMask = false;
     bool showPersons = true;
