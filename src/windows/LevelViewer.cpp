@@ -492,7 +492,8 @@ std::string LevelViewer::personInfo(const SEF_Person& person)
         person.scriptInventory.empty() ? std::string{}
                                        : std::format("inventory: {}", person.scriptInventory);
 
-    return std::format("index: {}\n"
+    return std::format("name: {}\n"
+                       "index: {}\n"
                        "direction: {}\n"
                        "routeType: {}\n"
                        "{}"
@@ -502,6 +503,7 @@ std::string LevelViewer::personInfo(const SEF_Person& person)
                        "tribe: {}\n"
                        "{}"
                        "{}",
+                       person.techName,
                        person.literaryNameIndex,
                        person.direction,
                        person.routeType,

@@ -14,10 +14,25 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
 
     std::string line;
     PersonParserContext personsCtx;
+    ParseSection currentSection = ParseSection::NONE;
     while (std::getline(file, line)) {
+
+        if (line == "persons:") {
+            currentSection = ParseSection::PERSONS;
+            continue;
+        } else if (line == "triggers:") {
+            currentSection = ParseSection::TRIGGERS;
+            continue;
+        } else if (line == "points_entrance:") {
+            currentSection = ParseSection::POINTS_ENTRANCE;
+            continue;
+        } else if (line == "}") {
+            currentSection = ParseSection::NONE;
+            continue;
+        }
         if (line.starts_with("pack:")) {
             m_data.pack = StringUtils::extractQuotedValue(line);
-        } else {
+        } else if (currentSection == ParseSection::PERSONS) {
             parsePersonLine(line, m_data, personsCtx);
         }
     }
@@ -52,57 +67,23 @@ RouteType SEF_Parser::parseRouteType(const std::string& type) {
 
 void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, PersonParserContext& ctx) {
     std::string line = StringUtils::trim(rawLine);
-    if (line.empty()) return;
-
-    // Начало секции
-    if (line == "persons:") {
-        ctx.currentSection = ParseSection::PERSONS;
-        ctx.sectionBraceDepth = 0;  // ожидаем открывающую скобку
-        return;
-    }
-
-    // Следим за открывающими и закрывающими скобками
-    if (line == "{") {
-        ctx.sectionBraceDepth++;
-        return;
-    }
+    if (line.empty() || line == "{" ) return;
 
     if (line == "}") {
-        // Закрытие блока персонажа
-        if (ctx.insidePersonBlock && ctx.currentSection == ParseSection::PERSONS) {
-            outData.persons.push_back(ctx.currentPerson);
-            ctx.currentPerson = SEF_Person();
-            ctx.insidePersonBlock = false;
-        }
-
-        ctx.sectionBraceDepth--;
-
-        // Выход из секции
-        if (ctx.sectionBraceDepth == 0) {
-            ctx.currentSection = ParseSection::NONE;
-        }
-
+        // Закрытие блока персонажа — сохраняем
+        outData.persons.push_back(ctx.currentPerson);
         return;
     }
 
-    // Если не в секции персонажей — выходим
-    if (ctx.currentSection != ParseSection::PERSONS)
-        return;
-
-    if (line.find("name:") == 0 && !ctx.insidePersonBlock) {
-        ctx.insidePersonBlock = true;
-        return;
-    }
-
-    // --- Обрезаем комментарий, если есть
+    // Удаление комментария
+    // TODO: Брать имя из sdb
     auto commentPos = line.find("//");
     if (commentPos != std::string::npos) {
         std::string comment = StringUtils::trim(line.substr(commentPos + 2));
         ctx.currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
         line = StringUtils::trim(line.substr(0, commentPos));
+        if (line.empty()) return;
     }
-
-    if (line.empty()) return;
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
@@ -110,7 +91,10 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, 
     std::string key = StringUtils::trim(line.substr(0, sepPos));
     std::string value = StringUtils::trim(line.substr(sepPos + 1));
 
-    if (key == "position") {
+    if (key == "name:") {
+        ctx.currentPerson = SEF_Person();  // Начинаем нового персонажа
+        ctx.currentPerson.techName = StringUtils::extractQuotedValue(value);
+    } else if (key == "position") {
         auto tokens = StringUtils::splitBySpaces(value);
         if (tokens.size() == 2) {
             ctx.currentPerson.position.x = std::stoi(tokens[0]);

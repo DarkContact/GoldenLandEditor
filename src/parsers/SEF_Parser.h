@@ -30,7 +30,7 @@ enum class RouteType {
 enum class ParseSection {
     NONE,
     PERSONS,
-    POINTS,
+    POINTS_ENTRANCE,
     CELL_GROUPS,
     TRIGGERS,
     DOORS
@@ -38,6 +38,7 @@ enum class ParseSection {
 
 struct SEF_Person {
     TilePosition position;
+    std::string techName;
     std::string literaryName;
     int literaryNameIndex = -1;
     std::string direction; // Direction
@@ -52,9 +53,6 @@ struct SEF_Person {
 };
 
 struct PersonParserContext {
-    ParseSection currentSection = ParseSection::NONE;
-    bool insidePersonBlock = false;
-    int sectionBraceDepth = 0;
     SEF_Person currentPerson;
 };
 
