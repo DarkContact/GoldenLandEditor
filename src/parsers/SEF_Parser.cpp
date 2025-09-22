@@ -119,9 +119,9 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, 
     } else if (key == "literary_name") {
         ctx.currentPerson.literaryNameIndex = std::stoi(value);
     } else if (key == "direction") {
-        ctx.currentPerson.direction = parseDirection(StringUtils::extractQuotedValue(value));
+        ctx.currentPerson.direction = StringUtils::extractQuotedValue(value);
     } else if (key == "route_type") {
-        ctx.currentPerson.routeType = parseRouteType(StringUtils::extractQuotedValue(value));
+        ctx.currentPerson.routeType = StringUtils::extractQuotedValue(value);
     } else if (key == "route") {
         ctx.currentPerson.route = StringUtils::extractQuotedValue(value);
     } else if (key == "radius") {

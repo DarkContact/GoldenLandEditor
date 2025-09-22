@@ -18,4 +18,6 @@ private:
     static void updateInfo(Level& level, ImVec2 drawPosition);
     static void drawMask(Level& level, ImVec2 drawPosition);
     static void drawPersons(Level& level, ImVec2 drawPosition);
+
+    static std::string personInfo(const SEF_Person& person);
 };

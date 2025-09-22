@@ -431,14 +431,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             mousePos.x >= position.x && mousePos.x < (position.x + tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + tileHeight))
         {
-            ImGui::SetTooltip("index: %d\n"
-                              "tribe: %s\n"
-                              "scr_dialog: %s\n"
-                              "scr_inv: %s",
-                              person.literaryNameIndex,
-                              person.tribe.c_str(),
-                              person.scriptDialog.c_str(),
-                              person.scriptInventory.c_str());
+            ImGui::SetTooltip("%s", personInfo(person).c_str());
         } else if (ImGui::IsWindowFocused() &&
                    ImGui::IsMouseDown(ImGuiMouseButton_Left))
         {
@@ -455,4 +448,40 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
         ImGui::SetCursorScreenPos(textPos);
         ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", person.literaryName.c_str());
     }
+}
+
+std::string LevelViewer::personInfo(const SEF_Person& person)
+{
+    std::string routeString =
+        person.route.empty() ? std::string{}
+                             : std::format("route: {}\n", person.route);
+
+    std::string dialogString =
+        person.scriptDialog.empty() ? std::string{}
+                                    : std::format("dialog: {}\n", person.scriptDialog);
+
+    std::string inventoryString =
+        person.scriptInventory.empty() ? std::string{}
+                                       : std::format("inventory: {}", person.scriptInventory);
+
+    return std::format("index: {}\n"
+                       "direction: {}\n"
+                       "routeType: {}\n"
+                       "{}"
+                       "radius: {}\n"
+                       "delayMin: {}\n"
+                       "delayMax: {}\n"
+                       "tribe: {}\n"
+                       "{}"
+                       "{}",
+                       person.literaryNameIndex,
+                       person.direction,
+                       person.routeType,
+                       routeString,
+                       person.radius,
+                       person.delayMin,
+                       person.delayMax,
+                       person.tribe,
+                       dialogString,
+                       inventoryString);
 }

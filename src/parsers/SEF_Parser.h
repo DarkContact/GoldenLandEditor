@@ -40,8 +40,8 @@ struct SEF_Person {
     TilePosition position;
     std::string literaryName;
     int literaryNameIndex = -1;
-    Direction direction;
-    RouteType routeType;
+    std::string direction; // Direction
+    std::string routeType; // RouteType
     std::string route;
     int radius = -1;
     int delayMin = -1;
