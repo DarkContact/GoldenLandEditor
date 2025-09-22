@@ -13,8 +13,9 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
     }
 
     std::string line;
-    PersonParserContext personsCtx;
     ParseSection currentSection = ParseSection::NONE;
+    SEF_Person currentPerson;
+    SEF_PointEntrance currentPoint;
     while (std::getline(file, line)) {
 
         if (line == "persons:") {
@@ -25,6 +26,12 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
             continue;
         } else if (line == "points_entrance:") {
             currentSection = ParseSection::POINTS_ENTRANCE;
+            continue;
+        } else if (line == "cell_groups:") {
+            currentSection = ParseSection::CELL_GROUPS;
+            continue;
+        } else if (line == "doors:") {
+            currentSection = ParseSection::DOORS;
             continue;
         } else if (line == "}") {
             currentSection = ParseSection::NONE;
@@ -44,7 +51,9 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
                 m_data.weather = std::stoi(getValue(line));
             }
         } else if (currentSection == ParseSection::PERSONS) {
-            parsePersonLine(line, m_data, personsCtx);
+            parsePersonLine(line, currentPerson);
+        } else if (currentSection == ParseSection::POINTS_ENTRANCE) {
+            parsePointEntranceLine(line, currentPoint);
         }
     }
 }
@@ -86,13 +95,13 @@ std::string SEF_Parser::getValue(const std::string& rawLine)
     return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
-void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, PersonParserContext& ctx) {
+void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Person& currentPerson) {
     std::string line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" ) return;
 
     if (line == "}") {
         // Закрытие блока персонажа — сохраняем
-        outData.persons.push_back(ctx.currentPerson);
+        m_data.persons.push_back(currentPerson);
         return;
     }
 
@@ -101,7 +110,7 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, 
     auto commentPos = line.find("//");
     if (commentPos != std::string::npos) {
         std::string comment = StringUtils::trim(line.substr(commentPos + 2));
-        ctx.currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
+        currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
         line = StringUtils::trim(line.substr(0, commentPos));
         if (line.empty()) return;
     }
@@ -113,33 +122,63 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, 
     std::string value = StringUtils::trim(line.substr(sepPos + 1));
 
     if (key == "name:") {
-        ctx.currentPerson = SEF_Person();  // Начинаем нового персонажа
-        ctx.currentPerson.techName = StringUtils::extractQuotedValue(value);
+        currentPerson = SEF_Person();  // Начинаем нового персонажа
+        currentPerson.techName = StringUtils::extractQuotedValue(value);
     } else if (key == "position") {
         auto tokens = StringUtils::splitBySpaces(value);
         if (tokens.size() == 2) {
-            ctx.currentPerson.position.x = std::stoi(tokens[0]);
-            ctx.currentPerson.position.y = std::stoi(tokens[1]);
+            currentPerson.position.x = std::stoi(tokens[0]);
+            currentPerson.position.y = std::stoi(tokens[1]);
         }
     } else if (key == "literary_name") {
-        ctx.currentPerson.literaryNameIndex = std::stoi(value);
+        currentPerson.literaryNameIndex = std::stoi(value);
     } else if (key == "direction") {
-        ctx.currentPerson.direction = StringUtils::extractQuotedValue(value);
+        currentPerson.direction = StringUtils::extractQuotedValue(value);
     } else if (key == "route_type") {
-        ctx.currentPerson.routeType = StringUtils::extractQuotedValue(value);
+        currentPerson.routeType = StringUtils::extractQuotedValue(value);
     } else if (key == "route") {
-        ctx.currentPerson.route = StringUtils::extractQuotedValue(value);
+        currentPerson.route = StringUtils::extractQuotedValue(value);
     } else if (key == "radius") {
-        ctx.currentPerson.radius = std::stoi(value);
+        currentPerson.radius = std::stoi(value);
     } else if (key == "delay_min") {
-        ctx.currentPerson.delayMin = std::stoi(value);
+        currentPerson.delayMin = std::stoi(value);
     } else if (key == "delay_max") {
-        ctx.currentPerson.delayMax = std::stoi(value);
+        currentPerson.delayMax = std::stoi(value);
     } else if (key == "tribe") {
-        ctx.currentPerson.tribe = StringUtils::extractQuotedValue(value);
+        currentPerson.tribe = StringUtils::extractQuotedValue(value);
     } else if (key == "scr_dialog") {
-        ctx.currentPerson.scriptDialog = StringUtils::extractQuotedValue(value);
+        currentPerson.scriptDialog = StringUtils::extractQuotedValue(value);
     } else if (key == "scr_inv") {
-        ctx.currentPerson.scriptInventory = StringUtils::extractQuotedValue(value);
+        currentPerson.scriptInventory = StringUtils::extractQuotedValue(value);
+    }
+}
+
+void SEF_Parser::parsePointEntranceLine(const std::string& rawLine, SEF_PointEntrance& currentPoint)
+{
+    std::string line = StringUtils::trim(rawLine);
+    if (line.empty() || line == "{" ) return;
+
+    if (line == "}") {
+        m_data.pointsEntrance.push_back(currentPoint);
+        return;
+    }
+
+    size_t sepPos = line.find_first_of("\t ");
+    if (sepPos == std::string::npos) return;
+
+    std::string key = StringUtils::trim(line.substr(0, sepPos));
+    std::string value = StringUtils::trim(line.substr(sepPos + 1));
+
+    if (key == "name:") {
+        currentPoint = SEF_PointEntrance();
+        currentPoint.techName = StringUtils::extractQuotedValue(value);
+    } else if (key == "position") {
+        auto tokens = StringUtils::splitBySpaces(value);
+        if (tokens.size() == 2) {
+            currentPoint.position.x = std::stoi(tokens[0]);
+            currentPoint.position.y = std::stoi(tokens[1]);
+        }
+    }  else if (key == "direction") {
+        currentPoint.direction = StringUtils::extractQuotedValue(value);
     }
 }

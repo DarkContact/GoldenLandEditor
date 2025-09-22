@@ -53,8 +53,10 @@ struct SEF_Person {
     std::string scriptInventory;
 };
 
-struct PersonParserContext {
-    SEF_Person currentPerson;
+struct SEF_PointEntrance {
+    TilePosition position;
+    std::string techName;
+    std::string direction; // Direction
 };
 
 struct SEF_Data {
@@ -64,6 +66,7 @@ struct SEF_Data {
     bool exitToGlobalMap = false;
     std::optional<int> weather;
     std::vector<SEF_Person> persons;
+    std::vector<SEF_PointEntrance> pointsEntrance;
 };
 
 class SEF_Parser
@@ -79,7 +82,8 @@ private:
 
     std::string getValue(const std::string& rawLine);
 
-    void parsePersonLine(const std::string& rawLine, SEF_Data& outData, PersonParserContext& ctx);
+    void parsePersonLine(const std::string& rawLine, SEF_Person& currentPerson);
+    void parsePointEntranceLine(const std::string& rawLine, SEF_PointEntrance& currentPoint);
 
     SEF_Data m_data;
 };

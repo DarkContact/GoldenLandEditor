@@ -25,6 +25,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Persons", "P", level.data().imgui.showPersons)) {
                 level.data().imgui.showPersons = !level.data().imgui.showPersons;
             }
+            if (ImGui::MenuItem("Entrance Points", "E", level.data().imgui.showEntrancePoints)) {
+                level.data().imgui.showEntrancePoints = !level.data().imgui.showEntrancePoints;
+            }
             ImGui::EndMenu();
         }
 
@@ -43,6 +46,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
         level.data().imgui.showPersons = !level.data().imgui.showPersons;
     }
+    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_E, false)) {
+        level.data().imgui.showEntrancePoints = !level.data().imgui.showEntrancePoints;
+    }
 
     // Отрисовка уровня
     ImVec2 startPos = ImGui::GetCursorScreenPos();
@@ -52,6 +58,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (level.data().imgui.showPersons)
     {
         drawPersons(level, startPos);
+    }
+
+    if (level.data().imgui.showEntrancePoints)
+    {
+        drawPointsEntrance(level, startPos);
     }
 
     if (level.data().imgui.showMask)
@@ -480,6 +491,41 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 
         ImGui::SetCursorScreenPos(textPos);
         ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", person.literaryName.c_str());
+    }
+}
+
+void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (const SEF_PointEntrance& pointEnt : level.data().sefData.pointsEntrance) {
+        ImVec2 position(drawPosition.x + pointEnt.position.x * Level::tileWidth,
+                        drawPosition.y + pointEnt.position.y * Level::tileHeight);
+
+        bool fullAlpha = true;
+        ImVec2 mousePos = ImGui::GetMousePos();
+        if (!level.data().imgui.minimapHovered &&
+            ImGui::IsWindowFocused() &&
+            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
+            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+        {
+            ImGui::SetTooltip("direction: %s", pointEnt.direction.c_str());
+        } else if (!level.data().imgui.minimapHovered &&
+                   ImGui::IsWindowFocused() &&
+                   ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            fullAlpha = false;
+        }
+
+        drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(204, 153, 204, fullAlpha ? 192 : 64));
+        drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+
+        const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
+        const ImVec2 textSize = ImGui::CalcTextSize(pointEnt.techName.c_str());
+        drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+
+        ImGui::SetCursorScreenPos(textPos);
+        ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.8f, fullAlpha ? 1.0f : 0.4f), "%s", pointEnt.techName.c_str());
     }
 }
 
