@@ -61,7 +61,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     ImRect minimapRect;
     if (level.data().imgui.showMinimap) {
-        updateMinimap(level, minimapRect);
+        const ImRect levelRect(startPos, {startPos.x + level.data().background->w, startPos.y + level.data().background->h});
+        drawMinimap(level, levelRect, minimapRect);
         minimapRect.Max.y += 16.0f;
     } else {
         ImVec2 minimapSize = {200.0f, 0.0f};
@@ -73,7 +74,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     if (level.data().imgui.showMetaInfo)
     {
-        updateInfo(level, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+        drawInfo(level, {minimapRect.GetBL().x, minimapRect.GetBL().y});
     }
 
     ImGui::End();
@@ -109,12 +110,27 @@ ImVec2 LevelViewer::computeMinimapPosition(const Level& level, ImVec2 minimapSiz
                   windowPos.y + titleBarHeight + menuBarHeight + offset);
 }
 
-void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
+ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& sourceRect, const ImRect& targetRect)
+{
+    ImVec2 normalized;
+    normalized.x = (pointInSource.x - sourceRect.Min.x) / (sourceRect.Max.x - sourceRect.Min.x);
+    normalized.y = (pointInSource.y - sourceRect.Min.y) / (sourceRect.Max.y - sourceRect.Min.y);
+
+    ImVec2 pointInTarget;
+    pointInTarget.x = targetRect.Min.x + normalized.x * (targetRect.Max.x - targetRect.Min.x);
+    pointInTarget.y = targetRect.Min.y + normalized.y * (targetRect.Max.y - targetRect.Min.y);
+
+    return pointInTarget;
+}
+
+void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect)
 {
     bool hasMinimap = (level.data().minimap != nullptr);
 
     const ImVec2 minimapSize = computeMinimapSize(level, hasMinimap);
     const ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+    minimapRect = ImRect(minimapPosition, ImVec2(minimapPosition.x + minimapSize.x, minimapPosition.y + minimapSize.y));
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     // Миникарта и белая обводка
     {
@@ -129,6 +145,18 @@ void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
 
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
+
+        // Отрисовка персонажей на миникарте
+        if (level.data().imgui.showPersons) {
+            for (const SEF_Person& person : level.data().sefData.persons) {
+                ImVec2 position(levelRect.Min.x + person.position.x * Level::tileWidth,
+                                levelRect.Min.y + person.position.y * Level::tileHeight);
+
+                ImVec2 minimapPosition = transformPoint(position, levelRect, minimapRect);
+                drawList->AddCircleFilled(minimapPosition, 2.0f, IM_COL32(255, 228, 0, 220));
+                drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 128));
+            }
+        }
     }
 
     // Рисуем рамку области видимости и обрабатываем drag / клик
@@ -150,7 +178,6 @@ void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
 
         ImGuiIO& io = ImGui::GetIO();
         ImRect viewRect(viewTopLeft, viewBottomRight);
-        minimapRect = ImRect(minimapPosition, ImVec2(minimapPosition.x + minimapSize.x, minimapPosition.y + minimapSize.y));
 
         auto& imgui = level.data().imgui;
 
@@ -231,47 +258,45 @@ void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
             float cornerLengthX = (size.x - gapW) * 0.5f;
             float cornerLengthY = (size.y - gapH) * 0.5f;
 
-            ImDrawList* draw = ImGui::GetWindowDrawList();
-
             // Top-left
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 viewTopLeft,
                 ImVec2(viewTopLeft.x + cornerLengthX, viewTopLeft.y + thickness),
                 opaque, transparent, transparent, opaque);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 viewTopLeft,
                 ImVec2(viewTopLeft.x + thickness, viewTopLeft.y + cornerLengthY),
                 opaque, opaque, transparent, transparent);
 
             // Top-right
             ImVec2 topRight = ImVec2(viewBottomRight.x, viewTopLeft.y);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 ImVec2(topRight.x - cornerLengthX, topRight.y),
                 ImVec2(topRight.x, topRight.y + thickness),
                 transparent, opaque, opaque, transparent);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 topRight,
                 ImVec2(topRight.x + thickness, topRight.y + cornerLengthY),
                 opaque, opaque, transparent, transparent);
 
             // Bottom-left
             ImVec2 bottomLeft = ImVec2(viewTopLeft.x, viewBottomRight.y);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 ImVec2(bottomLeft.x, bottomLeft.y - thickness),
                 ImVec2(bottomLeft.x + cornerLengthX, bottomLeft.y),
                 opaque, transparent, transparent, opaque);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 ImVec2(bottomLeft.x, bottomLeft.y - cornerLengthY),
                 ImVec2(bottomLeft.x + thickness, bottomLeft.y),
                 transparent, transparent, opaque, opaque);
 
             // Bottom-right
             ImVec2 bottomRight = viewBottomRight;
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 ImVec2(bottomRight.x - cornerLengthX, bottomRight.y - thickness),
                 ImVec2(bottomRight.x, bottomRight.y),
                 transparent, opaque, opaque, transparent);
-            draw->AddRectFilledMultiColor(
+            drawList->AddRectFilledMultiColor(
                 ImVec2(bottomRight.x, bottomRight.y - cornerLengthY),
                 ImVec2(bottomRight.x + thickness, bottomRight.y),
                 transparent, transparent, opaque, opaque);
@@ -279,7 +304,7 @@ void LevelViewer::updateMinimap(Level& level, ImRect& minimapRect)
     }
 }
 
-void LevelViewer::updateInfo(Level& level, ImVec2 drawPosition)
+void LevelViewer::drawInfo(Level& level, ImVec2 drawPosition)
 {
     auto infoMessage =
         std::format("Size: {}x{}\n"
@@ -319,8 +344,6 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
     ImGui::SetCursorScreenPos(drawPosition);
 
-    const int tileWidth = 12;
-    const int tileHeight = 9;
     const int chunkSize = 2; // 2x2 tiles per chunk
 
     const int chunksPerColumn = static_cast<int>(maskHDR.height);
@@ -331,8 +354,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
                             clipMin.y + ImGui::GetContentRegionAvail().y);
 
-    const int chunkPixelWidth = chunkSize * tileWidth;
-    const int chunkPixelHeight = chunkSize * tileHeight;
+    const int chunkPixelWidth = chunkSize * Level::tileWidth;
+    const int chunkPixelHeight = chunkSize * Level::tileHeight;
 
     // Вычисляем диапазон видимых чанков
     int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / chunkPixelWidth));
@@ -356,11 +379,11 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
                 const MHDRTile& tile = chunk[tileIndex];
 
-                int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * tileWidth;
-                int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * tileHeight;
+                int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * Level::tileWidth;
+                int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * Level::tileHeight;
 
                 ImVec2 p0 = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
-                ImVec2 p1 = ImVec2(p0.x + tileWidth, p0.y + tileHeight);
+                ImVec2 p1 = ImVec2(p0.x + Level::tileWidth, p0.y + Level::tileHeight);
 
                 ImU32 color;
                 if (tile.maskNumber <= 1000) {
@@ -417,19 +440,16 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    const int tileWidth = 12;
-    const int tileHeight = 9;
     for (const SEF_Person& person : level.data().sefData.persons) {
-        ImVec2 position;
-        position.x = drawPosition.x + person.position.x * tileWidth;
-        position.y = drawPosition.y + person.position.y * tileHeight;
+        ImVec2 position(drawPosition.x + person.position.x * Level::tileWidth,
+                        drawPosition.y + person.position.y * Level::tileHeight);
 
         bool fullAlpha = true;
         ImVec2 mousePos = ImGui::GetMousePos();
         if (ImGui::IsWindowFocused() &&
             ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-            mousePos.x >= position.x && mousePos.x < (position.x + tileWidth) &&
-            mousePos.y >= position.y && mousePos.y < (position.y + tileHeight))
+            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
+            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
             ImGui::SetTooltip("%s", personInfo(person).c_str());
         } else if (ImGui::IsWindowFocused() &&
@@ -438,10 +458,10 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             fullAlpha = false;
         }
 
-        drawList->AddRectFilled(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
-        drawList->AddRect(position, {position.x + tileWidth, position.y + tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
+        drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
 
-        const ImVec2 textPos = {position.x + tileWidth + 2.0f, position.y + 4.0f};
+        const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
         const ImVec2 textSize = ImGui::CalcTextSize(person.literaryName.c_str());
         drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
 

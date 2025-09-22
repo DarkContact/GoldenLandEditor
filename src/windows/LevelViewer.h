@@ -13,9 +13,10 @@ public:
 private:
     static ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);
     static ImVec2 computeMinimapPosition(const Level& level, ImVec2 minimapSize);
+    static ImVec2 transformPoint(const ImVec2& pointInSource, const ImRect& sourceRect, const ImRect& targetRect);
 
-    static void updateMinimap(Level& level, ImRect& minimapRect);
-    static void updateInfo(Level& level, ImVec2 drawPosition);
+    static void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
+    static void drawInfo(Level& level, ImVec2 drawPosition);
     static void drawMask(Level& level, ImVec2 drawPosition);
     static void drawPersons(Level& level, ImVec2 drawPosition);
 
