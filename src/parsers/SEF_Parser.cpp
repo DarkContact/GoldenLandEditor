@@ -30,8 +30,19 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
             currentSection = ParseSection::NONE;
             continue;
         }
-        if (line.starts_with("pack:")) {
-            m_data.pack = StringUtils::extractQuotedValue(line);
+
+        if (currentSection == ParseSection::NONE) {
+            if (line.starts_with("version:")) {
+                m_data.version = getValue(line);
+            } else if (line.starts_with("pack:")) {
+                m_data.pack = StringUtils::extractQuotedValue(line);
+            } else if (line.starts_with("internal_location:")) {
+                m_data.internalLocation = (getValue(line) == "1");
+            } else if (line.starts_with("exit_to_globalmap:")) {
+                m_data.exitToGlobalMap = (getValue(line) == "1");
+            } else if (line.starts_with("weather:")) {
+                m_data.weather = std::stoi(getValue(line));
+            }
         } else if (currentSection == ParseSection::PERSONS) {
             parsePersonLine(line, m_data, personsCtx);
         }
@@ -63,6 +74,16 @@ RouteType SEF_Parser::parseRouteType(const std::string& type) {
     if (type == "MOVED") return RouteType::MOVED;
     if (type == "RANDOM") return RouteType::RANDOM;
     throw std::runtime_error("Unknown route type: " + type);
+}
+
+std::string SEF_Parser::getValue(const std::string& rawLine)
+{
+    size_t sepPos = rawLine.find_first_of("\t ");
+    if (sepPos == std::string::npos) {
+        return {};
+    }
+
+    return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
 void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Data& outData, PersonParserContext& ctx) {

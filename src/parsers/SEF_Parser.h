@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,7 +58,11 @@ struct PersonParserContext {
 };
 
 struct SEF_Data {
+    std::string version;
     std::string pack;
+    bool internalLocation = false;
+    bool exitToGlobalMap = false;
+    std::optional<int> weather;
     std::vector<SEF_Person> persons;
 };
 
@@ -71,6 +76,8 @@ public:
 private:
     Direction parseDirection(const std::string& dir);
     RouteType parseRouteType(const std::string& type);
+
+    std::string getValue(const std::string& rawLine);
 
     void parsePersonLine(const std::string& rawLine, SEF_Data& outData, PersonParserContext& ctx);
 

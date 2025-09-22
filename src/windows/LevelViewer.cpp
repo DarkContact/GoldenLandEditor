@@ -311,12 +311,17 @@ void LevelViewer::drawInfo(Level& level, ImVec2 drawPosition)
     auto infoMessage =
         std::format("Size: {}x{}\n"
                     "Pack: {}\n"
+                    "Internal location: {}\n"
+                    "Exit to global map: {}\n"
+                    "\n"
                     "Big cells: {}x{}\n"
                     "Animations count: {}\n"
                     "Triggers count: {}\n"
                     "Floors: {}",
                     level.data().background->w, level.data().background->h,
                     level.data().sefData.pack,
+                    level.data().sefData.internalLocation,
+                    level.data().sefData.exitToGlobalMap,
                     level.data().lvlData.mapData.width, level.data().lvlData.mapData.height,
                     level.data().lvlData.animationDescriptions.size(),
                     level.data().lvlData.triggerDescription.size(),
