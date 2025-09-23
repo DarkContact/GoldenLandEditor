@@ -19,6 +19,10 @@ struct LevelImgui {
 
     bool minimapHovered = false;
 
+    bool draggingLevel = false;
+    ImVec2 dragStartPos;
+    ImVec2 scrollStart;
+
     bool showMetaInfo = false;
     bool showMask = false;
     bool showPersons = true;

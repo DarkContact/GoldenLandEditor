@@ -54,6 +54,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background, ImVec2(level.data().background->w, level.data().background->h));
 
+    handleLevelDragScroll(level);
+
     // Отрисовка персонажей
     if (level.data().imgui.showPersons)
     {
@@ -133,6 +135,49 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
     pointInTarget.y = targetRect.Min.y + normalized.y * (targetRect.Max.y - targetRect.Min.y);
 
     return pointInTarget;
+}
+
+void LevelViewer::handleLevelDragScroll(Level& level) {
+    ImGuiIO& io = ImGui::GetIO();
+    auto& imgui = level.data().imgui;
+    if (!ImGui::IsWindowFocused()) {
+        imgui.draggingLevel = false;
+        return;
+    }
+
+    const bool isShiftLMB = io.KeyShift && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+    const bool isMMB = ImGui::IsMouseClicked(ImGuiMouseButton_Middle);
+
+    // Начало перетаскивания по уровню
+    if (!imgui.draggingLevel && (isShiftLMB || isMMB)) {
+        imgui.draggingLevel = true;
+        imgui.dragStartPos = io.MousePos;
+        imgui.scrollStart = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+    }
+
+    // Завершение перетаскивания
+    if (imgui.draggingLevel &&
+        !(ImGui::IsMouseDown(ImGuiMouseButton_Middle) || (io.KeyShift && ImGui::IsMouseDown(ImGuiMouseButton_Left)))) {
+        imgui.draggingLevel = false;
+    }
+
+    // Обработка перемещения
+    if (imgui.draggingLevel) {
+        ImVec2 delta = ImVec2(io.MousePos.x - imgui.dragStartPos.x,
+                              io.MousePos.y - imgui.dragStartPos.y);
+
+        float newScrollX = imgui.scrollStart.x - delta.x;
+        float newScrollY = imgui.scrollStart.y - delta.y;
+
+        float maxScrollX = (float)level.data().background->w;
+        float maxScrollY = (float)level.data().background->h;
+
+        newScrollX = ImClamp(newScrollX, 0.0f, ImMax(0.0f, maxScrollX));
+        newScrollY = ImClamp(newScrollY, 0.0f, ImMax(0.0f, maxScrollY));
+
+        ImGui::SetScrollX(newScrollX);
+        ImGui::SetScrollY(newScrollY);
+    }
 }
 
 void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect)
