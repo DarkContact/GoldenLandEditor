@@ -82,8 +82,8 @@ private:
 
     std::string getValue(const std::string& rawLine);
 
-    void parsePersonLine(const std::string& rawLine, SEF_Person& currentPerson);
-    void parsePointEntranceLine(const std::string& rawLine, SEF_PointEntrance& currentPoint);
+    void parsePersonLine(const std::string& rawLine);
+    void parsePointEntranceLine(const std::string& rawLine);
 
     SEF_Data m_data;
 };

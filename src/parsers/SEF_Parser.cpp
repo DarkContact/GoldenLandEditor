@@ -1,7 +1,6 @@
 #include "SEF_Parser.h"
 
 #include <fstream>
-#include <iostream>
 
 #include "StringUtils.h"
 
@@ -14,8 +13,6 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
 
     std::string line;
     ParseSection currentSection = ParseSection::NONE;
-    SEF_Person currentPerson;
-    SEF_PointEntrance currentPoint;
     while (std::getline(file, line)) {
 
         if (line == "persons:") {
@@ -51,9 +48,9 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
                 m_data.weather = std::stoi(getValue(line));
             }
         } else if (currentSection == ParseSection::PERSONS) {
-            parsePersonLine(line, currentPerson);
+            parsePersonLine(line);
         } else if (currentSection == ParseSection::POINTS_ENTRANCE) {
-            parsePointEntranceLine(line, currentPoint);
+            parsePointEntranceLine(line);
         }
     }
 }
@@ -95,21 +92,17 @@ std::string SEF_Parser::getValue(const std::string& rawLine)
     return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
-void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Person& currentPerson) {
+void SEF_Parser::parsePersonLine(const std::string& rawLine) {
     std::string line = StringUtils::trim(rawLine);
-    if (line.empty() || line == "{" ) return;
+    if (line.empty() || line == "{" || line == "}") return;
 
-    if (line == "}") {
-        // Закрытие блока персонажа — сохраняем
-        m_data.persons.push_back(currentPerson);
-        return;
-    }
+    SEF_Person& currentPerson = m_data.persons.back();
 
     // Удаление комментария
-    // TODO: Брать имя из sdb
     auto commentPos = line.find("//");
     if (commentPos != std::string::npos) {
         std::string comment = StringUtils::trim(line.substr(commentPos + 2));
+        // TODO: Брать имя из sdb
         currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
         line = StringUtils::trim(line.substr(0, commentPos));
         if (line.empty()) return;
@@ -122,8 +115,9 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Person& current
     std::string value = StringUtils::trim(line.substr(sepPos + 1));
 
     if (key == "name:") {
-        currentPerson = SEF_Person();  // Начинаем нового персонажа
-        currentPerson.techName = StringUtils::extractQuotedValue(value);
+        SEF_Person newPerson;
+        newPerson.techName = StringUtils::extractQuotedValue(value);
+        m_data.persons.push_back(newPerson);
     } else if (key == "position") {
         auto tokens = StringUtils::splitBySpaces(value);
         if (tokens.size() == 2) {
@@ -153,15 +147,12 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine, SEF_Person& current
     }
 }
 
-void SEF_Parser::parsePointEntranceLine(const std::string& rawLine, SEF_PointEntrance& currentPoint)
+void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
 {
     std::string line = StringUtils::trim(rawLine);
-    if (line.empty() || line == "{" ) return;
+    if (line.empty() || line == "{" || line == "}") return;
 
-    if (line == "}") {
-        m_data.pointsEntrance.push_back(currentPoint);
-        return;
-    }
+    SEF_PointEntrance& currentPoint = m_data.pointsEntrance.back();
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
@@ -170,8 +161,9 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine, SEF_PointEnt
     std::string value = StringUtils::trim(line.substr(sepPos + 1));
 
     if (key == "name:") {
-        currentPoint = SEF_PointEntrance();
-        currentPoint.techName = StringUtils::extractQuotedValue(value);
+        SEF_PointEntrance newPoint;
+        newPoint.techName = StringUtils::extractQuotedValue(value);
+        m_data.pointsEntrance.push_back(newPoint);
     } else if (key == "position") {
         auto tokens = StringUtils::splitBySpaces(value);
         if (tokens.size() == 2) {

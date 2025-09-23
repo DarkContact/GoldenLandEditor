@@ -137,6 +137,7 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
     return pointInTarget;
 }
 
+// TODO: Добавить проверку что курсор мыши в активной области уровня
 void LevelViewer::handleLevelDragScroll(Level& level) {
     ImGuiIO& io = ImGui::GetIO();
     auto& imgui = level.data().imgui;
