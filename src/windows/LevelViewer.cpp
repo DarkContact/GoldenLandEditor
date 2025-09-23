@@ -509,7 +509,10 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGui::SetTooltip("direction: %s", pointEnt.direction.c_str());
+            ImGui::SetTooltip("position: %dx%d\n"
+                              "direction: %s",
+                              pointEnt.position.x, pointEnt.position.y,
+                              pointEnt.direction.c_str());
         } else if (!level.data().imgui.minimapHovered &&
                    ImGui::IsWindowFocused() &&
                    ImGui::IsMouseDown(ImGuiMouseButton_Left))
@@ -544,6 +547,7 @@ std::string LevelViewer::personInfo(const SEF_Person& person)
                                        : std::format("inventory: {}", person.scriptInventory);
 
     return std::format("name: {}\n"
+                       "position: {}x{}\n"
                        "index: {}\n"
                        "direction: {}\n"
                        "routeType: {}\n"
@@ -555,6 +559,7 @@ std::string LevelViewer::personInfo(const SEF_Person& person)
                        "{}"
                        "{}",
                        person.techName,
+                       person.position.x, person.position.y,
                        person.literaryNameIndex,
                        person.direction,
                        person.routeType,
