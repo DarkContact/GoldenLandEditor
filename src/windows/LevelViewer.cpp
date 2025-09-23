@@ -595,8 +595,27 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     for (const SEF_CellGroup& group : level.data().sefData.cellGroups) {
+        if (group.cells.empty()) break;
+
+        const TilePosition* leftCell = &group.cells.front();
+        const TilePosition* rightCell = &group.cells.front();
+        const TilePosition* upCell = &group.cells.front();
+        const TilePosition* downCell = &group.cells.front();
+
         for (int i = 0; i < group.cells.size(); ++i) {
-            TilePosition cellPosition = group.cells[i];
+            const TilePosition& cellPosition = group.cells[i];
+
+            if (cellPosition.x < leftCell->x) {
+                leftCell = &cellPosition;
+            } else if (cellPosition.x > rightCell->x) {
+                rightCell = &cellPosition;
+            }
+
+            if (cellPosition.y < upCell->y) {
+                upCell = &cellPosition;
+            } else if (cellPosition.y > downCell->y) {
+                downCell = &cellPosition;
+            }
 
             ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
                             drawPosition.y + cellPosition.y * Level::tileHeight);
@@ -625,6 +644,12 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
             drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(51, 255, 204, fullAlpha ? 192 : 64));
             drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
         }
+
+        ImVec2 boxUpLeft(drawPosition.x + leftCell->x * Level::tileWidth,
+                          drawPosition.y + upCell->y * Level::tileHeight);
+        ImVec2 boxDownRight(drawPosition.x + rightCell->x * Level::tileWidth + Level::tileWidth,
+                            drawPosition.y + downCell->y * Level::tileHeight + Level::tileHeight);
+        drawList->AddRect(boxUpLeft, boxDownRight, IM_COL32(0, 0, 0, 220), 0.0f, 0, 2.0f);
     }
 }
 
