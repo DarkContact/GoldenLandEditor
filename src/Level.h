@@ -27,6 +27,7 @@ struct LevelImgui {
     bool showMask = false;
     bool showPersons = true;
     bool showEntrancePoints = true;
+    bool showCellGroups = false;
 };
 
 struct LevelData {

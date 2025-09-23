@@ -25,8 +25,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Persons", "P", level.data().imgui.showPersons)) {
                 level.data().imgui.showPersons = !level.data().imgui.showPersons;
             }
-            if (ImGui::MenuItem("Entrance Points", "E", level.data().imgui.showEntrancePoints)) {
+            if (ImGui::MenuItem("Entrance points", "E", level.data().imgui.showEntrancePoints)) {
                 level.data().imgui.showEntrancePoints = !level.data().imgui.showEntrancePoints;
+            }
+            if (ImGui::MenuItem("Cells groups", "C", level.data().imgui.showCellGroups)) {
+                level.data().imgui.showCellGroups = !level.data().imgui.showCellGroups;
             }
             ImGui::EndMenu();
         }
@@ -34,20 +37,25 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         ImGui::EndMenuBar();
     }
 
-    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
-        level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
-    }
-    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_I, false)) {
-        level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
-    }
-    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
-        level.data().imgui.showMask = !level.data().imgui.showMask;
-    }
-    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
-        level.data().imgui.showPersons = !level.data().imgui.showPersons;
-    }
-    if (ImGui::IsWindowFocused() && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_E, false)) {
-        level.data().imgui.showEntrancePoints = !level.data().imgui.showEntrancePoints;
+    if (ImGui::IsWindowFocused()) {
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
+            level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_I, false)) {
+            level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
+            level.data().imgui.showMask = !level.data().imgui.showMask;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
+            level.data().imgui.showPersons = !level.data().imgui.showPersons;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_E, false)) {
+            level.data().imgui.showEntrancePoints = !level.data().imgui.showEntrancePoints;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_C, false)) {
+            level.data().imgui.showCellGroups = !level.data().imgui.showCellGroups;
+        }
     }
 
     // Отрисовка уровня
@@ -65,6 +73,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     if (level.data().imgui.showEntrancePoints)
     {
         drawPointsEntrance(level, startPos);
+    }
+
+    if (level.data().imgui.showCellGroups)
+    {
+        drawCellGroups(level, startPos);
     }
 
     if (level.data().imgui.showMask)
@@ -575,6 +588,43 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 
         ImGui::SetCursorScreenPos(textPos);
         ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.8f, fullAlpha ? 1.0f : 0.4f), "%s", pointEnt.techName.c_str());
+    }
+}
+
+void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (const SEF_CellGroup& group : level.data().sefData.cellGroups) {
+        for (int i = 0; i < group.cells.size(); ++i) {
+            TilePosition cellPosition = group.cells[i];
+
+            ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
+                            drawPosition.y + cellPosition.y * Level::tileHeight);
+
+            bool fullAlpha = true;
+            ImVec2 mousePos = ImGui::GetMousePos();
+            if (!level.data().imgui.minimapHovered &&
+                ImGui::IsWindowFocused() &&
+                ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+                mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
+                mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+            {
+                ImGui::SetTooltip("position: %dx%d\n"
+                                  "group: %s\n"
+                                  "name: cell_%02d",
+                                  cellPosition.x, cellPosition.y,
+                                  group.techName.c_str(),
+                                  i);
+            } else if (!level.data().imgui.minimapHovered &&
+                       ImGui::IsWindowFocused() &&
+                       ImGui::IsMouseDown(ImGuiMouseButton_Left))
+            {
+                fullAlpha = false;
+            }
+
+            drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(51, 255, 204, fullAlpha ? 192 : 64));
+            drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        }
     }
 }
 

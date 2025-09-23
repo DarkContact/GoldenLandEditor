@@ -18,14 +18,14 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
         if (line == "persons:") {
             currentSection = ParseSection::PERSONS;
             continue;
-        } else if (line == "triggers:") {
-            currentSection = ParseSection::TRIGGERS;
-            continue;
         } else if (line == "points_entrance:") {
             currentSection = ParseSection::POINTS_ENTRANCE;
             continue;
         } else if (line == "cell_groups:") {
             currentSection = ParseSection::CELL_GROUPS;
+            continue;
+        } else if (line == "triggers:") {
+            currentSection = ParseSection::TRIGGERS;
             continue;
         } else if (line == "doors:") {
             currentSection = ParseSection::DOORS;
@@ -51,6 +51,8 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
             parsePersonLine(line);
         } else if (currentSection == ParseSection::POINTS_ENTRANCE) {
             parsePointEntranceLine(line);
+        } else if (currentSection == ParseSection::CELL_GROUPS) {
+            parseCellGroupLine(line);
         }
     }
 }
@@ -172,5 +174,33 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
         }
     }  else if (key == "direction") {
         currentPoint.direction = StringUtils::extractQuotedValue(value);
+    }
+}
+
+void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
+{
+    std::string line = StringUtils::trim(rawLine);
+    if (line.empty() || line == "{" || line == "}") return;
+
+    SEF_CellGroup& currentGroup = m_data.cellGroups.back();
+
+    size_t sepPos = line.find_first_of("\t ");
+    if (sepPos == std::string::npos) return;
+
+    std::string key = StringUtils::trim(line.substr(0, sepPos));
+    std::string value = StringUtils::trim(line.substr(sepPos + 1));
+
+    if (key == "name:") {
+        SEF_CellGroup newGroup;
+        newGroup.techName = StringUtils::extractQuotedValue(value);
+        m_data.cellGroups.push_back(newGroup);
+    } else if (key.starts_with("cell")) {
+        auto tokens = StringUtils::splitBySpaces(value);
+        if (tokens.size() == 2) {
+            TilePosition position;
+            position.x = std::stoi(tokens[0]);
+            position.y = std::stoi(tokens[1]);
+            currentGroup.cells.push_back(position);
+        }
     }
 }
