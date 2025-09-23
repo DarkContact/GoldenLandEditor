@@ -1,3 +1,5 @@
+#include <atomic>
+#include <future>
 #include <stdio.h>
 
 #include <SDL3/SDL.h>
@@ -10,11 +12,14 @@
 
 #include "Level.h"
 #include "Resources.h"
+#include "ImguiHelper.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
 #include "windows/LevelViewer.h"
 #include "windows/CsxViewer.h"
 #include "windows/SdbViewer.h"
+
+std::atomic_bool backgroundWork = false;
 
 int main(int, char**)
 {
@@ -42,11 +47,21 @@ int main(int, char**)
 
     Resources resources(resourcesRootDirectory);
     auto levelNames = resources.levelNames();
-    auto csxFiles = resources.filesWithExtension(".csx");
-    auto sdbFiles = resources.filesWithExtension(".sdb");
+    std::vector<std::string> csxFiles;
+    std::vector<std::string> sdbFiles;
+
+    auto backgroundTask = [resourcesRootDirectory] (std::vector<std::string>& csxFiles, std::vector<std::string>& sdbFiles) {
+        backgroundWork = true;
+        Resources resources(resourcesRootDirectory);
+        auto levelNames = resources.levelNames();
+        csxFiles = resources.filesWithExtension(".csx");
+        sdbFiles = resources.filesWithExtension(".sdb");
+        backgroundWork = false;
+    };
+    auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(csxFiles), std::ref(sdbFiles));
 
     // Setup SDL
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
         printf("Error: SDL_Init(): %s\n", SDL_GetError());
         return -1;
@@ -142,6 +157,10 @@ int main(int, char**)
         static bool show_levels_window = false;
         static bool show_csx_window = false;
         static bool show_sdb_window = false;
+
+        static bool loaderWindow = false;
+        loaderWindow = backgroundWork;
+        ImguiHelper::Loader("Loading...", loaderWindow);
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
