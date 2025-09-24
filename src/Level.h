@@ -28,6 +28,8 @@ struct LevelImgui {
     bool showPersons = true;
     bool showEntrancePoints = true;
     bool showCellGroups = false;
+
+    std::optional<int> highlightCellGroudIndex;
 };
 
 struct LevelData {

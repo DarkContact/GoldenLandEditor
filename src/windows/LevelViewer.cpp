@@ -597,8 +597,14 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     auto drawListFlags = drawList->Flags;
     drawList->Flags = ImDrawListFlags_None;
 
-    for (const SEF_CellGroup& group : level.data().sefData.cellGroups) {
+    for (int groupIndex = 0; groupIndex < level.data().sefData.cellGroups.size(); ++groupIndex) {
+        const SEF_CellGroup& group = level.data().sefData.cellGroups[groupIndex];
         if (group.cells.empty()) break;
+
+        bool fullAlpha = true;
+        if (level.data().imgui.highlightCellGroudIndex) {
+            fullAlpha = level.data().imgui.highlightCellGroudIndex == groupIndex;
+        }
 
         std::vector<ImVec2> centers;
         for (int i = 0; i < group.cells.size(); ++i) {
@@ -609,15 +615,14 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 
             centers.push_back({position.x + Level::tileWidth / 2, position.y + Level::tileHeight / 2});
         }
-        drawList->AddPolyline(&centers[0], centers.size(), IM_COL32(0, 0, 0, 180), 0, 2.0f);
+        drawList->AddPolyline(&centers[0], centers.size(), IM_COL32(0, 0, 0, fullAlpha ? 180 : 64), 0, 2.0f);
 
-        for (int i = 0; i < group.cells.size(); ++i) {
-            const TilePosition& cellPosition = group.cells[i];
+        for (int cellIndex = 0; cellIndex < group.cells.size(); ++cellIndex) {
+            const TilePosition& cellPosition = group.cells[cellIndex];
 
             ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
                             drawPosition.y + cellPosition.y * Level::tileHeight);
 
-            bool fullAlpha = true;
             ImVec2 mousePos = ImGui::GetMousePos();
             if (!level.data().imgui.minimapHovered &&
                 ImGui::IsWindowFocused() &&
@@ -630,12 +635,14 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
                                   "name: cell_%02d",
                                   cellPosition.x, cellPosition.y,
                                   group.techName.c_str(),
-                                  i);
-            } else if (!level.data().imgui.minimapHovered &&
-                       ImGui::IsWindowFocused() &&
-                       ImGui::IsMouseDown(ImGuiMouseButton_Left))
+                                  cellIndex);
+
+                level.data().imgui.highlightCellGroudIndex = groupIndex;
+            }
+
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
-                fullAlpha = false;
+                level.data().imgui.highlightCellGroudIndex = std::nullopt;
             }
 
             drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(51, 255, 204, fullAlpha ? 192 : 64));
