@@ -17,7 +17,7 @@ private:
 
     static void handleLevelDragScroll(Level& level);
     static void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
-    static void drawInfo(Level& level, ImVec2 drawPosition);
+    static void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
     static void drawMask(Level& level, ImVec2 drawPosition);
     static void drawPersons(Level& level, ImVec2 drawPosition);
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);

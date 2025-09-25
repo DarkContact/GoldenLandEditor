@@ -100,8 +100,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     }
 
     ImRect minimapRect;
+    const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
+                                      startPos.y + level.data().background->h});
     if (level.data().imgui.showMinimap) {
-        const ImRect levelRect(startPos, {startPos.x + level.data().background->w, startPos.y + level.data().background->h});
         drawMinimap(level, levelRect, minimapRect);
         minimapRect.Max.y += 16.0f;
     } else {
@@ -115,7 +116,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     if (level.data().imgui.showMetaInfo)
     {
-        drawInfo(level, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+        drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
     }
 
     ImGui::End();
@@ -390,8 +391,14 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
     }
 }
 
-void LevelViewer::drawInfo(Level& level, ImVec2 drawPosition)
+void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition)
 {
+    std::string mouseOnLevelInfo = "None";
+    if (levelRect.Contains(ImGui::GetMousePos())) {
+        ImVec2 mouseOnLevel = transformPoint(ImGui::GetMousePos(), levelRect, {ImVec2(0, 0), ImVec2(level.data().background->w, level.data().background->h)});
+        mouseOnLevelInfo = std::format("{}x{}", (int)mouseOnLevel.x, (int)mouseOnLevel.y);
+    }
+
     auto infoMessage =
         std::format("Size: {}x{}\n"
                     "Pack: {}\n"
@@ -403,7 +410,9 @@ void LevelViewer::drawInfo(Level& level, ImVec2 drawPosition)
                     "Statics: {}\n"
                     "Animations: {}\n"
                     "Triggers: {}\n"
-                    "Floors: {}",
+                    "Floors: {}\n"
+                    "\n"
+                    "Mouse on level: {}",
                     level.data().background->w, level.data().background->h,
                     level.data().sefData.pack,
                     level.data().sefData.internalLocation,
@@ -413,7 +422,8 @@ void LevelViewer::drawInfo(Level& level, ImVec2 drawPosition)
                     level.data().lvlData.staticDescriptions.size(),
                     level.data().lvlData.animationDescriptions.size(),
                     level.data().lvlData.triggerDescription.size(),
-                    level.data().lvlData.levelFloors);
+                    level.data().lvlData.levelFloors,
+                    mouseOnLevelInfo);
 
     const float offset = 4.0f;
     const ImVec2 textSize = ImGui::CalcTextSize(infoMessage.c_str());
