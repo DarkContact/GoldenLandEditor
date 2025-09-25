@@ -9,7 +9,7 @@
 enum class MaskMode {
     Relief,
     Sound,
-    Type
+    MaskMap
 };
 
 enum MaskSound : uint16_t {

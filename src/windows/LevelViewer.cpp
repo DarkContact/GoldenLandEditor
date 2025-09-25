@@ -41,8 +41,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Sound", NULL, level.data().imgui.maskMode == MaskMode::Sound)) {
                 level.data().imgui.maskMode = MaskMode::Sound;
             }
-            if (ImGui::MenuItem("Type", NULL, level.data().imgui.maskMode == MaskMode::Type)) {
-                level.data().imgui.maskMode = MaskMode::Type;
+            if (ImGui::MenuItem("Mask map", NULL, level.data().imgui.maskMode == MaskMode::MaskMap)) {
+                level.data().imgui.maskMode = MaskMode::MaskMap;
             }
             ImGui::EndMenu();
         }
@@ -444,15 +444,15 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
 // [1] [3]
 void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 {
-    const MaskHDR& maskHDR = level.data().lvlData.mapData;
-    if (maskHDR.chunks.empty()) return;
+    const MapData& mapData = level.data().lvlData.mapData;
+    if (mapData.chunks.empty()) return;
 
     ImGui::SetCursorScreenPos(drawPosition);
 
     const int chunkSize = 2; // 2x2 tiles per chunk
 
-    const int chunksPerColumn = static_cast<int>(maskHDR.height);
-    const int chunksPerRow = static_cast<int>(maskHDR.width);
+    const int chunksPerColumn = static_cast<int>(mapData.height);
+    const int chunksPerRow = static_cast<int>(mapData.width);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
@@ -474,15 +474,15 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
         for (int row = minVisibleRow; row <= maxVisibleRow; ++row)
         {
             size_t chunkIndex = col * chunksPerColumn + row;
-            if (chunkIndex >= maskHDR.chunks.size()) continue;
+            if (chunkIndex >= mapData.chunks.size()) continue;
 
-            const MHDRChunk& chunk = maskHDR.chunks[chunkIndex];
+            const MapChunk& chunk = mapData.chunks[chunkIndex];
 
             int correctX = col * chunkPixelWidth;
             int correctY = row * chunkPixelHeight;
 
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
-                const MHDRTile& tile = chunk[tileIndex];
+                const MapTile& tile = chunk[tileIndex];
 
                 int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * Level::tileWidth;
                 int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * Level::tileHeight;
@@ -493,44 +493,44 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 ImU32 color;
                 MaskMode maskMode = level.data().imgui.maskMode;
                 if (maskMode == MaskMode::Relief) {
-                    if (tile.maskNumber <= 1000) {
+                    if (tile.relief <= 1000) {
                         color = IM_COL32(0, 255, 0, 64);
-                    } else if (tile.maskNumber <= 2000) {
+                    } else if (tile.relief <= 2000) {
                         color = IM_COL32(0, 140, 0, 88);
-                    } else if (tile.maskNumber <= 15000) {
+                    } else if (tile.relief <= 15000) {
                         color = IM_COL32(140, 0, 0, 88);
-                    } else if (tile.maskNumber <= 35000) {
+                    } else if (tile.relief <= 35000) {
                         color = IM_COL32(180, 0, 0, 96);
-                    } else if (tile.maskNumber <= 55000) {
+                    } else if (tile.relief <= 55000) {
                         color = IM_COL32(220, 0, 0, 96);
                     } else {
                         color = IM_COL32(255, 0, 0, 104);
                     }
                 } else if (maskMode == MaskMode::Sound) {
-                    if (tile.soundType == MaskSound::Ground) {
+                    if (tile.sound == MaskSound::Ground) {
                         color = IM_COL32(0, 0, 0, 96);
-                    } else if (tile.soundType == MaskSound::Grass) {
+                    } else if (tile.sound == MaskSound::Grass) {
                         color = IM_COL32(0, 204, 0, 96);
-                    } else if (tile.soundType == MaskSound::Sand) {
+                    } else if (tile.sound == MaskSound::Sand) {
                         color = IM_COL32(255, 220, 0, 96);
-                    } else if (tile.soundType == MaskSound::Wood) {
+                    } else if (tile.sound == MaskSound::Wood) {
                         color = IM_COL32(160, 82, 45, 96);
-                    } else if (tile.soundType == MaskSound::Stone) {
+                    } else if (tile.sound == MaskSound::Stone) {
                         color = IM_COL32(128, 128, 128, 96);
-                    } else if (tile.soundType == MaskSound::Water) {
+                    } else if (tile.sound == MaskSound::Water) {
                         color = IM_COL32(70, 130, 180, 96);
-                    } else if (tile.soundType == MaskSound::Snow) {
+                    } else if (tile.sound == MaskSound::Snow) {
                         color = IM_COL32(255, 255, 255, 96);
                     }
-                } else if (maskMode == MaskMode::Type) {
-                    if (tile.tileType == 0xffff) {
+                } else if (maskMode == MaskMode::MaskMap) {
+                    if (tile.maskMap == 0xffff) {
                         color = IM_COL32(255, 0, 0, 96);
                     } else {
                         color = IM_COL32(0, 0, 0, 96);
 
                         ImGui::SetCursorScreenPos({p0.x, p0.y});
                         ImGui::PushFont(NULL, 10.0f);
-                        ImGui::Text("%u", tile.tileType);
+                        ImGui::Text("%u", tile.maskMap);
                         ImGui::PopFont();
                     }
                 }
@@ -547,13 +547,13 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
                     ImGui::SetTooltip("%dx%d\n"
-                                      "Mask: %u\n"
+                                      "Relief: %u\n"
                                       "Sound: %s (%u)\n"
-                                      "Type: %u",
+                                      "Mask map: %u",
                                       (tileX / Level::tileWidth), (tileY / Level::tileHeight),
-                                      tile.maskNumber,
-                                      maskSoundToString(static_cast<MaskSound>(tile.soundType)).c_str(), tile.soundType,
-                                      tile.tileType);
+                                      tile.relief,
+                                      maskSoundToString(static_cast<MaskSound>(tile.sound)).c_str(), tile.sound,
+                                      tile.maskMap);
                 }
             }
 
