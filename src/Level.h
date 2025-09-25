@@ -6,6 +6,22 @@
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
 
+enum class MaskMode {
+    Relief,
+    Sound,
+    Type
+};
+
+enum MaskSound : uint16_t {
+    Ground = 0,
+    Grass = 1,
+    Sand = 2,
+    Wood = 3,
+    Stone = 4,
+    Water = 5,
+    Snow = 6
+};
+
 struct LevelImgui {
     bool showMinimap = true;
 
@@ -24,11 +40,14 @@ struct LevelImgui {
     ImVec2 scrollStart;
 
     bool showMetaInfo = false;
+
     bool showMask = false;
+    MaskMode maskMode = MaskMode::Relief;
+
     bool showPersons = true;
     bool showEntrancePoints = true;
-    bool showCellGroups = false;
 
+    bool showCellGroups = false;
     std::optional<int> highlightCellGroudIndex;
 };
 

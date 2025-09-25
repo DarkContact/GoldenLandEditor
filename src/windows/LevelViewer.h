@@ -23,5 +23,7 @@ private:
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);
     static void drawCellGroups(Level& level, ImVec2 drawPosition);
 
+    static std::string maskSoundToString(MaskSound sound);
+
     static std::string personInfo(const SEF_Person& person);
 };
