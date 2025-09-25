@@ -81,15 +81,15 @@ struct EnvironmentSounds {
 };
 
 struct MapTile {
-    uint16_t relief = 0;
-    uint16_t sound = 0;
-    uint16_t maskMap = 0;
+    uint16_t relief = 0; // Всё что ниже 2000 - проходимо, всё что выше 30000 - не простреливается (Точные значения требуют проверки)
+    uint16_t sound = 0;  // Какой звук издаёт поверхность при контакте
+    uint16_t mask = 0;   // Карта расположения масок уровня (объекты которые рисуется над героем)
 };
 
 using MapChunk = std::array<MapTile, 4>;
 struct MapData {
-    uint32_t width = 0; // В чанках (Big cells)
-    uint32_t height = 0;
+    uint32_t chunkWidth = 0; // (Big cells)
+    uint32_t chunkHeight = 0;
     std::vector<MapChunk> chunks;
 };
 

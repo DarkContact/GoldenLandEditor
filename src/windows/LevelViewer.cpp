@@ -19,8 +19,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Info", "I", level.data().imgui.showMetaInfo)) {
                 level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
             }
-            if (ImGui::MenuItem("Mask", "M", level.data().imgui.showMask)) {
-                level.data().imgui.showMask = !level.data().imgui.showMask;
+            if (ImGui::MenuItem("Map data", "M", level.data().imgui.showMapData)) {
+                level.data().imgui.showMapData = !level.data().imgui.showMapData;
             }
             if (ImGui::MenuItem("Persons", "P", level.data().imgui.showPersons)) {
                 level.data().imgui.showPersons = !level.data().imgui.showPersons;
@@ -34,15 +34,15 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             ImGui::EndMenu();
         }
 
-        if (level.data().imgui.showMask && ImGui::BeginMenu("Mask Mode")) {
-            if (ImGui::MenuItem("Relief", NULL, level.data().imgui.maskMode == MaskMode::Relief)) {
-                level.data().imgui.maskMode = MaskMode::Relief;
+        if (level.data().imgui.showMapData && ImGui::BeginMenu("Map data mode")) {
+            if (ImGui::MenuItem("Relief", NULL, level.data().imgui.mapDataMode == MapDataMode::Relief)) {
+                level.data().imgui.mapDataMode = MapDataMode::Relief;
             }
-            if (ImGui::MenuItem("Sound", NULL, level.data().imgui.maskMode == MaskMode::Sound)) {
-                level.data().imgui.maskMode = MaskMode::Sound;
+            if (ImGui::MenuItem("Sound", NULL, level.data().imgui.mapDataMode == MapDataMode::Sound)) {
+                level.data().imgui.mapDataMode = MapDataMode::Sound;
             }
-            if (ImGui::MenuItem("Mask map", NULL, level.data().imgui.maskMode == MaskMode::MaskMap)) {
-                level.data().imgui.maskMode = MaskMode::MaskMap;
+            if (ImGui::MenuItem("Mask", NULL, level.data().imgui.mapDataMode == MapDataMode::Mask)) {
+                level.data().imgui.mapDataMode = MapDataMode::Mask;
             }
             ImGui::EndMenu();
         }
@@ -59,7 +59,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
-            level.data().imgui.showMask = !level.data().imgui.showMask;
+            level.data().imgui.showMapData = !level.data().imgui.showMapData;
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
             level.data().imgui.showPersons = !level.data().imgui.showPersons;
@@ -94,9 +94,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         drawCellGroups(level, startPos);
     }
 
-    if (level.data().imgui.showMask)
+    if (level.data().imgui.showMapData)
     {
-        drawMask(level, startPos);
+        drawMapData(level, startPos);
     }
 
     ImRect minimapRect;
@@ -417,7 +417,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     level.data().sefData.pack,
                     level.data().sefData.internalLocation,
                     level.data().sefData.exitToGlobalMap,
-                    level.data().lvlData.mapData.width, level.data().lvlData.mapData.height,
+                    level.data().lvlData.mapData.chunkWidth, level.data().lvlData.mapData.chunkHeight,
                     level.data().lvlData.maskDescriptions.size(),
                     level.data().lvlData.staticDescriptions.size(),
                     level.data().lvlData.animationDescriptions.size(),
@@ -442,7 +442,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
 // Чанки и тайлы начинают отсчёт слева сверху и дальше идут по столбцам:
 // [0] [2]
 // [1] [3]
-void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
+void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
 {
     const MapData& mapData = level.data().lvlData.mapData;
     if (mapData.chunks.empty()) return;
@@ -451,8 +451,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
 
     const int chunkSize = 2; // 2x2 tiles per chunk
 
-    const int chunksPerColumn = static_cast<int>(mapData.height);
-    const int chunksPerRow = static_cast<int>(mapData.width);
+    const int chunksPerColumn = static_cast<int>(mapData.chunkHeight);
+    const int chunksPerRow = static_cast<int>(mapData.chunkWidth);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
@@ -491,8 +491,8 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                 ImVec2 p1 = ImVec2(p0.x + Level::tileWidth, p0.y + Level::tileHeight);
 
                 ImU32 color;
-                MaskMode maskMode = level.data().imgui.maskMode;
-                if (maskMode == MaskMode::Relief) {
+                MapDataMode mapDataMode = level.data().imgui.mapDataMode;
+                if (mapDataMode == MapDataMode::Relief) {
                     if (tile.relief <= 1000) {
                         color = IM_COL32(0, 255, 0, 64);
                     } else if (tile.relief <= 2000) {
@@ -506,31 +506,31 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                     } else {
                         color = IM_COL32(255, 0, 0, 104);
                     }
-                } else if (maskMode == MaskMode::Sound) {
-                    if (tile.sound == MaskSound::Ground) {
+                } else if (mapDataMode == MapDataMode::Sound) {
+                    if (tile.sound == MapDataSound::Ground) {
                         color = IM_COL32(0, 0, 0, 96);
-                    } else if (tile.sound == MaskSound::Grass) {
+                    } else if (tile.sound == MapDataSound::Grass) {
                         color = IM_COL32(0, 204, 0, 96);
-                    } else if (tile.sound == MaskSound::Sand) {
+                    } else if (tile.sound == MapDataSound::Sand) {
                         color = IM_COL32(255, 220, 0, 96);
-                    } else if (tile.sound == MaskSound::Wood) {
+                    } else if (tile.sound == MapDataSound::Wood) {
                         color = IM_COL32(160, 82, 45, 96);
-                    } else if (tile.sound == MaskSound::Stone) {
+                    } else if (tile.sound == MapDataSound::Stone) {
                         color = IM_COL32(128, 128, 128, 96);
-                    } else if (tile.sound == MaskSound::Water) {
+                    } else if (tile.sound == MapDataSound::Water) {
                         color = IM_COL32(70, 130, 180, 96);
-                    } else if (tile.sound == MaskSound::Snow) {
+                    } else if (tile.sound == MapDataSound::Snow) {
                         color = IM_COL32(255, 255, 255, 96);
                     }
-                } else if (maskMode == MaskMode::MaskMap) {
-                    if (tile.maskMap == 0xffff) {
+                } else if (mapDataMode == MapDataMode::Mask) {
+                    if (tile.mask == 0xffff) {
                         color = IM_COL32(255, 0, 0, 96);
                     } else {
                         color = IM_COL32(0, 0, 0, 96);
 
                         ImGui::SetCursorScreenPos({p0.x, p0.y});
                         ImGui::PushFont(NULL, 10.0f);
-                        ImGui::Text("%u", tile.maskMap);
+                        ImGui::Text("%u", tile.mask);
                         ImGui::PopFont();
                     }
                 }
@@ -549,11 +549,11 @@ void LevelViewer::drawMask(Level& level, ImVec2 drawPosition)
                     ImGui::SetTooltip("%dx%d\n"
                                       "Relief: %u\n"
                                       "Sound: %s (%u)\n"
-                                      "Mask map: %u",
+                                      "Mask: %u",
                                       (tileX / Level::tileWidth), (tileY / Level::tileHeight),
                                       tile.relief,
-                                      maskSoundToString(static_cast<MaskSound>(tile.sound)).c_str(), tile.sound,
-                                      tile.maskMap);
+                                      maskSoundToString(static_cast<MapDataSound>(tile.sound)).c_str(), tile.sound,
+                                      tile.mask);
                 }
             }
 
@@ -708,16 +708,16 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     drawList->Flags = drawListFlags;
 }
 
-std::string LevelViewer::maskSoundToString(MaskSound sound)
+std::string LevelViewer::maskSoundToString(MapDataSound sound)
 {
     switch (sound) {
-        case MaskSound::Ground: return "Ground";
-        case MaskSound::Grass:  return "Grass";
-        case MaskSound::Sand:   return "Sand";
-        case MaskSound::Wood:   return "Wood";
-        case MaskSound::Stone:  return "Stone";
-        case MaskSound::Water:  return "Water";
-        case MaskSound::Snow:   return "Snow";
+        case MapDataSound::Ground: return "Ground";
+        case MapDataSound::Grass:  return "Grass";
+        case MapDataSound::Sand:   return "Sand";
+        case MapDataSound::Wood:   return "Wood";
+        case MapDataSound::Stone:  return "Stone";
+        case MapDataSound::Water:  return "Water";
+        case MapDataSound::Snow:   return "Snow";
     }
     return {};
 }

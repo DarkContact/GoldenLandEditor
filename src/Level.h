@@ -6,13 +6,13 @@
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
 
-enum class MaskMode {
+enum class MapDataMode {
     Relief,
     Sound,
-    MaskMap
+    Mask
 };
 
-enum MaskSound : uint16_t {
+enum MapDataSound : uint16_t {
     Ground = 0,
     Grass = 1,
     Sand = 2,
@@ -41,8 +41,8 @@ struct LevelImgui {
 
     bool showMetaInfo = false;
 
-    bool showMask = false;
-    MaskMode maskMode = MaskMode::Relief;
+    bool showMapData = false;
+    MapDataMode mapDataMode = MapDataMode::Relief;
 
     bool showPersons = true;
     bool showEntrancePoints = true;

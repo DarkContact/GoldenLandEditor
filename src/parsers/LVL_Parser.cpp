@@ -63,28 +63,28 @@ MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
 }
 
 MapData LVL_Parser::parseMapData(const std::vector<uint8_t>& block) {
-    MapData hdr;
-    if (block.size() < 8) return hdr;
-    hdr.width  = *reinterpret_cast<const uint32_t*>(&block[0]);
-    hdr.height = *reinterpret_cast<const uint32_t*>(&block[4]);
+    MapData mapData;
+    if (block.size() < 8) return mapData;
+    mapData.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
+    mapData.chunkHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
 
     size_t offset = 8;
-    const size_t numChunks = hdr.width * hdr.height;
-    hdr.chunks.reserve(numChunks);
+    const size_t numChunks = mapData.chunkWidth * mapData.chunkHeight;
+    mapData.chunks.reserve(numChunks);
     for (size_t i = 0; i < numChunks; ++i) {
         MapChunk chunk;
         for (size_t j = 0; j < chunk.size(); ++j) {
             MapTile tile;
-            tile.relief  = *reinterpret_cast<const uint16_t*>(&block[offset]);
-            tile.sound   = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
-            tile.maskMap = *reinterpret_cast<const uint16_t*>(&block[offset + 4]);
+            tile.relief = *reinterpret_cast<const uint16_t*>(&block[offset]);
+            tile.sound  = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
+            tile.mask   = *reinterpret_cast<const uint16_t*>(&block[offset + 4]);
             chunk[j] = tile;
             offset += 6;
         }
-        hdr.chunks.push_back(chunk);
+        mapData.chunks.push_back(chunk);
     }
 
-    return hdr;
+    return mapData;
 }
 
 std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector<uint8_t>& block) {
