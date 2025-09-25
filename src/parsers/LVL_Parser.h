@@ -5,32 +5,78 @@
 #include <array>
 #include <map>
 
-struct MapSize { uint32_t width = 1, height = 1; };
-struct PixelPosition { uint32_t x = 0, y = 0; };
-struct LVLDescription { std::string name; uint16_t param1 = 0, param2 = 0; uint32_t number = 0; PixelPosition position{}; };
-struct MaskDescription { uint32_t number = 0, x = 0, y = 0; };
-struct Weather { uint16_t type = 0, intensity = 0; };
-struct CellGroup { uint16_t x = 0, y = 0; };
+struct MapSize {
+    uint32_t width = 1;
+    uint32_t height = 1;
+};
+
+struct PixelPosition {
+    uint32_t x = 0;
+    uint32_t y = 0;
+};
+
+struct LVLDescription {
+    std::string name;
+    uint16_t param1 = 0;
+    uint16_t param2 = 0;
+    uint32_t number = 0;
+    PixelPosition position{};
+};
+
+struct MaskDescription {
+    uint32_t number = 0;
+    uint32_t x = 0;
+    uint32_t y = 0;
+};
+
+struct Weather {
+    uint16_t type = 0;
+    uint16_t intensity = 0;
+};
+
+struct CellGroup {
+    uint16_t x = 0;
+    uint16_t y = 0;
+};
 using CellGroups = std::map<std::string, std::vector<CellGroup>>;
 
 struct Door {
-    std::string sefName, openAction, closeAction, cellGroup, param1, staticName;
+    std::string sefName;
+    std::string openAction;
+    std::string closeAction;
+    std::string cellGroup;
+    std::string param1;
+    std::string staticName;
 };
 
 struct ExtraSound {
     std::string path;
-    uint32_t param1=0, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0, param8=0;
-    uint32_t param9=0, param10=0, param11=0, param12=0;
+    float param1 = 0;
+    float param2 = 0;
+    float param3 = 0;
+    float param4 = 0;
+    float param5 = 0;
+    float param6 = 0;
+    float param7 = 0;
+    float param8 = 0;
+    uint32_t param9 = 0;
+    uint32_t param10 = 0;
+    uint32_t param11 = 0;
+    uint32_t param12 = 0;
 };
 
 struct EnvironmentSoundHeader {
-    int32_t param1=0;
-    int32_t param2=0, param3=0, param4=0;
+    int32_t param1 = 0;
+    float param2 = 0;
+    float param3 = 0;
+    float param4 = 0;
 };
 
 struct EnvironmentSounds {
     EnvironmentSoundHeader header{};
-    std::string levelTheme, dayAmbience, nightAmbience;
+    std::string levelTheme;
+    std::string dayAmbience;
+    std::string nightAmbience;
     std::vector<ExtraSound> otherSounds;
 };
 

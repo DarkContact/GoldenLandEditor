@@ -159,12 +159,13 @@ CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
 EnvironmentSounds LVL_Parser::parseSoundEnv(const std::vector<uint8_t>& block) {
     EnvironmentSounds result;
     if (block.size() < 16) return result;
+
     size_t offset = 0;
     result.header.param1 = *reinterpret_cast<const int32_t*>(&block[offset]);
-    offset += 4;
-    result.header.param2 = static_cast<float>(*reinterpret_cast<const int32_t*>(&block[offset])) / 100.0f; offset += 4;
-    result.header.param3 = static_cast<float>(*reinterpret_cast<const int32_t*>(&block[offset])) / 100.0f; offset += 4;
-    result.header.param4 = static_cast<float>(*reinterpret_cast<const int32_t*>(&block[offset])) / 100.0f; offset += 4;
+    result.header.param2 = *reinterpret_cast<const float*>(&block[offset + 4]);
+    result.header.param3 = *reinterpret_cast<const float*>(&block[offset + 8]);
+    result.header.param4 = *reinterpret_cast<const float*>(&block[offset + 12]);
+    offset += 16;
 
     if (offset + 4 > block.size()) return result;
     uint32_t soundCount = *reinterpret_cast<const uint32_t*>(&block[offset]);
@@ -179,7 +180,7 @@ EnvironmentSounds LVL_Parser::parseSoundEnv(const std::vector<uint8_t>& block) {
         s.path = StringUtils::readStringWithLength(block, offset);
         if (offset + 48 > block.size()) break;
         for (int p = 0; p < 8; ++p)
-            reinterpret_cast<uint32_t*>(&s.param1)[p] = *reinterpret_cast<const uint32_t*>(&block[offset + p * 4]);
+            reinterpret_cast<float*>(&s.param1)[p] = *reinterpret_cast<const float*>(&block[offset + p * 4]);
         offset += 32;
         s.param9  = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
         s.param10 = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
