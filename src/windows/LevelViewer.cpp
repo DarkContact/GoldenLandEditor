@@ -7,6 +7,8 @@
 
 bool LevelViewer::update(bool& showWindow, Level& level)
 {
+    ImGuiIO& io = ImGui::GetIO();
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin(level.data().name.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::PopStyleVar();
@@ -19,8 +21,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Info", "I", level.data().imgui.showMetaInfo)) {
                 level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
             }
-            if (ImGui::MenuItem("Map data", "M", level.data().imgui.showMapData)) {
-                level.data().imgui.showMapData = !level.data().imgui.showMapData;
+            if (ImGui::MenuItem("Tiles", "T", level.data().imgui.showMapTiles)) {
+                level.data().imgui.showMapTiles = !level.data().imgui.showMapTiles;
             }
             if (ImGui::MenuItem("Persons", "P", level.data().imgui.showPersons)) {
                 level.data().imgui.showPersons = !level.data().imgui.showPersons;
@@ -34,15 +36,15 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             ImGui::EndMenu();
         }
 
-        if (level.data().imgui.showMapData && ImGui::BeginMenu("Map data mode")) {
-            if (ImGui::MenuItem("Relief", NULL, level.data().imgui.mapDataMode == MapDataMode::Relief)) {
-                level.data().imgui.mapDataMode = MapDataMode::Relief;
+        if (level.data().imgui.showMapTiles && ImGui::BeginMenu("Tiles mode")) {
+            if (ImGui::MenuItem("Relief", "Ctrl + 1", level.data().imgui.mapTilesMode == MapTilesMode::Relief)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Relief;
             }
-            if (ImGui::MenuItem("Sound", NULL, level.data().imgui.mapDataMode == MapDataMode::Sound)) {
-                level.data().imgui.mapDataMode = MapDataMode::Sound;
+            if (ImGui::MenuItem("Sound", "Ctrl + 2", level.data().imgui.mapTilesMode == MapTilesMode::Sound)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Sound;
             }
-            if (ImGui::MenuItem("Mask", NULL, level.data().imgui.mapDataMode == MapDataMode::Mask)) {
-                level.data().imgui.mapDataMode = MapDataMode::Mask;
+            if (ImGui::MenuItem("Mask", "Ctrl + 3", level.data().imgui.mapTilesMode == MapTilesMode::Mask)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Mask;
             }
             ImGui::EndMenu();
         }
@@ -58,8 +60,8 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_I, false)) {
             level.data().imgui.showMetaInfo = !level.data().imgui.showMetaInfo;
         }
-        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_M, false)) {
-            level.data().imgui.showMapData = !level.data().imgui.showMapData;
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_T, false)) {
+            level.data().imgui.showMapTiles = !level.data().imgui.showMapTiles;
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_P, false)) {
             level.data().imgui.showPersons = !level.data().imgui.showPersons;
@@ -69,6 +71,18 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_C, false)) {
             level.data().imgui.showCellGroups = !level.data().imgui.showCellGroups;
+        }
+
+        if (level.data().imgui.showMapTiles) {
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1, false)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Relief;
+            }
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_2, false)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Sound;
+            }
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_3, false)) {
+                level.data().imgui.mapTilesMode = MapTilesMode::Mask;
+            }
         }
     }
 
@@ -94,9 +108,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         drawCellGroups(level, startPos);
     }
 
-    if (level.data().imgui.showMapData)
+    if (level.data().imgui.showMapTiles)
     {
-        drawMapData(level, startPos);
+        drawMapTiles(level, startPos);
     }
 
     ImRect minimapRect;
@@ -417,7 +431,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     level.data().sefData.pack,
                     level.data().sefData.internalLocation,
                     level.data().sefData.exitToGlobalMap,
-                    level.data().lvlData.mapData.chunkWidth, level.data().lvlData.mapData.chunkHeight,
+                    level.data().lvlData.mapTiles.chunkWidth, level.data().lvlData.mapTiles.chunkHeight,
                     level.data().lvlData.maskDescriptions.size(),
                     level.data().lvlData.staticDescriptions.size(),
                     level.data().lvlData.animationDescriptions.size(),
@@ -442,17 +456,16 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
 // Чанки и тайлы начинают отсчёт слева сверху и дальше идут по столбцам:
 // [0] [2]
 // [1] [3]
-void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
+void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 {
-    const MapData& mapData = level.data().lvlData.mapData;
-    if (mapData.chunks.empty()) return;
+    const MapTiles& mapTiles = level.data().lvlData.mapTiles;
+    if (mapTiles.chunks.empty()) return;
 
     ImGui::SetCursorScreenPos(drawPosition);
 
     const int chunkSize = 2; // 2x2 tiles per chunk
-
-    const int chunksPerColumn = static_cast<int>(mapData.chunkHeight);
-    const int chunksPerRow = static_cast<int>(mapData.chunkWidth);
+    const int chunksPerColumn = static_cast<int>(mapTiles.chunkHeight);
+    const int chunksPerRow = static_cast<int>(mapTiles.chunkWidth);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
@@ -474,9 +487,9 @@ void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
         for (int row = minVisibleRow; row <= maxVisibleRow; ++row)
         {
             size_t chunkIndex = col * chunksPerColumn + row;
-            if (chunkIndex >= mapData.chunks.size()) continue;
+            if (chunkIndex >= mapTiles.chunks.size()) continue;
 
-            const MapChunk& chunk = mapData.chunks[chunkIndex];
+            const MapChunk& chunk = mapTiles.chunks[chunkIndex];
 
             int correctX = col * chunkPixelWidth;
             int correctY = row * chunkPixelHeight;
@@ -491,8 +504,8 @@ void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
                 ImVec2 p1 = ImVec2(p0.x + Level::tileWidth, p0.y + Level::tileHeight);
 
                 ImU32 color;
-                MapDataMode mapDataMode = level.data().imgui.mapDataMode;
-                if (mapDataMode == MapDataMode::Relief) {
+                MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
+                if (mapTilesMode == MapTilesMode::Relief) {
                     if (tile.relief <= 1000) {
                         color = IM_COL32(0, 255, 0, 64);
                     } else if (tile.relief <= 2000) {
@@ -506,7 +519,7 @@ void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
                     } else {
                         color = IM_COL32(255, 0, 0, 104);
                     }
-                } else if (mapDataMode == MapDataMode::Sound) {
+                } else if (mapTilesMode == MapTilesMode::Sound) {
                     if (tile.sound == MapDataSound::Ground) {
                         color = IM_COL32(0, 0, 0, 96);
                     } else if (tile.sound == MapDataSound::Grass) {
@@ -522,7 +535,7 @@ void LevelViewer::drawMapData(Level& level, ImVec2 drawPosition)
                     } else if (tile.sound == MapDataSound::Snow) {
                         color = IM_COL32(255, 255, 255, 96);
                     }
-                } else if (mapDataMode == MapDataMode::Mask) {
+                } else if (mapTilesMode == MapTilesMode::Mask) {
                     if (tile.mask == 0xffff) {
                         color = IM_COL32(255, 0, 0, 96);
                     } else {

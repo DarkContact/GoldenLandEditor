@@ -33,7 +33,7 @@ LVL_Data LVL_Parser::interpretData() {
     for (auto& [name, block]: m_blocks) {
         if      (name == "BLK_LVER") d.version = parseVersion(block);
         else if (name == "BLK_MPSZ") d.mapSize = parseMapSize(block);
-        else if (name == "BLK_MHDR") d.mapData = parseMapData(block);
+        else if (name == "BLK_MHDR") d.mapTiles = parseMapTiles(block);
         else if (name == "BLK_MDSC") d.maskDescriptions = parseMaskDescriptions(block);
         else if (name == "BLK_SDSC") d.staticDescriptions = parseStructuredBlock(block);
         else if (name == "BLK_ADSC") d.animationDescriptions = parseStructuredBlock(block);
@@ -62,15 +62,15 @@ MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
     };
 }
 
-MapData LVL_Parser::parseMapData(const std::vector<uint8_t>& block) {
-    MapData mapData;
-    if (block.size() < 8) return mapData;
-    mapData.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
-    mapData.chunkHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
+MapTiles LVL_Parser::parseMapTiles(const std::vector<uint8_t>& block) {
+    MapTiles mapTiles;
+    if (block.size() < 8) return mapTiles;
+    mapTiles.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
+    mapTiles.chunkHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
 
     size_t offset = 8;
-    const size_t numChunks = mapData.chunkWidth * mapData.chunkHeight;
-    mapData.chunks.reserve(numChunks);
+    const size_t numChunks = mapTiles.chunkWidth * mapTiles.chunkHeight;
+    mapTiles.chunks.reserve(numChunks);
     for (size_t i = 0; i < numChunks; ++i) {
         MapChunk chunk;
         for (size_t j = 0; j < chunk.size(); ++j) {
@@ -81,10 +81,10 @@ MapData LVL_Parser::parseMapData(const std::vector<uint8_t>& block) {
             chunk[j] = tile;
             offset += 6;
         }
-        mapData.chunks.push_back(chunk);
+        mapTiles.chunks.push_back(chunk);
     }
 
-    return mapData;
+    return mapTiles;
 }
 
 std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector<uint8_t>& block) {
@@ -106,8 +106,8 @@ std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector
     return result;
 }
 
-std::vector<LVLDescription> LVL_Parser::parseStructuredBlock(const std::vector<uint8_t>& block) {
-    std::vector<LVLDescription> result;
+std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(const std::vector<uint8_t>& block) {
+    std::vector<LVL_Description> result;
     if (block.size() < 4) return result;
     size_t offset = 0;
     uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
@@ -115,7 +115,7 @@ std::vector<LVLDescription> LVL_Parser::parseStructuredBlock(const std::vector<u
 
     for (uint32_t i = 0; i < count; ++i) {
         if (offset + 16 > block.size()) break;
-        LVLDescription desc;
+        LVL_Description desc;
         desc.param1 = *reinterpret_cast<const uint16_t*>(&block[offset]);
         desc.param2 = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
         desc.number = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);

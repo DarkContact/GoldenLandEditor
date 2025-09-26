@@ -6,8 +6,8 @@
 #include <map>
 
 struct MapSize {
-    uint32_t width = 1;
-    uint32_t height = 1;
+    uint32_t pixelWidth = 1;
+    uint32_t pixelHeight = 1;
 };
 
 struct PixelPosition {
@@ -15,7 +15,7 @@ struct PixelPosition {
     uint32_t y = 0;
 };
 
-struct LVLDescription {
+struct LVL_Description {
     std::string name;
     uint16_t param1 = 0;
     uint16_t param2 = 0;
@@ -87,7 +87,7 @@ struct MapTile {
 };
 
 using MapChunk = std::array<MapTile, 4>;
-struct MapData {
+struct MapTiles {
     uint32_t chunkWidth = 0; // (Big cells)
     uint32_t chunkHeight = 0;
     std::vector<MapChunk> chunks;
@@ -95,12 +95,12 @@ struct MapData {
 
 struct LVL_Data {
     std::string version;
-    MapSize mapSize; // Размер в фона в пикселях
-    MapData mapData;
+    MapSize mapSize;
+    MapTiles mapTiles;
     std::vector<MaskDescription> maskDescriptions;
-    std::vector<LVLDescription> staticDescriptions;
-    std::vector<LVLDescription> animationDescriptions;
-    std::vector<LVLDescription> triggerDescription;
+    std::vector<LVL_Description> staticDescriptions;
+    std::vector<LVL_Description> animationDescriptions;
+    std::vector<LVL_Description> triggerDescription;
     CellGroups cellGroups;
     EnvironmentSounds environmentSounds;
     Weather weather;
@@ -122,9 +122,9 @@ private:
 
     std::string parseVersion(const std::vector<uint8_t>& block);
     MapSize parseMapSize(const std::vector<uint8_t>& block);
-    MapData parseMapData(const std::vector<uint8_t>& block);
+    MapTiles parseMapTiles(const std::vector<uint8_t>& block);
     std::vector<MaskDescription> parseMaskDescriptions(const std::vector<uint8_t>& block);
-    std::vector<LVLDescription> parseStructuredBlock(const std::vector<uint8_t>& block);
+    std::vector<LVL_Description> parseStructuredBlock(const std::vector<uint8_t>& block);
     CellGroups parseCellGroups(const std::vector<uint8_t>& block);
     EnvironmentSounds parseSoundEnv(const std::vector<uint8_t>& block);
     Weather parseWeather(const std::vector<uint8_t>& block);

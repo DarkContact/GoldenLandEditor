@@ -6,7 +6,7 @@
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
 
-enum class MapDataMode {
+enum class MapTilesMode {
     Relief,
     Sound,
     Mask
@@ -41,8 +41,8 @@ struct LevelImgui {
 
     bool showMetaInfo = false;
 
-    bool showMapData = false;
-    MapDataMode mapDataMode = MapDataMode::Relief;
+    bool showMapTiles = false;
+    MapTilesMode mapTilesMode = MapTilesMode::Relief;
 
     bool showPersons = true;
     bool showEntrancePoints = true;
