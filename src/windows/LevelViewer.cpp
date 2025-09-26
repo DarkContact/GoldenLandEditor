@@ -636,8 +636,8 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGui::SetTooltip("position: %dx%d\n"
-                              "direction: %s",
+            ImGui::SetTooltip("Position: %dx%d\n"
+                              "Direction: %s",
                               pointEnt.position.x, pointEnt.position.y,
                               pointEnt.direction.c_str());
         } else if (!level.data().imgui.minimapHovered &&
@@ -698,12 +698,14 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
                 mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
                 mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
             {
-                ImGui::SetTooltip("position: %dx%d\n"
-                                  "group: %s\n"
-                                  "name: cell_%02d",
+                ImGui::SetTooltip("Position: %dx%d\n"
+                                  "Group: %s\n"
+                                  "Name: cell_%02d\n"
+                                  "Count: %zu",
                                   cellPosition.x, cellPosition.y,
                                   group.techName.c_str(),
-                                  cellIndex);
+                                  cellIndex,
+                                  group.cells.size());
 
                 level.data().imgui.highlightCellGroudIndex = groupIndex;
             }
@@ -739,26 +741,26 @@ std::string LevelViewer::personInfo(const SEF_Person& person)
 {
     std::string routeString =
         person.route.empty() ? std::string{}
-                             : std::format("route: {}\n", person.route);
+                             : std::format("Route: {}\n", person.route);
 
     std::string dialogString =
         person.scriptDialog.empty() ? std::string{}
-                                    : std::format("dialog: {}\n", person.scriptDialog);
+                                    : std::format("Dialog: {}\n", person.scriptDialog);
 
     std::string inventoryString =
         person.scriptInventory.empty() ? std::string{}
-                                       : std::format("inventory: {}", person.scriptInventory);
+                                       : std::format("Inventory: {}", person.scriptInventory);
 
-    return std::format("name: {}\n"
-                       "position: {}x{}\n"
-                       "index: {}\n"
-                       "direction: {}\n"
-                       "routeType: {}\n"
+    return std::format("Name: {}\n"
+                       "Position: {}x{}\n"
+                       "Index: {}\n"
+                       "Direction: {}\n"
+                       "RouteType: {}\n"
                        "{}"
-                       "radius: {}\n"
-                       "delayMin: {}\n"
-                       "delayMax: {}\n"
-                       "tribe: {}\n"
+                       "Radius: {}\n"
+                       "DelayMin: {}\n"
+                       "DelayMax: {}\n"
+                       "Tribe: {}\n"
                        "{}"
                        "{}",
                        person.techName,
