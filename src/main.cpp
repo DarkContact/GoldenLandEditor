@@ -19,14 +19,37 @@
 #include "windows/CsxViewer.h"
 #include "windows/SdbViewer.h"
 
+// TODO: Сохранение уровня
+// TODO: Изменение данных уровня с поддержкой undo/redo
+
+struct RootDirectoryContext {
+
+    std::vector<std::string> levelNames;
+    std::vector<std::string> csxFiles;
+    std::vector<std::string> sdbFiles;
+    std::vector<Level> levels;
+    int selectedLevelIndex = 0;
+
+    const std::string& rootDirectory() const { return m_rootDirectory; }
+
+    void setRootDirectory(const std::string& rootDirectory) {
+        levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
+        selectedLevelIndex = 0;
+        m_rootDirectory = rootDirectory;
+    }
+
+private:
+    std::string m_rootDirectory;
+};
+
 std::atomic_bool backgroundWork = false;
 
 int main(int, char**)
 {
+    RootDirectoryContext rootDirectoryContext;
+
     std::string fontFilepath;
     int fontSize = 13;
-
-    std::string resourcesRootDirectory;
 
     auto settingsFilename = "settings.ini";
     mINI::INIFile settingsFile(settingsFilename);
@@ -38,27 +61,22 @@ int main(int, char**)
         if (!fontSizeString.empty())
             fontSize = std::stoi(fontSizeString);
 
-        resourcesRootDirectory = settingsFileIni.get("resources").get("root_dir");
+        rootDirectoryContext.setRootDirectory(settingsFileIni.get("resources").get("root_dir"));
     } else {
         settingsFileIni["fonts"]["filepath"] = fontFilepath;
         settingsFileIni["fonts"]["size"] = fontSize;
         settingsFile.write(settingsFileIni, true);
     }
 
-    Resources resources(resourcesRootDirectory);
-    auto levelNames = resources.levelNames();
-    std::vector<std::string> csxFiles;
-    std::vector<std::string> sdbFiles;
-
-    auto backgroundTask = [resourcesRootDirectory] (std::vector<std::string>& csxFiles, std::vector<std::string>& sdbFiles) {
+    auto backgroundTask = [] (RootDirectoryContext& rootDirectoryContext) {
         backgroundWork = true;
-        Resources resources(resourcesRootDirectory);
-        auto levelNames = resources.levelNames();
-        csxFiles = resources.filesWithExtension(".csx");
-        sdbFiles = resources.filesWithExtension(".sdb");
+        Resources resources(rootDirectoryContext.rootDirectory());
+        rootDirectoryContext.levelNames = resources.levelNames();
+        rootDirectoryContext.csxFiles = resources.filesWithExtension(".csx");
+        rootDirectoryContext.sdbFiles = resources.filesWithExtension(".sdb");
         backgroundWork = false;
     };
-    auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(csxFiles), std::ref(sdbFiles));
+    auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(rootDirectoryContext));
 
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO))
@@ -128,7 +146,6 @@ int main(int, char**)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    std::vector<Level> levels;
 
     // Main loop
     bool done = false;
@@ -177,6 +194,34 @@ int main(int, char**)
             }
 
             if (ImGui::BeginMenu("Settings")) {
+                if (ImGui::MenuItem("Root folder")) {
+                    // TODO: Сделать модальное окно с отображением текущей директории
+                    SDL_ShowOpenFolderDialog([] (void* userdata, const char* const* filelist, int filter) {
+                        if (!filelist) {
+                            SDL_Log("Folder dialog error: %s", SDL_GetError());
+                            return;
+                        } else if (!*filelist) {
+                            // Dialog was canceled.
+                            return;
+                        }
+
+                        if (*filelist) {
+                            RootDirectoryContext* rootDirectoryContext = static_cast<RootDirectoryContext*>(userdata);
+                            rootDirectoryContext->setRootDirectory(*filelist);
+
+                            auto backgroundTask = [] (RootDirectoryContext* rootDirectoryContext) {
+                                backgroundWork = true;
+                                Resources resources(rootDirectoryContext->rootDirectory());
+                                rootDirectoryContext->levelNames = resources.levelNames();
+                                rootDirectoryContext->csxFiles = resources.filesWithExtension(".csx");
+                                rootDirectoryContext->sdbFiles = resources.filesWithExtension(".sdb");
+                                // TODO: Запись rootDirectory в ini файл настроек
+                                backgroundWork = false;
+                            };
+                            auto bgTaskFuture = std::async(std::launch::async, backgroundTask, rootDirectoryContext);
+                        }
+                    }, &rootDirectoryContext, window, rootDirectoryContext.rootDirectory().c_str(), false);
+                }
                 if (ImGui::MenuItem("Fonts")) {
                     show_settings_window = true;
                 }
@@ -189,19 +234,18 @@ int main(int, char**)
             FontSettings::update(show_settings_window);
         }
         if (show_csx_window) {
-            CsxViewer::update(show_csx_window, renderer, resourcesRootDirectory, csxFiles);
+            CsxViewer::update(show_csx_window, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csxFiles);
         }
         if (show_sdb_window) {
-            SdbViewer::update(show_sdb_window, resourcesRootDirectory, sdbFiles);
+            SdbViewer::update(show_sdb_window, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
         }
 
         std::string loadedLevelName;
-        static int selectedLevelIndex = 0;
-        if (show_levels_window && !levelNames.empty()) {
-            if (LevelPicker::update(show_levels_window, levelNames, selectedLevelIndex)) {
-                loadedLevelName = levelNames[selectedLevelIndex];
+        if (show_levels_window && !rootDirectoryContext.levelNames.empty()) {
+            if (LevelPicker::update(show_levels_window, rootDirectoryContext.levelNames, rootDirectoryContext.selectedLevelIndex)) {
+                loadedLevelName = rootDirectoryContext.levelNames[rootDirectoryContext.selectedLevelIndex];
                 bool alreadyLoaded = false;
-                for (const auto& level : levels) {
+                for (const auto& level : rootDirectoryContext.levels) {
                     if (level.data().name == loadedLevelName) {
                         alreadyLoaded = true;
                         break;
@@ -211,19 +255,19 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.c_str());
                 } else {
-                    levels.emplace_back(renderer, resourcesRootDirectory, loadedLevelName);
+                    rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
                 }
             }
         }
 
-        for (auto it = levels.begin(); it != levels.end();) {
+        for (auto it = rootDirectoryContext.levels.begin(); it != rootDirectoryContext.levels.end();) {
             bool openLevel = true;
             Level& level = *it;
             if (level.data().background) {
                 LevelViewer::update(openLevel, level);
 
                 if (!openLevel) {
-                    it = levels.erase(it);
+                    it = rootDirectoryContext.levels.erase(it);
                     continue;
                 }
 
