@@ -98,18 +98,6 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
     std::string line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
-    SEF_Person& currentPerson = m_data.persons.back();
-
-    // Удаление комментария
-    auto commentPos = line.find("//");
-    if (commentPos != std::string::npos) {
-        std::string comment = StringUtils::trim(line.substr(commentPos + 2));
-        // TODO: Брать имя из sdb
-        currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
-        line = StringUtils::trim(line.substr(0, commentPos));
-        if (line.empty()) return;
-    }
-
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
 
@@ -120,32 +108,46 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
         SEF_Person newPerson;
         newPerson.techName = StringUtils::extractQuotedValue(value);
         m_data.persons.push_back(newPerson);
-    } else if (key == "position") {
-        auto tokens = StringUtils::splitBySpaces(value);
-        if (tokens.size() == 2) {
-            currentPerson.position.x = std::stoi(tokens[0]);
-            currentPerson.position.y = std::stoi(tokens[1]);
+    } else {
+        SEF_Person& currentPerson = m_data.persons.back();
+
+        // Удаление комментария
+        auto commentPos = line.find("//");
+        if (commentPos != std::string::npos) {
+            std::string comment = StringUtils::trim(line.substr(commentPos + 2));
+            // TODO: Брать имя из sdb
+            currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
+            line = StringUtils::trim(line.substr(0, commentPos));
+            if (line.empty()) return;
         }
-    } else if (key == "literary_name") {
-        currentPerson.literaryNameIndex = std::stoi(value);
-    } else if (key == "direction") {
-        currentPerson.direction = StringUtils::extractQuotedValue(value);
-    } else if (key == "route_type") {
-        currentPerson.routeType = StringUtils::extractQuotedValue(value);
-    } else if (key == "route") {
-        currentPerson.route = StringUtils::extractQuotedValue(value);
-    } else if (key == "radius") {
-        currentPerson.radius = std::stoi(value);
-    } else if (key == "delay_min") {
-        currentPerson.delayMin = std::stoi(value);
-    } else if (key == "delay_max") {
-        currentPerson.delayMax = std::stoi(value);
-    } else if (key == "tribe") {
-        currentPerson.tribe = StringUtils::extractQuotedValue(value);
-    } else if (key == "scr_dialog") {
-        currentPerson.scriptDialog = StringUtils::extractQuotedValue(value);
-    } else if (key == "scr_inv") {
-        currentPerson.scriptInventory = StringUtils::extractQuotedValue(value);
+
+        if (key == "position") {
+            auto tokens = StringUtils::splitBySpaces(value);
+            if (tokens.size() == 2) {
+                currentPerson.position.x = std::stoi(tokens[0]);
+                currentPerson.position.y = std::stoi(tokens[1]);
+            }
+        } else if (key == "literary_name") {
+            currentPerson.literaryNameIndex = std::stoi(value);
+        } else if (key == "direction") {
+            currentPerson.direction = StringUtils::extractQuotedValue(value);
+        } else if (key == "route_type") {
+            currentPerson.routeType = StringUtils::extractQuotedValue(value);
+        } else if (key == "route") {
+            currentPerson.route = StringUtils::extractQuotedValue(value);
+        } else if (key == "radius") {
+            currentPerson.radius = std::stoi(value);
+        } else if (key == "delay_min") {
+            currentPerson.delayMin = std::stoi(value);
+        } else if (key == "delay_max") {
+            currentPerson.delayMax = std::stoi(value);
+        } else if (key == "tribe") {
+            currentPerson.tribe = StringUtils::extractQuotedValue(value);
+        } else if (key == "scr_dialog") {
+            currentPerson.scriptDialog = StringUtils::extractQuotedValue(value);
+        } else if (key == "scr_inv") {
+            currentPerson.scriptInventory = StringUtils::extractQuotedValue(value);
+        }
     }
 }
 
@@ -153,8 +155,6 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
 {
     std::string line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
-
-    SEF_PointEntrance& currentPoint = m_data.pointsEntrance.back();
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
@@ -166,14 +166,17 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
         SEF_PointEntrance newPoint;
         newPoint.techName = StringUtils::extractQuotedValue(value);
         m_data.pointsEntrance.push_back(newPoint);
-    } else if (key == "position") {
-        auto tokens = StringUtils::splitBySpaces(value);
-        if (tokens.size() == 2) {
-            currentPoint.position.x = std::stoi(tokens[0]);
-            currentPoint.position.y = std::stoi(tokens[1]);
+    } else {
+        SEF_PointEntrance& currentPoint = m_data.pointsEntrance.back();
+        if (key == "position") {
+            auto tokens = StringUtils::splitBySpaces(value);
+            if (tokens.size() == 2) {
+                currentPoint.position.x = std::stoi(tokens[0]);
+                currentPoint.position.y = std::stoi(tokens[1]);
+            }
+        } else if (key == "direction") {
+            currentPoint.direction = StringUtils::extractQuotedValue(value);
         }
-    }  else if (key == "direction") {
-        currentPoint.direction = StringUtils::extractQuotedValue(value);
     }
 }
 
@@ -181,8 +184,6 @@ void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
 {
     std::string line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
-
-    SEF_CellGroup& currentGroup = m_data.cellGroups.back();
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
@@ -194,13 +195,16 @@ void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
         SEF_CellGroup newGroup;
         newGroup.techName = StringUtils::extractQuotedValue(value);
         m_data.cellGroups.push_back(newGroup);
-    } else if (key.starts_with("cell")) {
-        auto tokens = StringUtils::splitBySpaces(value);
-        if (tokens.size() == 2) {
-            TilePosition position;
-            position.x = std::stoi(tokens[0]);
-            position.y = std::stoi(tokens[1]);
-            currentGroup.cells.push_back(position);
+    } else {
+        SEF_CellGroup& currentGroup = m_data.cellGroups.back();
+        if (key.starts_with("cell")) {
+            auto tokens = StringUtils::splitBySpaces(value);
+            if (tokens.size() == 2) {
+                TilePosition position;
+                position.x = std::stoi(tokens[0]);
+                position.y = std::stoi(tokens[1]);
+                currentGroup.cells.push_back(position);
+            }
         }
     }
 }
