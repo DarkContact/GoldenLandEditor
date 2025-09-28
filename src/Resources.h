@@ -13,9 +13,11 @@ public:
 
     std::vector<std::string> sdbFiles() const;
     std::vector<std::string> csxFiles() const;
-    std::vector<std::string> filesWithExtension(std::string_view extension) const;
 
 private:
+    std::vector<std::string> filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const;
+    std::vector<std::string> filesWithExtensionAsync(std::initializer_list<int> indices, std::string_view extension) const;
+
     std::string_view m_rootDirectory;
     std::array<std::string, 14> m_mainDirectories;
 };

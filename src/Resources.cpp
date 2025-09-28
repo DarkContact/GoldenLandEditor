@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <format>
+#include <future>
 
 namespace fs = std::filesystem;
 
@@ -58,12 +59,21 @@ std::vector<std::string> Resources::levelNames() const
 
 std::vector<std::string> Resources::sdbFiles() const
 {
+    return filesWithExtensionAsync({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
+}
+
+std::vector<std::string> Resources::csxFiles() const
+{
+    return filesWithExtensionAsync({Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}, ".csx");
+}
+
+std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {
     std::vector<std::string> files;
-    for (int index : {Levels_Single, Levels_Multiplayer, Sdb}) {
+    for (int index : indices) {
         if (!fs::is_directory(m_mainDirectories[index])) continue;
 
         for (const auto& entry : fs::recursive_directory_iterator(m_mainDirectories[index])) {
-            if (entry.path().extension() == ".sdb") {
+            if (entry.path().extension() == extension) {
                 files.push_back(entry.path().lexically_relative(m_rootDirectory).string());
             }
         }
@@ -71,17 +81,31 @@ std::vector<std::string> Resources::sdbFiles() const
     return files;
 }
 
-std::vector<std::string> Resources::csxFiles() const
-{
-    std::vector<std::string> files;
-    for (int index : {Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}) {
-        if (!fs::is_directory(m_mainDirectories[index])) continue;
+std::vector<std::string> Resources::filesWithExtensionAsync(std::initializer_list<int> indices, std::string_view extension) const {
+    std::vector<std::future<std::vector<std::string>>> futures;
+    futures.reserve(indices.size());
 
-        for (const auto& entry : fs::recursive_directory_iterator(m_mainDirectories[index])) {
-            if (entry.path().extension() == ".csx") {
-                files.push_back(entry.path().lexically_relative(m_rootDirectory).string());
+    // Запускаем асинхронные задачи для каждой директории
+    for (int index : indices) {
+        futures.push_back(std::async(std::launch::async, [this, index, extension]() {
+            std::vector<std::string> localFiles;
+            if (!fs::is_directory(m_mainDirectories[index])) return localFiles;
+
+            for (const auto& entry : fs::recursive_directory_iterator(m_mainDirectories[index])) {
+                if (entry.path().extension() == extension) {
+                    localFiles.push_back(entry.path().lexically_relative(m_rootDirectory).string());
+                }
             }
-        }
+            return localFiles;
+        }));
     }
-    return files;
+
+    // Собираем результаты из всех потоков
+    std::vector<std::string> allFiles;
+    for (auto& future : futures) {
+        auto localFiles = future.get();
+        allFiles.insert(allFiles.end(), localFiles.begin(), localFiles.end());
+    }
+
+    return allFiles;
 }
