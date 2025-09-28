@@ -59,7 +59,7 @@ std::vector<std::string> Resources::levelNames() const
 
 std::vector<std::string> Resources::sdbFiles() const
 {
-    return filesWithExtensionAsync({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
+    return filesWithExtension({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
 }
 
 std::vector<std::string> Resources::csxFiles() const

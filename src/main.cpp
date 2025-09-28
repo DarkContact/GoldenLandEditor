@@ -205,15 +205,19 @@ int main(int, char**)
                         } else if (!*filelist) {
                             // Dialog was canceled.
                             return;
+                        } else if ((*filelist)[0] == '\0') {
+                            // Выбрана всякая чушь из панели управления
+                            return;
                         }
 
                         if (*filelist) {
                             RootDirectoryContext* rootDirectoryContext = static_cast<RootDirectoryContext*>(userdata);
-                            rootDirectoryContext->setRootDirectory(*filelist);
+                            if (rootDirectoryContext->rootDirectory() == *filelist) return;
 
+                            backgroundWork = true;
+                            rootDirectoryContext->setRootDirectory(*filelist);
                             auto backgroundTask = [] (RootDirectoryContext* rootDirectoryContext) {
-                                backgroundWork = true;
-                                Resources resources(rootDirectoryContext->rootDirectory());
+                              Resources resources(rootDirectoryContext->rootDirectory());
                                 rootDirectoryContext->levelNames = resources.levelNames();
                                 rootDirectoryContext->csxFiles = resources.csxFiles();
                                 rootDirectoryContext->sdbFiles = resources.sdbFiles();
