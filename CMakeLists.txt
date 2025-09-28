@@ -39,6 +39,17 @@ add_executable(GoldenLandEditor
     src/windows/SdbViewer.h src/windows/SdbViewer.cpp
 )
 
+option(USE_TRACY "Enable Tracy profiler" OFF)
+if(USE_TRACY)
+    option(TRACY_ENABLE "" ON)
+    option(TRACY_ON_DEMAND "" ON)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/external/tracy)
+    target_link_libraries(GoldenLandEditor PUBLIC Tracy::TracyClient)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(GoldenLandEditor PRIVATE -g -fno-omit-frame-pointer -O3)
+    endif()
+endif()
+
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)
 target_include_directories(GoldenLandEditor PRIVATE external/stb)

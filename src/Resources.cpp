@@ -36,4 +36,3 @@ std::vector<std::string> Resources::filesWithExtension(std::string_view extensio
 
     return files;
 }
-
