@@ -29,12 +29,16 @@ struct RootDirectoryContext {
     std::vector<std::string> sdbFiles;
     std::vector<Level> levels;
     int selectedLevelIndex = 0;
+    bool showCsxWindow = false;
+    bool showSdbWindow = false;
 
     const std::string& rootDirectory() const { return m_rootDirectory; }
 
     void setRootDirectory(const std::string& rootDirectory) {
         levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
         selectedLevelIndex = 0;
+        showCsxWindow = false;
+        showSdbWindow = false;
         m_rootDirectory = rootDirectory;
     }
 
@@ -72,8 +76,8 @@ int main(int, char**)
         backgroundWork = true;
         Resources resources(rootDirectoryContext.rootDirectory());
         rootDirectoryContext.levelNames = resources.levelNames();
-        rootDirectoryContext.csxFiles = resources.filesWithExtension(".csx");
-        rootDirectoryContext.sdbFiles = resources.filesWithExtension(".sdb");
+        rootDirectoryContext.csxFiles = resources.csxFiles();
+        rootDirectoryContext.sdbFiles = resources.sdbFiles();
         backgroundWork = false;
     };
     auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(rootDirectoryContext));
@@ -172,8 +176,6 @@ int main(int, char**)
 
         static bool show_settings_window = false;
         static bool show_levels_window = false;
-        static bool show_csx_window = false;
-        static bool show_sdb_window = false;
 
         static bool loaderWindow = false;
         loaderWindow = backgroundWork;
@@ -185,10 +187,10 @@ int main(int, char**)
                     show_levels_window = true;
                 }
                 if (ImGui::MenuItem("CSX Viewer")) {
-                    show_csx_window = true;
+                    rootDirectoryContext.showCsxWindow = true;
                 }
                 if (ImGui::MenuItem("SDB Viewer")) {
-                    show_sdb_window = true;
+                    rootDirectoryContext.showSdbWindow = true;
                 }
                 ImGui::EndMenu();
             }
@@ -213,8 +215,8 @@ int main(int, char**)
                                 backgroundWork = true;
                                 Resources resources(rootDirectoryContext->rootDirectory());
                                 rootDirectoryContext->levelNames = resources.levelNames();
-                                rootDirectoryContext->csxFiles = resources.filesWithExtension(".csx");
-                                rootDirectoryContext->sdbFiles = resources.filesWithExtension(".sdb");
+                                rootDirectoryContext->csxFiles = resources.csxFiles();
+                                rootDirectoryContext->sdbFiles = resources.sdbFiles();
                                 // TODO: Запись rootDirectory в ini файл настроек
                                 backgroundWork = false;
                             };
@@ -233,11 +235,11 @@ int main(int, char**)
         if (show_settings_window) {
             FontSettings::update(show_settings_window);
         }
-        if (show_csx_window) {
-            CsxViewer::update(show_csx_window, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csxFiles);
+        if (rootDirectoryContext.showCsxWindow) {
+            CsxViewer::update(rootDirectoryContext.showCsxWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csxFiles);
         }
-        if (show_sdb_window) {
-            SdbViewer::update(show_sdb_window, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
+        if (rootDirectoryContext.showSdbWindow) {
+            SdbViewer::update(rootDirectoryContext.showSdbWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
         }
 
         std::string loadedLevelName;
