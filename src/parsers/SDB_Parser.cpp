@@ -3,8 +3,8 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "FileLoader.h"
-#include "StringUtils.h"
+#include "utils/FileLoader.h"
+#include "utils/StringUtils.h"
 
 SDB_Parser::SDB_Parser(std::string_view sdbPath) :
     m_filePath(sdbPath)

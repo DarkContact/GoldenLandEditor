@@ -1,7 +1,7 @@
 #include "LVL_Parser.h"
 
-#include "FileLoader.h"
-#include "StringUtils.h"
+#include "utils/FileLoader.h"
+#include "utils/StringUtils.h"
 
 LVL_Parser::LVL_Parser(std::string_view lvlPath) :
     m_filePath(lvlPath)

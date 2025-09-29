@@ -3,7 +3,7 @@
 #include <array>
 #include <format>
 
-#include "TextureLoader.h"
+#include "utils/TextureLoader.h"
 #include "imgui.h"
 
 bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)

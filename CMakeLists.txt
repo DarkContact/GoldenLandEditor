@@ -13,18 +13,18 @@ add_executable(GoldenLandEditor
     src/windows/FontSettings.cpp
     src/Resources.h
     src/Resources.cpp
-    src/ImguiHelper.h
-    src/ImguiHelper.cpp
+    src/utils/ImguiHelper.h
+    src/utils/ImguiHelper.cpp
     src/windows/LevelPicker.h
     src/windows/LevelPicker.cpp
     src/parsers/SEF_Parser.h
     src/parsers/SEF_Parser.cpp
     src/Level.h
     src/Level.cpp
-    src/StringUtils.h
-    src/StringUtils.cpp
-    src/TextureLoader.h
-    src/TextureLoader.cpp
+    src/utils/StringUtils.h
+    src/utils/StringUtils.cpp
+    src/utils/TextureLoader.h
+    src/utils/TextureLoader.cpp
     src/parsers/CSX_Parser.h
     src/parsers/CSX_Parser.cpp
     src/windows/CsxViewer.h
@@ -35,8 +35,10 @@ add_executable(GoldenLandEditor
     src/parsers/LVL_Parser.cpp
     src/parsers/SDB_Parser.h
     src/parsers/SDB_Parser.cpp
-    src/FileLoader.h src/FileLoader.cpp
-    src/windows/SdbViewer.h src/windows/SdbViewer.cpp
+    src/utils/FileLoader.h
+    src/utils/FileLoader.cpp
+    src/windows/SdbViewer.h
+    src/windows/SdbViewer.cpp
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)

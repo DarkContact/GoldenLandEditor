@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "StringUtils.h"
+#include "utils/StringUtils.h"
 
 SEF_Parser::SEF_Parser(std::string_view sefPath) {
     std::ifstream file(sefPath.data());
