@@ -19,11 +19,12 @@
 #include "windows/CsxViewer.h"
 #include "windows/SdbViewer.h"
 
+#include "utils/TracyProfiler.h"
+
 // TODO: Сохранение уровня
 // TODO: Изменение данных уровня с поддержкой undo/redo
 
 struct RootDirectoryContext {
-
     std::vector<std::string> levelNames;
     std::vector<std::string> csxFiles;
     std::vector<std::string> sdbFiles;
@@ -155,6 +156,7 @@ int main(int, char**)
     bool done = false;
     while (!done)
     {
+        Tracy_ZoneScopedN("Main Loop");
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -261,6 +263,7 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.c_str());
                 } else {
+                    Tracy_ZoneScopedN("Load level");
                     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
                 }
             }
@@ -290,6 +293,8 @@ int main(int, char**)
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 
         SDL_RenderPresent(renderer);
+
+        Tracy_FrameMark;
     }
 
     // Cleanup

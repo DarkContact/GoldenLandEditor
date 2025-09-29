@@ -39,13 +39,24 @@ add_executable(GoldenLandEditor
     src/utils/FileLoader.cpp
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
+    src/utils/TracyProfiler.h
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)
 if(USE_TRACY)
+    include(FetchContent)
+
+    FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable(tracy)
+
     option(TRACY_ENABLE "" ON)
     option(TRACY_ON_DEMAND "" ON)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/external/tracy)
     target_link_libraries(GoldenLandEditor PUBLIC Tracy::TracyClient)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(GoldenLandEditor PRIVATE -g -fno-omit-frame-pointer -O3)
