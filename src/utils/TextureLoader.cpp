@@ -1,21 +1,20 @@
 #include "TextureLoader.h"
 
-#include "imgui.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include "parsers/CSX_Parser.h"
 
+#include "utils/FileLoader.h"
 #include "utils/TracyProfiler.h"
 
-bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture)
+bool TextureLoader::loadTextureFromMemory(const void* data, size_t dataSize, SDL_Renderer* renderer, SDL_Texture** outTexture)
 {
     Tracy_ZoneScoped;
     int image_width = 0;
     int image_height = 0;
     int channels = 4;
-    unsigned char* image_data = stbi_load_from_memory((const unsigned char*)data, (int)data_size, &image_width, &image_height, NULL, 4);
+    unsigned char* image_data = stbi_load_from_memory((const stbi_uc*)data, (int)dataSize, &image_width, &image_height, NULL, 4);
     if (image_data == nullptr)
     {
         fprintf(stderr, "Failed to load image: %s\n", stbi_failure_reason());
@@ -33,7 +32,7 @@ bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SD
     if (texture == nullptr)
         fprintf(stderr, "Failed to create SDL texture: %s\n", SDL_GetError());
 
-    *out_texture = texture;
+    *outTexture = texture;
 
     SDL_DestroySurface(surface);
     stbi_image_free(image_data);
@@ -41,48 +40,20 @@ bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SD
     return true;
 }
 
-bool TextureLoader::loadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture)
+bool TextureLoader::loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, SDL_Texture** outTexture)
 {
     Tracy_ZoneScoped;
-    FILE* f = fopen(file_name, "rb");
-    if (f == NULL)
-        return false;
-    fseek(f, 0, SEEK_END);
-    size_t file_size = (size_t)ftell(f);
-    if (file_size == -1) {
-        fclose(f);
-        return false;
-    }
-    fseek(f, 0, SEEK_SET);
-    void* file_data = IM_ALLOC(file_size);
-    fread(file_data, 1, file_size, f);
-    fclose(f);
-    bool ret = loadTextureFromMemory(file_data, file_size, renderer, out_texture);
-    IM_FREE(file_data);
-    return ret;
+    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName);
+    return loadTextureFromMemory(fileData.data(), fileData.size(), renderer, outTexture);
 }
 
-bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture)
+bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, SDL_Texture** outTexture)
 {
     Tracy_ZoneScoped;
-    FILE* f = fopen(file_name, "rb");
-    if (f == NULL)
-        return false;
-    fseek(f, 0, SEEK_END);
-    size_t file_size = (size_t)ftell(f);
-    if (file_size == -1) {
-        fclose(f);
-        return false;
-    }
-    fseek(f, 0, SEEK_SET);
-    void* file_data = IM_ALLOC(file_size);
-    fread(file_data, 1, file_size, f);
-    fclose(f);
+    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName);
 
-    CSX_Parser csxParser((const uint8_t*)file_data, file_size);
+    CSX_Parser csxParser(fileData.data(), fileData.size());
     SDL_Surface* surface = csxParser.parse();
-
-    IM_FREE(file_data);
 
     if (surface == nullptr) {
         fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());
@@ -91,11 +62,11 @@ bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* 
 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (texture == nullptr) {
-        fprintf(stderr, "Failed to create SDL texture %s: %s\n", file_name, SDL_GetError());
+        fprintf(stderr, "Failed to create SDL texture %s: %s\n", fileName, SDL_GetError());
         fprintf(stderr, "Surface dimensions: %dx%d\n", surface->w, surface->h);
     }
 
-    *out_texture = texture;
+    *outTexture = texture;
 
     SDL_DestroySurface(surface);
     return true;
