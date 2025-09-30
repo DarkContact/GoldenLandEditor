@@ -7,8 +7,11 @@
 
 #include "parsers/CSX_Parser.h"
 
+#include "utils/TracyProfiler.h"
+
 bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SDL_Renderer* renderer, SDL_Texture** out_texture)
 {
+    Tracy_ZoneScoped;
     int image_width = 0;
     int image_height = 0;
     int channels = 4;
@@ -40,6 +43,7 @@ bool TextureLoader::loadTextureFromMemory(const void* data, size_t data_size, SD
 
 bool TextureLoader::loadTextureFromFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture)
 {
+    Tracy_ZoneScoped;
     FILE* f = fopen(file_name, "rb");
     if (f == NULL)
         return false;
@@ -60,6 +64,7 @@ bool TextureLoader::loadTextureFromFile(const char* file_name, SDL_Renderer* ren
 
 bool TextureLoader::loadTextureFromCsxFile(const char* file_name, SDL_Renderer* renderer, SDL_Texture** out_texture)
 {
+    Tracy_ZoneScoped;
     FILE* f = fopen(file_name, "rb");
     if (f == NULL)
         return false;

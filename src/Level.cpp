@@ -4,7 +4,10 @@
 
 #include "utils/TextureLoader.h"
 
+#include "utils/TracyProfiler.h"
+
 Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
+    Tracy_ZoneScopedN("Level loading");
     m_data.name = level;
 
     std::string sefPath = levelSef(rootDirectory, level, levelType);

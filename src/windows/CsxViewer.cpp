@@ -6,8 +6,11 @@
 #include "utils/TextureLoader.h"
 #include "imgui.h"
 
+#include "utils/TracyProfiler.h"
+
 bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)
 {
+    Tracy_ZoneScopedN("CsxViewer::update");
     if (csxFiles.empty()) return false;
 
     static int selectedIndex = -1;

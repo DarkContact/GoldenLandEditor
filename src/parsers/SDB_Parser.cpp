@@ -5,6 +5,7 @@
 
 #include "utils/FileLoader.h"
 #include "utils/StringUtils.h"
+#include "utils/TracyProfiler.h"
 
 SDB_Parser::SDB_Parser(std::string_view sdbPath) :
     m_filePath(sdbPath)
@@ -14,6 +15,7 @@ SDB_Parser::SDB_Parser(std::string_view sdbPath) :
 
 SDB_Data& SDB_Parser::parse()
 {
+    Tracy_ZoneScopedN("SDB_Parser::parse");
     auto buffer = FileLoader::loadFile(m_filePath); // Загружаем весь файл в буфер
     if (buffer.size() < 4) {
         throw std::runtime_error("File too small.");

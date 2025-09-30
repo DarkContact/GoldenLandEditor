@@ -5,8 +5,11 @@
 #include "imgui.h"
 #include "parsers/SDB_Parser.h"
 
+#include "utils/TracyProfiler.h"
+
 bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files)
 {
+    Tracy_ZoneScopedN("SdbViewer::update");
     if (files.empty()) return false;
 
     static int selectedIndex = -1;

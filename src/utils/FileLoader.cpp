@@ -3,8 +3,11 @@
 #include <fstream>
 #include <format>
 
+#include "utils/TracyProfiler.h"
+
 std::vector<uint8_t> FileLoader::loadFile(std::string_view m_filePath)
 {
+    Tracy_ZoneScoped;
     std::ifstream in(m_filePath.data(), std::ios::binary | std::ios::ate);
     if (!in)
         throw std::runtime_error(std::format("Cannot open file: {}", m_filePath));

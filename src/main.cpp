@@ -156,7 +156,6 @@ int main(int, char**)
     bool done = false;
     while (!done)
     {
-        Tracy_ZoneScopedN("Main Loop");
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -263,7 +262,6 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.c_str());
                 } else {
-                    Tracy_ZoneScopedN("Load level");
                     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
                 }
             }
@@ -285,12 +283,25 @@ int main(int, char**)
         }
 
         // Rendering
-        ImGui::Render();
-        SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        SDL_RenderClear(renderer);
+        {
+            Tracy_ZoneScopedN("Rendering");
+            Tracy_ZoneColor(0x32cd32); // LimeGreen
 
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+            ImGui::Render();
+
+            SDL_SetRenderScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+            SDL_SetRenderDrawColorFloat(renderer, clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+            SDL_RenderClear(renderer);
+
+            ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+        }
+
+        {
+            Tracy_ZoneScopedN("CaptureImage");
+            Tracy_ZoneColor(0xc0c0c0); // Silver
+
+            CaptureImage(renderer);
+        }
 
         SDL_RenderPresent(renderer);
 

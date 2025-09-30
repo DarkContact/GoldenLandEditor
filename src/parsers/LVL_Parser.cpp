@@ -2,6 +2,7 @@
 
 #include "utils/FileLoader.h"
 #include "utils/StringUtils.h"
+#include "utils/TracyProfiler.h"
 
 LVL_Parser::LVL_Parser(std::string_view lvlPath) :
     m_filePath(lvlPath)
@@ -10,6 +11,7 @@ LVL_Parser::LVL_Parser(std::string_view lvlPath) :
 }
 
 LVL_Data& LVL_Parser::parse() {
+    Tracy_ZoneScopedN("LVL_Parser::parse");
     auto buffer = FileLoader::loadFile(m_filePath);
     extractBlocks(buffer);
     m_data = interpretData();

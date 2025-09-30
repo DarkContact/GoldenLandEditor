@@ -6,39 +6,29 @@
     #define Tracy_ZoneScoped ZoneScoped
     #define Tracy_ZoneScopedN(name) ZoneScopedN(name)
 
+    #define Tracy_ZoneText(txt, size) ZoneText(txt, size)
+    #define Tracy_ZoneTextF(fmt, ...) ZoneTextF(fmt, ##__VA_ARGS__)
+    #define Tracy_ZoneColor(color) ZoneColor(color)
+
     #define Tracy_FrameImage(image, width, height, offset, flip) FrameImage(image, width, height, offset, flip)
 
     #define Tracy_FrameMark FrameMark
+
+    #include "SDL3/SDL_render.h"
+    void CaptureImage(SDL_Renderer* renderer); // Работает, но медленно (~12-15 мс)
 
 #else
     #define Tracy_ZoneScoped
     #define Tracy_ZoneScopedN(name)
 
+    #define Tracy_ZoneText(txt, size)
+    #define Tracy_ZoneTextF(fmt, ...)
+    #define Tracy_ZoneColor(color)
+
     #define Tracy_FrameImage(image, width, height, offset, flip)
 
     #define Tracy_FrameMark
+
+    struct SDL_Renderer;
+    void CaptureImage(SDL_Renderer* renderer);
 #endif
-
-// Работает, но очень медленно (15 мс)
-// {
-//     int screenW, screenH;
-//     SDL_GetRenderOutputSize(renderer, &screenW, &screenH);
-
-//     SDL_Rect rect;
-//     rect.w = 320;
-//     rect.h = 180;
-//     rect.x = (screenW - rect.w) / 2;
-//     rect.y = (screenH - rect.h) / 2;
-
-//     SDL_Surface* surface = SDL_RenderReadPixels(renderer, &rect);
-//     SDL_Surface* rgbaSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-
-//     Tracy_FrameImage(rgbaSurface->pixels,
-//                      rgbaSurface->w,
-//                      rgbaSurface->h,
-//                      0,
-//                      false);
-
-//     SDL_DestroySurface(surface);
-//     SDL_DestroySurface(rgbaSurface);
-// }

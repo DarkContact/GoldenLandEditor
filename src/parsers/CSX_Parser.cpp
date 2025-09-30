@@ -1,6 +1,9 @@
 #include "CSX_Parser.h"
 
+#include "utils/TracyProfiler.h"
+
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
+    Tracy_ZoneScopedN("CSX_Parser::parse");
     // Читаем количество цветов в палитре
     int colorCount = readInt();
     SDL_Color fillColor = readBGRA();
@@ -87,6 +90,7 @@ SDL_Color CSX_Parser::readBGRA() {
 }
 
 void CSX_Parser::decodeLine(const std::vector<uint8_t>& bytes, size_t byteIndex, std::vector<int>& pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
+    Tracy_ZoneScopedN("CSX_Parser::decodeLine");
     size_t startPixelIndex = pixelIndex;
     while (widthLeft > 0 && byteCount > 0) {
         uint8_t x = bytes[byteIndex];

@@ -40,6 +40,7 @@ add_executable(GoldenLandEditor
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
+    src/utils/TracyProfiler.cpp
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)
@@ -60,6 +61,7 @@ if(USE_TRACY)
     target_link_libraries(GoldenLandEditor PUBLIC Tracy::TracyClient)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(GoldenLandEditor PRIVATE -g -fno-omit-frame-pointer -O3)
+        target_compile_options(imgui PRIVATE -g -fno-omit-frame-pointer -O3)
     endif()
 endif()
 

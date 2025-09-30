@@ -5,8 +5,12 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include "utils/TracyProfiler.h"
+
 bool LevelViewer::update(bool& showWindow, Level& level)
 {
+    Tracy_ZoneScopedN("LevelViewer::update");
+    Tracy_ZoneText(level.data().name.c_str(), level.data().name.size());
     ImGuiIO& io = ImGui::GetIO();
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -181,6 +185,7 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
 
 // TODO: Добавить проверку что курсор мыши в активной области уровня
 void LevelViewer::handleLevelDragScroll(Level& level) {
+    Tracy_ZoneScoped;
     ImGuiIO& io = ImGui::GetIO();
     auto& imgui = level.data().imgui;
     if (!ImGui::IsWindowFocused()) {
@@ -225,6 +230,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 
 void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect)
 {
+    Tracy_ZoneScoped;
     bool hasMinimap = (level.data().minimap != nullptr);
 
     const ImVec2 minimapSize = computeMinimapSize(level, hasMinimap);
@@ -407,6 +413,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
 
 void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     std::string mouseOnLevelInfo = "None";
     if (levelRect.Contains(ImGui::GetMousePos())) {
         ImVec2 mouseOnLevel = transformPoint(ImGui::GetMousePos(), levelRect, {ImVec2(0, 0), ImVec2(level.data().background->w, level.data().background->h)});
@@ -458,6 +465,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
 // [1] [3]
 void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     const MapTiles& mapTiles = level.data().lvlData.mapTiles;
     if (mapTiles.chunks.empty()) return;
 
@@ -588,6 +596,7 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     for (const SEF_Person& person : level.data().sefData.persons) {
         ImVec2 position(drawPosition.x + person.position.x * Level::tileWidth,
@@ -623,6 +632,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 
 void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     for (const SEF_PointEntrance& pointEnt : level.data().sefData.pointsEntrance) {
         ImVec2 position(drawPosition.x + pointEnt.position.x * Level::tileWidth,
@@ -661,6 +671,7 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 
 void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     auto drawListFlags = drawList->Flags;
     drawList->Flags = ImDrawListFlags_None;
