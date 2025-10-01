@@ -1,6 +1,5 @@
 #include "CsxViewer.h"
 
-#include <array>
 #include <format>
 
 #include "utils/TextureLoader.h"
@@ -16,7 +15,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static int selectedIndex = -1;
     static SDL_Texture* csxTexture = nullptr;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
-    static std::array<bool, 5> activeButtons = {true, false, false, false, false};
+    static int activeButtonIndex = 0;
     static ImGuiTextFilter textFilter;
 
     ImGui::Begin("CSX Viewer", &showWindow);
@@ -47,49 +46,44 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     ImGui::SameLine();
 
     // Right
-    {
+    if (csxTexture) {
         ImGui::BeginGroup();
+        {
+            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
-        ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
-        if (csxTexture) {
             ImGui::Text("%dx%d", csxTexture->w, csxTexture->h);
             ImGui::ImageWithBg((ImTextureID)csxTexture, ImVec2(csxTexture->w, csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
-        }
-        ImGui::EndChild();
+            ImGui::EndChild();
 
-        if (ImGui::RadioButton("Transparent", activeButtons[0])) {
-            bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
-            activeButtons.fill(false);
-            activeButtons[0] = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Black", activeButtons[1])) {
-            bgColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-            activeButtons.fill(false);
-            activeButtons[1] = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Gray", activeButtons[2])) {
-            bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-            activeButtons.fill(false);
-            activeButtons[2] = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("White", activeButtons[3])) {
-            bgColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-            activeButtons.fill(false);
-            activeButtons[3] = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Custom", activeButtons[4])) {
-            activeButtons.fill(false);
-            activeButtons[4] = true;
-        }
-        ImGui::SameLine();
-        if (activeButtons[4]) {
-            ImGui::ColorEdit4("Color", (float*)&bgColor, ImGuiColorEditFlags_NoInputs);
-        }
 
+            if (ImGui::RadioButton("Transparent", activeButtonIndex == 0)) {
+                bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+                activeButtonIndex = 0;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Black", activeButtonIndex == 1)) {
+                bgColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+                activeButtonIndex = 1;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Gray", activeButtonIndex == 2)) {
+                bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+                activeButtonIndex = 2;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("White", activeButtonIndex == 3)) {
+                bgColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+                activeButtonIndex = 3;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Custom", activeButtonIndex == 4)) {
+                activeButtonIndex = 4;
+            }
+            ImGui::SameLine();
+            if (activeButtonIndex == 4) {
+                ImGui::ColorEdit4("Color", (float*)&bgColor, ImGuiColorEditFlags_NoInputs);
+            }
+        }
         ImGui::EndGroup();
     }
 
