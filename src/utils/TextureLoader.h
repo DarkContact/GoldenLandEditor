@@ -1,5 +1,6 @@
 #pragma once
 #include <span>
+#include <string>
 #include <cstdint>
 
 class Texture;
@@ -9,7 +10,7 @@ class TextureLoader {
 public:
     TextureLoader() = delete;
 
-    static bool loadTextureFromMemory(std::span<uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture);
-    static bool loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture);
-    static bool loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture);
+    static bool loadTextureFromMemory(std::span<uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
+    static bool loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
+    static bool loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
 };

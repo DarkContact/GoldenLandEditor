@@ -7,10 +7,9 @@
 
 #include "utils/TracyProfiler.h"
 
-bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files)
+void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files)
 {
     Tracy_ZoneScopedN("SdbViewer::update");
-    if (files.empty()) return false;
 
     static int selectedIndex = -1;
     static SDB_Data sdbRecords;
@@ -30,6 +29,7 @@ bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                 if (textFilterFile.PassFilter(files[i].c_str())
                     && ImGui::Selectable(files[i].c_str(), selectedIndex == i))
                 {
+                    // TODO: При переключении SDB сбрасывать ScrollY у таблицы
                     selectedIndex = i;
 
                     SDB_Parser parser(std::format("{}/{}", rootDirectory, files[i]));
@@ -70,5 +70,10 @@ bool SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
     ImGui::End();
 
-    return true;
+    if (!showWindow) {
+        selectedIndex = -1;
+        sdbRecords.strings.clear();
+        textFilterFile.Clear();
+        textFilterString.Clear();
+    }
 }

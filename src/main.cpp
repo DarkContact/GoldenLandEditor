@@ -175,8 +175,8 @@ int main(int, char**)
 
         //ImGui::ShowDemoWindow();
 
-        static bool show_settings_window = false;
-        static bool show_levels_window = false;
+        static bool showSettingsWindow = false;
+        static bool showLevelsWindow = false;
 
         static bool loaderWindow = false;
         loaderWindow = backgroundWork;
@@ -185,13 +185,13 @@ int main(int, char**)
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Levels")) {
-                    show_levels_window = true;
+                    showLevelsWindow = !rootDirectoryContext.levelNames.empty();
                 }
                 if (ImGui::MenuItem("CSX Viewer")) {
-                    rootDirectoryContext.showCsxWindow = true;
+                    rootDirectoryContext.showCsxWindow = !rootDirectoryContext.csxFiles.empty();
                 }
                 if (ImGui::MenuItem("SDB Viewer")) {
-                    rootDirectoryContext.showSdbWindow = true;
+                    rootDirectoryContext.showSdbWindow = !rootDirectoryContext.sdbFiles.empty();
                 }
                 ImGui::EndMenu();
             }
@@ -230,26 +230,26 @@ int main(int, char**)
                     }, &rootDirectoryContext, window, rootDirectoryContext.rootDirectory().c_str(), false);
                 }
                 if (ImGui::MenuItem("Fonts")) {
-                    show_settings_window = true;
+                    showSettingsWindow = true;
                 }
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
         }
 
-        if (show_settings_window) {
-            FontSettings::update(show_settings_window);
+        if (showSettingsWindow) {
+            FontSettings::update(showSettingsWindow);
         }
-        if (rootDirectoryContext.showCsxWindow) {
+        if (rootDirectoryContext.showCsxWindow && !rootDirectoryContext.csxFiles.empty()) {
             CsxViewer::update(rootDirectoryContext.showCsxWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csxFiles);
         }
-        if (rootDirectoryContext.showSdbWindow) {
+        if (rootDirectoryContext.showSdbWindow && !rootDirectoryContext.sdbFiles.empty()) {
             SdbViewer::update(rootDirectoryContext.showSdbWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
         }
 
         std::string loadedLevelName;
-        if (show_levels_window && !rootDirectoryContext.levelNames.empty()) {
-            if (LevelPicker::update(show_levels_window, rootDirectoryContext.levelNames, rootDirectoryContext.selectedLevelIndex)) {
+        if (showLevelsWindow && !rootDirectoryContext.levelNames.empty()) {
+            if (LevelPicker::update(showLevelsWindow, rootDirectoryContext.levelNames, rootDirectoryContext.selectedLevelIndex)) {
                 loadedLevelName = rootDirectoryContext.levelNames[rootDirectoryContext.selectedLevelIndex];
                 bool alreadyLoaded = false;
                 for (const auto& level : rootDirectoryContext.levels) {
@@ -262,6 +262,7 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.c_str());
                 } else {
+                    // Загрузка уровня
                     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
                 }
             }

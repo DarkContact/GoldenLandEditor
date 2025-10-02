@@ -8,13 +8,13 @@
 
 #include "utils/TracyProfiler.h"
 
-bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)
+void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)
 {
     Tracy_ZoneScopedN("CsxViewer::update");
-    if (csxFiles.empty()) return false;
 
     static int selectedIndex = -1;
     static Texture csxTexture;
+    static std::string csxTextureError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
     static ImGuiTextFilter textFilter;
@@ -35,7 +35,10 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     selectedIndex = i;
 
                     // TODO: Отображать ошибку в случае неуспешной загрузки
-                    TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTexture);
+                    bool isLoaded = TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTexture, &csxTextureError);
+                    if (!isLoaded) {
+                        csxTexture = {};
+                    }
                 }
             }
             ImGui::EndChild();
@@ -84,9 +87,16 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             }
         }
         ImGui::EndGroup();
+    } else if (selectedIndex > 0) {
+        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", csxTextureError.c_str());
     }
 
     ImGui::End();
 
-    return true;
+    if (!showWindow) {
+        selectedIndex = -1;
+        csxTexture = {};
+        csxTextureError.clear();
+        textFilter.Clear();
+    }
 }

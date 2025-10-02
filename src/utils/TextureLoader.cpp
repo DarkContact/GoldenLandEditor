@@ -10,7 +10,7 @@
 #include "utils/FileLoader.h"
 #include "utils/TracyProfiler.h"
 
-bool TextureLoader::loadTextureFromMemory(std::span<uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture)
+bool TextureLoader::loadTextureFromMemory(std::span<uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
     int imageWidth = 0;
@@ -22,19 +22,17 @@ bool TextureLoader::loadTextureFromMemory(std::span<uint8_t> memory, SDL_Rendere
     };
 
     if (!imageDataPtr) {
-        fprintf(stderr, "Failed to load image: %s\n", stbi_failure_reason());
+        if (error)
+            *error = std::string(stbi_failure_reason());
         return false;
     }
 
-    std::string error;
-    Texture texture = Texture::create(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, imageWidth, imageHeight, &error);
+    Texture texture = Texture::create(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, imageWidth, imageHeight, error);
     if (!texture) {
-        fprintf(stderr, "Failed to create texture: %s\n", error.c_str());
         return false;
     }
 
-    if (!texture.updatePixels(imageDataPtr.get(), nullptr, &error)) {
-        fprintf(stderr, "Failed to update texture: %s\n", error.c_str());
+    if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
         return false;
     }
 
@@ -42,17 +40,22 @@ bool TextureLoader::loadTextureFromMemory(std::span<uint8_t> memory, SDL_Rendere
     return true;
 }
 
-bool TextureLoader::loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture)
+bool TextureLoader::loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName);
-    return loadTextureFromMemory(fileData, renderer, outTexture);
+    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    if (fileData.empty())
+        return false;
+
+    return loadTextureFromMemory(fileData, renderer, outTexture, error);
 }
 
-bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture)
+bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName);
+    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    if (fileData.empty())
+        return false;
 
     CSX_Parser csxParser(fileData.data(), fileData.size());
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
@@ -61,15 +64,13 @@ bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* r
     };
 
     if (!surfacePtr) {
-        fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError());
+        fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError()); // FIXME: Ошибка должна придти из парсера
         return false;
     }
 
-    Texture texture = Texture::createFromSurface(renderer, surfacePtr.get());
+    // FIXME: Грузить текстуру вне зависимости от размера поверхности
+    Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
     if (!texture) {
-        // FIXME: Грузить текстуру вне зависимости от размера поверхности
-        fprintf(stderr, "Failed to create SDL texture %s: %s\n", fileName, SDL_GetError());
-        fprintf(stderr, "Surface dimensions: %dx%d\n", surfacePtr->w, surfacePtr->h);
         return false;
     }
 

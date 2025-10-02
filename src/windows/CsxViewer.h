@@ -9,6 +9,6 @@ class CsxViewer
 public:
     CsxViewer() = delete;
 
-    static bool update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles);
+    static void update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles);
 };
 
