@@ -41,6 +41,8 @@ add_executable(GoldenLandEditor WIN32
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
     src/utils/TracyProfiler.cpp
+    src/Texture.h
+    src/Texture.cpp
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)
