@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(SDL3 REQUIRED CONFIG)
 include(external/imgui.cmake)
 
-add_executable(GoldenLandEditor WIN32
+add_executable(GoldenLandEditor
     src/main.cpp
     src/windows/FontSettings.h
     src/windows/FontSettings.cpp
@@ -43,6 +43,10 @@ add_executable(GoldenLandEditor WIN32
     src/utils/TracyProfiler.cpp
     src/Texture.h
     src/Texture.cpp
+)
+
+set_target_properties(GoldenLandEditor PROPERTIES
+    WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)
