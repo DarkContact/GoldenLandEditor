@@ -2,7 +2,7 @@
 #include <string_view>
 
 #include "imgui.h"
-#include "SDL3/SDL_render.h"
+#include "Texture.h"
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
 
@@ -53,8 +53,8 @@ struct LevelImgui {
 
 struct LevelData {
     std::string name;
-    SDL_Texture* background = nullptr;
-    SDL_Texture* minimap = nullptr;
+    Texture background;
+    Texture minimap;
     SEF_Data sefData;
     LVL_Data lvlData;
     LevelImgui imgui;
@@ -64,13 +64,13 @@ class Level
 {
 public:
     Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType = "single");
-    ~Level();
+    ~Level() = default;
 
     Level(const Level&) = delete;
     Level& operator=(const Level&) = delete;
 
-    Level(Level&& other) noexcept;
-    Level& operator=(Level&& other) noexcept;
+    Level(Level&& other) noexcept = default;
+    Level& operator=(Level&& other) noexcept = default;
 
     const LevelData& data() const;
     LevelData& data();

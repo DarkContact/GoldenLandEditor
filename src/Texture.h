@@ -26,12 +26,18 @@ public:
                                      SDL_Surface *surface,
                                      std::string* error = nullptr) noexcept;
 
+    bool updatePixels(const void* pixels, const SDL_Rect* rect = nullptr, std::string* error = nullptr) noexcept;
+
     bool isValid() const noexcept { return m_texture; }
     explicit operator bool() const noexcept { return m_texture; }
 
     SDL_Texture* get() const noexcept { return m_texture; }
 
+    const SDL_Texture* operator->() const { return m_texture; }
+
 private:
+    void freeTexture();
+
     SDL_Texture* m_texture = nullptr;
 };
 

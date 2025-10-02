@@ -92,7 +92,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     // Отрисовка уровня
     ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)level.data().background, ImVec2(level.data().background->w, level.data().background->h));
+    ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
 
     handleLevelDragScroll(level);
 
@@ -231,7 +231,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect)
 {
     Tracy_ZoneScoped;
-    bool hasMinimap = (level.data().minimap != nullptr);
+    bool hasMinimap = level.data().minimap.isValid();
 
     const ImVec2 minimapSize = computeMinimapSize(level, hasMinimap);
     const ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
@@ -245,8 +245,8 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
 
-        ImGui::ImageWithBg((ImTextureID)(hasMinimap ? level.data().minimap
-                                                    : level.data().background),
+        ImGui::ImageWithBg((ImTextureID)(hasMinimap ? level.data().minimap.get()
+                                                    : level.data().background.get()),
                            minimapSize, ImVec2(0, 0), ImVec2(1, 1), ImVec4(0, 0, 0, 1));
 
         ImGui::PopStyleColor();

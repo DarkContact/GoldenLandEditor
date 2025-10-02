@@ -3,6 +3,7 @@
 #include <format>
 
 #include "utils/TextureLoader.h"
+#include "Texture.h"
 #include "imgui.h"
 
 #include "utils/TracyProfiler.h"
@@ -13,7 +14,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     if (csxFiles.empty()) return false;
 
     static int selectedIndex = -1;
-    static SDL_Texture* csxTexture = nullptr;
+    static Texture csxTexture;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
     static ImGuiTextFilter textFilter;
@@ -33,10 +34,8 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 {
                     selectedIndex = i;
 
-                    if (csxTexture)
-                        SDL_DestroyTexture(csxTexture);
-
-                    TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, &csxTexture);
+                    // TODO: Отображать ошибку в случае неуспешной загрузки
+                    TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTexture);
                 }
             }
             ImGui::EndChild();
@@ -52,7 +51,7 @@ bool CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
             ImGui::Text("%dx%d", csxTexture->w, csxTexture->h);
-            ImGui::ImageWithBg((ImTextureID)csxTexture, ImVec2(csxTexture->w, csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
+            ImGui::ImageWithBg((ImTextureID)csxTexture.get(), ImVec2(csxTexture->w, csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
             ImGui::EndChild();
 
 
