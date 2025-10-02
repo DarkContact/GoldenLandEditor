@@ -1,6 +1,14 @@
 #include "CSX_Parser.h"
 
+#include <array>
 #include "utils/TracyProfiler.h"
+
+CSX_Parser::CSX_Parser(const uint8_t* buffer, size_t size) :
+    m_data(buffer),
+    m_dataSize(size)
+{
+
+}
 
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     Tracy_ZoneScopedN("CSX_Parser::parse");
@@ -12,31 +20,31 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     }
 
     // Читаем палитру цветов
-    std::vector<SDL_Color> colors;
+    std::array<SDL_Color, 256> colors = {};
     for (int i = 0; i < colorCount; i++) {
-        colors.push_back(readBGRA());
+        colors[i] = readBGRA();
     }
 
     // Читаем размеры изображения
     int width = readInt();
     int height = readInt();
 
-    // Читаем индексы строк пикселей
-    std::vector<int> byteLineIndices(height + 1);
+    // read relative line offsets
+    std::vector<int> lineOffsets(height + 1);
     for (int i = 0; i < height + 1; i++) {
-        byteLineIndices[i] = readInt();
+        lineOffsets[i] = readInt();
     }
 
     // Читаем данные пикселей
-    std::vector<uint8_t> bytes(byteLineIndices[height]);
-    for (int i = 0; i < byteLineIndices[height]; i++) {
+    std::vector<uint8_t> bytes(lineOffsets[height]);
+    for (int i = 0; i < lineOffsets[height]; i++) {
         bytes[i] = readByte();
     }
 
     // Декодируем изображение
-    std::vector<int> pixelIndices(width * height, -1);
+    std::vector<uint16_t> pixelIndices(width * height, 0xffff);
     for (int y = 0; y < height; y++) {
-        decodeLine(bytes, byteLineIndices[y], pixelIndices, y * width, width, byteLineIndices[y + 1] - byteLineIndices[y]);
+        decodeLine(bytes, lineOffsets[y], pixelIndices, y * width, width, lineOffsets[y + 1] - lineOffsets[y]);
     }
 
     // Создаём SDL_Surface
@@ -52,7 +60,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
         for (int x = 0; x < width; x++) {
             int idx = y * width + x;
             SDL_Color c;
-            if (pixelIndices[idx] >= 0) {
+            if (pixelIndices[idx] != 0xffff) {
                 c = colors[pixelIndices[idx]];
             } else {
                 c = fillColor;
@@ -67,31 +75,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     return surface;
 }
 
-int32_t CSX_Parser::readInt() {
-    if (offset + 4 > dataSize) return 0; // Защита от выхода за границы
-    int32_t val = *(int32_t*)(data + offset);
-    offset += 4;
-    return val;
-}
-
-uint8_t CSX_Parser::readByte() {
-    if (offset + 1 > dataSize) return 0;
-    return data[offset++];
-}
-
-SDL_Color CSX_Parser::readBGRA() {
-    uint8_t b = readByte();
-    uint8_t g = readByte();
-    uint8_t r = readByte();
-    uint8_t a = readByte();
-    // alpha инвертирован
-    a = 255 - a;
-    return SDL_Color{r, g, b, a};
-}
-
-void CSX_Parser::decodeLine(const std::vector<uint8_t>& bytes, size_t byteIndex, std::vector<int>& pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
-    Tracy_ZoneScopedN("CSX_Parser::decodeLine");
-    size_t startPixelIndex = pixelIndex;
+void CSX_Parser::decodeLine(const std::vector<uint8_t>& bytes, size_t byteIndex, std::vector<uint16_t>& pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
     while (widthLeft > 0 && byteCount > 0) {
         uint8_t x = bytes[byteIndex];
         byteIndex++;
@@ -100,8 +84,6 @@ void CSX_Parser::decodeLine(const std::vector<uint8_t>& bytes, size_t byteIndex,
         switch (x) {
             case 107: // WTF-case
                 pixels[pixelIndex] = bytes[byteIndex];
-                if (pixelIndex != startPixelIndex)
-                    pixels[pixelIndex - 1] = bytes[byteIndex];
                 byteIndex++;
                 byteCount--;
                 pixelIndex++;
@@ -114,11 +96,7 @@ void CSX_Parser::decodeLine(const std::vector<uint8_t>& bytes, size_t byteIndex,
             case 106: { // Заполненный цвет
                 int runLength = std::min(widthLeft, (int)bytes[byteIndex + 1]);
                 uint8_t colorIndex = bytes[byteIndex];
-                for (int i = 0; i < runLength; i++) {
-                    pixels[pixelIndex + i] = colorIndex;
-                }
-                if (pixelIndex != startPixelIndex)
-                    pixels[pixelIndex - 1] = colorIndex;
+                std::fill_n(pixels.begin() + pixelIndex, runLength, colorIndex);
                 byteCount -= 2;
                 byteIndex += 2;
                 pixelIndex += runLength;
