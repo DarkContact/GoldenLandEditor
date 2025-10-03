@@ -128,7 +128,10 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
         std::span<uint8_t> pixels((uint8_t*)surface->pixels, surface->pitch * height);
         #pragma omp parallel for
         for (int y = 0; y < height; y++) {
-            decodeLine(bytes, lineOffsets[y], pixels, y * surface->pitch, width, lineOffsets[y + 1] - lineOffsets[y]);
+            size_t byteIndex = lineOffsets[y];
+            size_t pixelIndex = y * surface->pitch;
+            size_t byteCount = lineOffsets[y + 1] - lineOffsets[y];
+            decodeLine(bytes, byteIndex, pixels, pixelIndex, width, byteCount);
         }
     }
 
