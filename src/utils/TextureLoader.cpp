@@ -57,7 +57,7 @@ bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* r
     if (fileData.empty())
         return false;
 
-    CSX_Parser csxParser(fileData.data(), fileData.size());
+    CSX_Parser csxParser(fileData);
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
         csxParser.parse(),
         SDL_DestroySurface
