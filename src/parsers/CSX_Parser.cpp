@@ -26,7 +26,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     fillColor.u32 = readUInt32();
 
     // Читаем палитру цветов
-    int transparentIndex = 0;
+    int transparentIndex = -1;
     std::array<ColorData, 256> colors = {};
     for (int i = 0; i < colorCount; i++) {
         colors[i].u32 = readUInt32();
@@ -35,7 +35,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
         }
         colors[i].a = 255;
     }
-    if (isBackgroundTransparent) {
+    if (isBackgroundTransparent && transparentIndex >= 0) {
         colors[transparentIndex].a = 0;
     }
 
@@ -93,18 +93,20 @@ void CSX_Parser::decodeLine(std::span<uint8_t> bytes, size_t byteIndex, std::vec
         byteCount--;
 
         switch (x) {
-            case 107: // WTF-case
+            case 107: { // [0x6B] Экранирование. Следующий байт - обычный цвет (для интерпретации 0x69, 0x6A, 0x6C как цвет, а не как команды)
                 pixels[pixelIndex] = bytes[byteIndex];
                 byteIndex++;
                 byteCount--;
                 pixelIndex++;
                 widthLeft--;
                 break;
-            case 105: // Прозрачный пиксель
+            }
+            case 105: { // [0x69] Прозрачный пиксель
                 pixelIndex++;
                 widthLeft--;
                 break;
-            case 106: { // Заполненный цвет
+            }
+            case 106: { // [0x6A] Заполненный цвет
                 int runLength = std::min(widthLeft, (int)bytes[byteIndex + 1]);
                 uint8_t colorIndex = bytes[byteIndex];
                 std::fill_n(pixels.begin() + pixelIndex, runLength, colorIndex);
@@ -114,7 +116,7 @@ void CSX_Parser::decodeLine(std::span<uint8_t> bytes, size_t byteIndex, std::vec
                 widthLeft -= runLength;
                 break;
             }
-            case 108: { // Заполнение прозрачным
+            case 108: { // [0x6C] Заполнение прозрачным
                 int runLength = std::min((int)bytes[byteIndex], widthLeft);
                 byteIndex++;
                 byteCount--;
