@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <array>
+
 #include "utils/TracyProfiler.h"
 
 union ColorData {
@@ -23,15 +24,18 @@ CSX_Parser::CSX_Parser(std::span<uint8_t> buffer) :
 
 }
 
-std::span<uint32_t> reinterpret_as_u32(std::span<uint8_t> bytes) {
+std::span<const uint32_t> reinterpret_as_u32(std::span<const uint8_t> bytes) {
     assert(reinterpret_cast<uintptr_t>(bytes.data()) % alignof(uint32_t) == 0);
     assert(bytes.size_bytes() % sizeof(uint32_t) == 0);
-    return std::span<uint32_t>(reinterpret_cast<uint32_t*>(bytes.data()), bytes.size_bytes() / sizeof(uint32_t));
+    return std::span<const uint32_t>(reinterpret_cast<const uint32_t*>(bytes.data()), bytes.size_bytes() / sizeof(uint32_t));
 }
 
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error) {
     Tracy_ZoneScopedN("CSX_Parser::parse");
+
     uint32_t colorCount = readUInt32(); // Читаем количество цветов в палитре
+    assert(colorCount > 0);
+
     ColorData fillColor;
     fillColor.u32 = readUInt32();
 
@@ -56,35 +60,46 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
 
     // read relative line offsets
     int lineOffsetSize = (height + 1) * sizeof(uint32_t);
-    std::span<uint32_t> lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
+    std::span<const uint32_t> lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
     m_offset += lineOffsetSize;
 
     // Читаем данные пикселей
     std::span<const uint8_t> bytes = m_buffer.subspan(m_offset, lineOffsets[height]);
+
+    // Добавляем заполняющий цвет в палитру
     if (!fillColorInPallete) {
-        std::array<size_t, 256> frequency = {};
-        for (uint8_t b : bytes) {
-            ++frequency[b];
-        }
-
-        int firstUnusedIndex = -1;
-        for (int i = 0; i < 256; ++i) {
-            if (frequency[i] == 0) {
-                firstUnusedIndex = i;
-                break;
+        // Если есть свободное место в палитре
+        if (colorCount < 256) {
+            SDL_colors[colorCount].r = fillColor.r;
+            SDL_colors[colorCount].g = fillColor.g;
+            SDL_colors[colorCount].b = fillColor.b;
+            ++colorCount;
+        } else {
+            // Если места нет - анализируем изображение. Если цвет в палитре не используется перезапишем его
+            std::array<size_t, 256> frequency = {};
+            for (uint8_t b : bytes) {
+                ++frequency[b];
             }
-        }
 
-        if (firstUnusedIndex == -1) {
-            // TODO: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
-            if (error)
-                *error = "Can't use fillColor value, because pallete is full";
-            return nullptr;
-        }
+            int firstUnusedIndex = -1;
+            for (int i = 0; i < 256; ++i) {
+                if (frequency[i] == 0) {
+                    firstUnusedIndex = i;
+                    break;
+                }
+            }
 
-        SDL_colors[firstUnusedIndex].r = fillColor.r;
-        SDL_colors[firstUnusedIndex].g = fillColor.g;
-        SDL_colors[firstUnusedIndex].b = fillColor.b;
+            if (firstUnusedIndex == -1) {
+                // TODO: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
+                if (error)
+                    *error = "Can't use fillColor value, because pallete is full";
+                return nullptr;
+            }
+
+            SDL_colors[firstUnusedIndex].r = fillColor.r;
+            SDL_colors[firstUnusedIndex].g = fillColor.g;
+            SDL_colors[firstUnusedIndex].b = fillColor.b;
+        }
     }
 
     // Создаём SDL_Surface
@@ -111,6 +126,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     {
         Tracy_ZoneScopedN("decodeLines");
         std::span<uint8_t> pixels((uint8_t*)surface->pixels, surface->pitch * height);
+        #pragma omp parallel for
         for (int y = 0; y < height; y++) {
             decodeLine(bytes, lineOffsets[y], pixels, y * surface->pitch, width, lineOffsets[y + 1] - lineOffsets[y]);
         }

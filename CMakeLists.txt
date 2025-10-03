@@ -77,6 +77,10 @@ target_include_directories(GoldenLandEditor PRIVATE external/stb)
 target_include_directories(GoldenLandEditor PRIVATE imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
 
+# OpenMP
+target_link_libraries(GoldenLandEditor PRIVATE libgomp)
+target_compile_options(GoldenLandEditor PRIVATE -fopenmp)
+
 add_custom_target(Docs ALL
     SOURCES ${CMAKE_SOURCE_DIR}/README.md
 )
