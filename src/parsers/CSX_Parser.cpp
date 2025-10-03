@@ -1,6 +1,7 @@
 #include "CSX_Parser.h"
 
 #include <array>
+#include <cassert>
 #include "utils/TracyProfiler.h"
 
 union ColorData {
@@ -17,6 +18,12 @@ CSX_Parser::CSX_Parser(std::span<uint8_t> buffer) :
     m_buffer(buffer)
 {
 
+}
+
+std::span<uint32_t> reinterpret_as_u32(std::span<uint8_t> bytes) {
+    assert(reinterpret_cast<uintptr_t>(bytes.data()) % alignof(uint32_t) == 0);
+    assert(bytes.size_bytes() % sizeof(uint32_t) == 0);
+    return std::span<uint32_t>(reinterpret_cast<uint32_t*>(bytes.data()), bytes.size_bytes() / sizeof(uint32_t));
 }
 
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
@@ -44,10 +51,9 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     uint32_t height = readUInt32();
 
     // read relative line offsets
-    std::vector<uint32_t> lineOffsets(height + 1);
-    for (int i = 0; i < height + 1; i++) {
-        lineOffsets[i] = readUInt32();
-    }
+    int lineOffsetSize = (height + 1) * sizeof(uint32_t);
+    std::span<uint32_t> lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
+    m_offset += lineOffsetSize;
 
     // Читаем данные пикселей
     std::span<uint8_t> bytes = m_buffer.subspan(m_offset, lineOffsets[height]);

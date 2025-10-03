@@ -13,7 +13,7 @@ public:
 private:
     inline uint32_t readUInt32() {
         uint32_t val = *(uint32_t*)(m_buffer.data() + m_offset);
-        m_offset += 4;
+        m_offset += sizeof(uint32_t);
         return val;
     }
 
