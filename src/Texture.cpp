@@ -1,7 +1,5 @@
 #include "Texture.h"
 
-#include <format>
-
 #include "SDL3/SDL_assert.h"
 
 Texture::~Texture() noexcept
@@ -35,7 +33,7 @@ Texture Texture::create(
     Texture texture;
     texture.m_texture = SDL_CreateTexture(renderer, format, access, width, height);
     if (!texture.m_texture && error) {
-        *error = std::format("{}", SDL_GetError());
+        *error = std::string(SDL_GetError());
     }
     return texture;
 }
@@ -45,7 +43,7 @@ Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface,
     Texture texture;
     texture.m_texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture.m_texture && error) {
-        *error = std::format("{}", SDL_GetError());
+        *error = std::string(SDL_GetError());
     }
     return texture;
 }
@@ -64,7 +62,7 @@ bool Texture::updatePixels(const void* pixels, const SDL_Rect* rect, std::string
     int updatedWidth = rect ? rect->w : m_texture->w;
     bool isOk = SDL_UpdateTexture(m_texture, rect, pixels, bytesPerPixel * updatedWidth);
     if (!isOk && error) {
-        *error = std::format("{}", SDL_GetError());
+        *error = std::string(SDL_GetError());
     }
     return isOk;
 }

@@ -59,20 +59,17 @@ bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* r
 
     CSX_Parser csxParser(fileData);
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
-        csxParser.parse(),
+        csxParser.parse(true, error),
         SDL_DestroySurface
     };
 
-    if (!surfacePtr) {
-        fprintf(stderr, "Failed to create SDL surface: %s\n", SDL_GetError()); // FIXME: Ошибка должна придти из парсера
+    if (!surfacePtr)
         return false;
-    }
 
     // FIXME: Грузить текстуру вне зависимости от размера поверхности
     Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
-    if (!texture) {
+    if (!texture)
         return false;
-    }
 
     outTexture = std::move(texture);
     return true;

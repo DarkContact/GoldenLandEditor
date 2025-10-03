@@ -1,14 +1,14 @@
-#include <SDL3/SDL.h>
-#include <vector>
 #include <cstdint>
-#include <cstring>
+#include <string>
 #include <span>
+
+struct SDL_Surface;
 
 class CSX_Parser {
 public:
     CSX_Parser(std::span<uint8_t> buffer);
 
-    SDL_Surface* parse(bool isBackgroundTransparent = true);
+    SDL_Surface* parse(bool isBackgroundTransparent = true, std::string* error = nullptr);
 
 private:
     inline uint32_t readUInt32() {
@@ -17,8 +17,8 @@ private:
         return val;
     }
 
-    void decodeLine(std::span<uint8_t> bytes, size_t byteIndex,
-                    std::vector<uint8_t>& pixels, size_t pixelIndex,
+    void decodeLine(std::span<const uint8_t> bytes, size_t byteIndex,
+                    std::span<uint8_t> pixels, size_t pixelIndex,
                     int widthLeft, size_t byteCount);
 
     std::span<uint8_t> m_buffer;
