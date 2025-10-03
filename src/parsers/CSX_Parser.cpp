@@ -3,6 +3,16 @@
 #include <array>
 #include "utils/TracyProfiler.h"
 
+union ColorData {
+    uint32_t u32;
+    struct {
+        uint8_t b;
+        uint8_t g;
+        uint8_t r;
+        uint8_t a;
+    };
+};
+
 CSX_Parser::CSX_Parser(std::span<uint8_t> buffer) :
     m_buffer(buffer)
 {
@@ -11,34 +21,39 @@ CSX_Parser::CSX_Parser(std::span<uint8_t> buffer) :
 
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     Tracy_ZoneScopedN("CSX_Parser::parse");
-    // Читаем количество цветов в палитре
-    int colorCount = readInt();
-    SDL_Color fillColor = readBGRA();
-    if (isBackgroundTransparent) {
-        fillColor.a = 0;
-    }
+    uint32_t colorCount = readUInt32(); // Читаем количество цветов в палитре
+    ColorData fillColor;
+    fillColor.u32 = readUInt32();
 
     // Читаем палитру цветов
-    std::array<SDL_Color, 256> colors = {};
+    int transparentIndex = 0;
+    std::array<ColorData, 256> colors = {};
     for (int i = 0; i < colorCount; i++) {
-        colors[i] = readBGRA();
+        colors[i].u32 = readUInt32();
+        if (fillColor.u32 == colors[i].u32) {
+            transparentIndex = i;
+        }
+        colors[i].a = 255;
+    }
+    if (isBackgroundTransparent) {
+        colors[transparentIndex].a = 0;
     }
 
     // Читаем размеры изображения
-    int width = readInt();
-    int height = readInt();
+    uint32_t width = readUInt32();
+    uint32_t height = readUInt32();
 
     // read relative line offsets
-    std::vector<int> lineOffsets(height + 1);
+    std::vector<uint32_t> lineOffsets(height + 1);
     for (int i = 0; i < height + 1; i++) {
-        lineOffsets[i] = readInt();
+        lineOffsets[i] = readUInt32();
     }
 
     // Читаем данные пикселей
     std::span<uint8_t> bytes = m_buffer.subspan(m_offset, lineOffsets[height]);
 
     // Декодируем изображение
-    std::vector<uint16_t> pixelIndices(width * height, 0xffff);
+    std::vector<uint8_t> pixelIndices(width * height, transparentIndex);
     {
         Tracy_ZoneScopedN("decodeLines");
         for (int y = 0; y < height; y++) {
@@ -50,30 +65,20 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     SDL_Surface* surface;
     {
         Tracy_ZoneScopedN("createSurface");
-        surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA32);
+        surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_BGRA32);
         if (!surface) return nullptr;
     }
 
     uint8_t* pixels = (uint8_t*)surface->pixels;
     int pitch = surface->pitch; // количество байт в строке
-
     {
         Tracy_ZoneScopedN("fillSurface");
         // Заполняем surface пикселями
         for (int y = 0; y < height; y++) {
-            uint8_t* row = pixels + y * pitch;
+            uint32_t* row = reinterpret_cast<uint32_t*>(pixels + y * pitch);
             for (int x = 0; x < width; x++) {
                 int idx = y * width + x;
-                SDL_Color c;
-                if (pixelIndices[idx] != 0xffff) {
-                    c = colors[pixelIndices[idx]];
-                } else {
-                    c = fillColor;
-                }
-                row[x * 4 + 0] = c.r;
-                row[x * 4 + 1] = c.g;
-                row[x * 4 + 2] = c.b;
-                row[x * 4 + 3] = c.a;
+                row[x] = colors[pixelIndices[idx]].u32;
             }
         }
     }
@@ -81,7 +86,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent) {
     return surface;
 }
 
-void CSX_Parser::decodeLine(std::span<uint8_t> bytes, size_t byteIndex, std::vector<uint16_t>& pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
+void CSX_Parser::decodeLine(std::span<uint8_t> bytes, size_t byteIndex, std::vector<uint8_t>& pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
     while (widthLeft > 0 && byteCount > 0) {
         uint8_t x = bytes[byteIndex];
         byteIndex++;
