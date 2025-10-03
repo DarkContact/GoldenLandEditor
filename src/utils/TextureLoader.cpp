@@ -10,7 +10,7 @@
 #include "utils/FileLoader.h"
 #include "utils/TracyProfiler.h"
 
-bool TextureLoader::loadTextureFromMemory(std::span<uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
+bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
     int imageWidth = 0;
