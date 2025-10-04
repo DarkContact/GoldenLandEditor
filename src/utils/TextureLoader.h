@@ -1,5 +1,6 @@
 #pragma once
 #include <span>
+#include <vector>
 #include <string>
 #include <cstdint>
 
@@ -13,4 +14,5 @@ public:
     static bool loadTextureFromMemory(std::span<const uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
     static bool loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
     static bool loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error = nullptr);
+    static bool loadTexturesFromCsxFile(const char* fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error = nullptr);
 };

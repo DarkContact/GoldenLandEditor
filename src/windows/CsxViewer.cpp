@@ -13,7 +13,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     Tracy_ZoneScopedN("CsxViewer::update");
 
     static int selectedIndex = -1;
-    static Texture csxTexture;
+    static std::vector<Texture> csxTextures;
     static std::string csxTextureError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
@@ -34,11 +34,8 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 {
                     selectedIndex = i;
 
-                    // TODO: Отображать ошибку в случае неуспешной загрузки
-                    bool isLoaded = TextureLoader::loadTextureFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTexture, &csxTextureError);
-                    if (!isLoaded) {
-                        csxTexture = {};
-                    }
+                    csxTextures.clear();
+                    TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTextures, &csxTextureError);
                 }
             }
             ImGui::EndChild();
@@ -48,15 +45,27 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     ImGui::SameLine();
 
     // Right
-    if (csxTexture) {
+    if (!csxTextures.empty()) {
         ImGui::BeginGroup();
         {
-            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
-            ImGui::Text("%dx%d", csxTexture->w, csxTexture->h);
-            ImGui::ImageWithBg((ImTextureID)csxTexture.get(), ImVec2(csxTexture->w, csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
+            ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ
+
+            int csxTextureWidth = 0;
+            int csxTextureHeight = 0;
+            for (const auto& csxTexture : csxTextures) {
+                csxTextureWidth = csxTexture->w;
+                csxTextureHeight += csxTexture->h;
+                ImGui::ImageWithBg((ImTextureID)csxTexture.get(), ImVec2(csxTexture->w, csxTexture->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
+            }
+
+            ImGui::PopStyleVar();
+
             ImGui::EndChild();
 
+            ImGui::Text("%dx%d", csxTextureWidth, csxTextureHeight);
 
             if (ImGui::RadioButton("Transparent", activeButtonIndex == 0)) {
                 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -95,7 +104,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     if (!showWindow) {
         selectedIndex = -1;
-        csxTexture = {};
+        csxTextures.clear();
         csxTextureError.clear();
         textFilter.Clear();
     }
