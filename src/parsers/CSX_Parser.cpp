@@ -40,19 +40,21 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     fillColor.u32 = readUInt32();
 
     // Читаем палитру цветов
-    bool fillColorInPallete = false;
+    int fillColorIndex = -1;
     std::array<SDL_Color, 256> SDL_colors = {};
     for (int i = 0; i < colorCount; i++) {
         ColorData color;
         color.u32 = readUInt32();
         if (fillColor.u32 == color.u32) {
-            fillColorInPallete = true;
+            fillColorIndex = i;
         }
 
         SDL_colors[i].r = color.r;
         SDL_colors[i].g = color.g;
         SDL_colors[i].b = color.b;
+        SDL_colors[i].a = 255;
     }
+    fillColor.a = 255;
 
     // Читаем размеры изображения
     uint32_t width = readUInt32();
@@ -67,12 +69,13 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     std::span<const uint8_t> bytes = m_buffer.subspan(m_offset, lineOffsets[height]);
 
     // Добавляем заполняющий цвет в палитру
-    if (!fillColorInPallete) {
+    if (fillColorIndex == -1) {
         // Если есть свободное место в палитре
         if (colorCount < 256) {
             SDL_colors[colorCount].r = fillColor.r;
             SDL_colors[colorCount].g = fillColor.g;
             SDL_colors[colorCount].b = fillColor.b;
+            fillColorIndex = colorCount;
             ++colorCount;
         } else {
             // Если места нет - анализируем изображение. Если цвет в палитре не используется перезапишем его
@@ -90,7 +93,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
             }
 
             if (firstUnusedIndex == -1) {
-                // TODO: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
+                // NOTE: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
                 if (error)
                     *error = "Can't use fillColor value, because pallete is full";
                 return nullptr;
@@ -99,6 +102,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
             SDL_colors[firstUnusedIndex].r = fillColor.r;
             SDL_colors[firstUnusedIndex].g = fillColor.g;
             SDL_colors[firstUnusedIndex].b = fillColor.b;
+            fillColorIndex = firstUnusedIndex;
         }
     }
 
@@ -109,18 +113,18 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
             *error = std::string(SDL_GetError());
         return nullptr;
     }
+    // Заливка цветом
+    SDL_FillSurfaceRect(surface, NULL, fillColorIndex);
 
+    // Создаём и прикрепляем палитру
     SDL_Palette* pallete = SDL_CreatePalette(colorCount);
     SDL_SetPaletteColors(pallete, SDL_colors.data(), 0, colorCount);
-
-    Uint32 fillColorValue = SDL_MapRGB(SDL_GetPixelFormatDetails(surface->format), pallete, fillColor.r, fillColor.g, fillColor.b);
-    SDL_FillSurfaceRect(surface, NULL, fillColorValue);
-
-    if (isBackgroundTransparent) {
-        SDL_SetSurfaceColorKey(surface, true, fillColorValue);
-    }
     SDL_SetSurfacePalette(surface, pallete);
     SDL_DestroyPalette(pallete);
+
+    if (isBackgroundTransparent) {
+        SDL_SetSurfaceColorKey(surface, true, fillColorIndex);
+    }
 
     // Декодируем изображение
     {
