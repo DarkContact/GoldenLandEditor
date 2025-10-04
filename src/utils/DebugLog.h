@@ -5,6 +5,8 @@
 #include <format>
 #include <cstdio>
 
+#include "TracyProfiler.h"
+
 class DebugLog {
 public:
     DebugLog() = delete;
@@ -42,6 +44,8 @@ private:
     }
 
     static void toOutput(const std::source_location& location, std::string_view msg) {
+        Tracy_Message(msg.data(), msg.size());
+
         fputs(msg.data(), stdout);
 
         constexpr size_t kBufferSize = 512;
