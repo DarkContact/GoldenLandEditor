@@ -43,6 +43,8 @@ add_executable(GoldenLandEditor
     src/utils/TracyProfiler.cpp
     src/Texture.h
     src/Texture.cpp
+    src/utils/DebugLog.h
+    src/utils/DebugLog.cpp
 )
 
 set_target_properties(GoldenLandEditor PROPERTIES
