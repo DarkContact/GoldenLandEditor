@@ -16,6 +16,11 @@
     #define Tracy_FrameMark FrameMark
     #define Tracy_FrameImage(image, width, height, offset, flip) FrameImage(image, width, height, offset, flip)
 
+    #if defined(_MSC_VER)
+        void* operator new(std::size_t count);
+        void operator delete(void* ptr) noexcept;
+    #endif
+
     #include "SDL3/SDL_render.h"
     void CaptureImage(SDL_Renderer* renderer); // Работает, но медленно (~12-15 мс)
 

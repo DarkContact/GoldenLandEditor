@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 class FileLoader

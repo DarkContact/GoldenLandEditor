@@ -64,9 +64,9 @@ if(USE_TRACY)
     option(TRACY_ON_DEMAND "" ON)
     target_link_libraries(GoldenLandEditor PUBLIC Tracy::TracyClient)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(GoldenLandEditor PRIVATE -g -fno-omit-frame-pointer -O3)
-        target_compile_options(imgui PRIVATE -g -fno-omit-frame-pointer -O3)
+        add_compile_options(-g -fno-omit-frame-pointer -O2)
     endif()
+    # add_compile_definitions(TRACY_CALLSTACK=16)
 endif()
 
 target_include_directories(GoldenLandEditor PRIVATE src)
@@ -76,8 +76,14 @@ target_include_directories(GoldenLandEditor PRIVATE imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
 
 # OpenMP
-target_link_libraries(GoldenLandEditor PRIVATE libgomp)
-target_compile_options(GoldenLandEditor PRIVATE -fopenmp)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(GoldenLandEditor PRIVATE -fopenmp)
+    target_link_libraries(GoldenLandEditor PRIVATE libgomp)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(GoldenLandEditor PRIVATE /openmp)
+endif()
 
 add_custom_target(Docs ALL
     SOURCES ${CMAKE_SOURCE_DIR}/README.md
