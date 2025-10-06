@@ -41,7 +41,8 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
 
     // Читаем палитру цветов
     int fillColorIndex = -1;
-    std::array<SDL_Color, 256> SDL_colors = {};
+    constexpr uint32_t kMaxColor = 256;
+    std::array<SDL_Color, kMaxColor> palleteColors = {};
     for (int i = 0; i < colorCount; i++) {
         ColorData color;
         color.u32 = readUInt32();
@@ -49,10 +50,10 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
             fillColorIndex = i;
         }
 
-        SDL_colors[i].r = color.r;
-        SDL_colors[i].g = color.g;
-        SDL_colors[i].b = color.b;
-        SDL_colors[i].a = 255;
+        palleteColors[i].r = color.r;
+        palleteColors[i].g = color.g;
+        palleteColors[i].b = color.b;
+        palleteColors[i].a = 255;
     }
     fillColor.a = 255;
 
@@ -71,21 +72,21 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     // Добавляем заполняющий цвет в палитру
     if (fillColorIndex == -1) {
         // Если есть свободное место в палитре
-        if (colorCount < 256) {
-            SDL_colors[colorCount].r = fillColor.r;
-            SDL_colors[colorCount].g = fillColor.g;
-            SDL_colors[colorCount].b = fillColor.b;
+        if (colorCount < kMaxColor) {
+            palleteColors[colorCount].r = fillColor.r;
+            palleteColors[colorCount].g = fillColor.g;
+            palleteColors[colorCount].b = fillColor.b;
             fillColorIndex = colorCount;
             ++colorCount;
         } else {
             // Если места нет - анализируем изображение. Если цвет в палитре не используется перезапишем его
-            std::array<size_t, 256> frequency = {};
+            std::array<size_t, kMaxColor> frequency = {};
             for (uint8_t b : bytes) {
                 ++frequency[b];
             }
 
             int firstUnusedIndex = -1;
-            for (int i = 0; i < 256; ++i) {
+            for (int i = 0; i < kMaxColor; ++i) {
                 if (frequency[i] == 0) {
                     firstUnusedIndex = i;
                     break;
@@ -99,9 +100,9 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
                 return nullptr;
             }
 
-            SDL_colors[firstUnusedIndex].r = fillColor.r;
-            SDL_colors[firstUnusedIndex].g = fillColor.g;
-            SDL_colors[firstUnusedIndex].b = fillColor.b;
+            palleteColors[firstUnusedIndex].r = fillColor.r;
+            palleteColors[firstUnusedIndex].g = fillColor.g;
+            palleteColors[firstUnusedIndex].b = fillColor.b;
             fillColorIndex = firstUnusedIndex;
         }
     }
@@ -118,7 +119,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
 
     // Создаём и прикрепляем палитру
     SDL_Palette* pallete = SDL_CreatePalette(colorCount);
-    SDL_SetPaletteColors(pallete, SDL_colors.data(), 0, colorCount);
+    SDL_SetPaletteColors(pallete, palleteColors.data(), 0, colorCount);
     SDL_SetSurfacePalette(surface, pallete);
     SDL_DestroyPalette(pallete);
 
@@ -135,15 +136,15 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
             size_t byteIndex = lineOffsets[y];
             size_t pixelIndex = y * surface->pitch;
             size_t byteCount = lineOffsets[y + 1] - lineOffsets[y];
-            decodeLine(bytes, byteIndex, pixels, pixelIndex, width, byteCount);
+            decodeLine(bytes, byteIndex, pixels, pixelIndex, byteCount);
         }
     }
 
     return surface;
 }
 
-void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, std::span<uint8_t> pixels, size_t pixelIndex, size_t widthLeft, size_t byteCount) {
-    while (widthLeft > 0 && byteCount > 0) {
+void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, std::span<uint8_t> pixels, size_t pixelIndex, size_t byteCount) {
+    while (byteCount > 0) {
         uint8_t x = bytes[byteIndex];
         byteIndex++;
         byteCount--;
@@ -154,36 +155,31 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
                 byteIndex++;
                 byteCount--;
                 pixelIndex++;
-                widthLeft--;
                 break;
             }
             case 105: { // [0x69] Прозрачный пиксель
                 pixelIndex++;
-                widthLeft--;
                 break;
             }
             case 106: { // [0x6A] Заполненный цвет
-                int runLength = std::min(widthLeft, (size_t)bytes[byteIndex + 1]);
+                auto runLength = bytes[byteIndex + 1];
                 uint8_t colorIndex = bytes[byteIndex];
                 std::fill_n(pixels.begin() + pixelIndex, runLength, colorIndex);
                 byteCount -= 2;
                 byteIndex += 2;
                 pixelIndex += runLength;
-                widthLeft -= runLength;
                 break;
             }
             case 108: { // [0x6C] Заполнение прозрачным
-                int runLength = std::min((size_t)bytes[byteIndex], widthLeft);
+                auto runLength = bytes[byteIndex];
                 byteIndex++;
                 byteCount--;
                 pixelIndex += runLength;
-                widthLeft -= runLength;
                 break;
             }
             default: // Обычный цвет
                 pixels[pixelIndex] = x;
                 pixelIndex++;
-                widthLeft--;
                 break;
         }
     }
