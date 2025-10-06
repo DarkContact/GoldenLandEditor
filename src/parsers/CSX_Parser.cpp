@@ -61,7 +61,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     uint32_t height = readUInt32();
 
     // read relative line offsets
-    int lineOffsetSize = (height + 1) * sizeof(uint32_t);
+    uint32_t lineOffsetSize = (height + 1) * sizeof(uint32_t);
     std::span<const uint32_t> lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
     m_offset += lineOffsetSize;
 
@@ -142,7 +142,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     return surface;
 }
 
-void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, std::span<uint8_t> pixels, size_t pixelIndex, int widthLeft, size_t byteCount) {
+void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, std::span<uint8_t> pixels, size_t pixelIndex, size_t widthLeft, size_t byteCount) {
     while (widthLeft > 0 && byteCount > 0) {
         uint8_t x = bytes[byteIndex];
         byteIndex++;
@@ -163,7 +163,7 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
                 break;
             }
             case 106: { // [0x6A] Заполненный цвет
-                int runLength = std::min(widthLeft, (int)bytes[byteIndex + 1]);
+                int runLength = std::min(widthLeft, (size_t)bytes[byteIndex + 1]);
                 uint8_t colorIndex = bytes[byteIndex];
                 std::fill_n(pixels.begin() + pixelIndex, runLength, colorIndex);
                 byteCount -= 2;
@@ -173,7 +173,7 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
                 break;
             }
             case 108: { // [0x6C] Заполнение прозрачным
-                int runLength = std::min((int)bytes[byteIndex], widthLeft);
+                int runLength = std::min((size_t)bytes[byteIndex], widthLeft);
                 byteIndex++;
                 byteCount--;
                 pixelIndex += runLength;

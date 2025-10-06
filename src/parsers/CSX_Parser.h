@@ -19,7 +19,7 @@ private:
 
     void decodeLine(std::span<const uint8_t> bytes, size_t byteIndex,
                     std::span<uint8_t> pixels, size_t pixelIndex,
-                    int widthLeft, size_t byteCount);
+                    size_t widthLeft, size_t byteCount);
 
     std::span<uint8_t> m_buffer;
     size_t m_offset = 0;
