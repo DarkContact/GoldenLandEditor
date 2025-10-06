@@ -40,7 +40,7 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
     return true;
 }
 
-bool TextureLoader::loadTextureFromFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
+bool TextureLoader::loadTextureFromFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
     std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
@@ -50,7 +50,7 @@ bool TextureLoader::loadTextureFromFile(const char* fileName, SDL_Renderer* rend
     return loadTextureFromMemory(fileData, renderer, outTexture, error);
 }
 
-bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
+bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
     std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
@@ -75,7 +75,7 @@ bool TextureLoader::loadTextureFromCsxFile(const char* fileName, SDL_Renderer* r
     return true;
 }
 
-bool TextureLoader::loadTexturesFromCsxFile(const char* fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
     std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
