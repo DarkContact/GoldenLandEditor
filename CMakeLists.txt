@@ -40,7 +40,6 @@ add_executable(GoldenLandEditor WIN32
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
-    src/utils/TracyProfiler.cpp
     src/Texture.h
     src/Texture.cpp
     src/utils/DebugLog.h
@@ -59,6 +58,8 @@ if(USE_TRACY)
         GIT_PROGRESS TRUE
     )
     FetchContent_MakeAvailable(tracy)
+
+    target_sources(GoldenLandEditor PRIVATE src/utils/TracyProfiler.cpp)
 
     option(TRACY_ENABLE "" ON)
     option(TRACY_ON_DEMAND "" ON)

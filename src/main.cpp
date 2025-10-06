@@ -302,7 +302,7 @@ int main(int, char**)
             Tracy_ZoneScopedN("CaptureImage");
             Tracy_ZoneColor(0xc0c0c0); // Silver
 
-            CaptureImage(renderer);
+            Tracy_CaptureImage(renderer);
         }
 
         SDL_RenderPresent(renderer);

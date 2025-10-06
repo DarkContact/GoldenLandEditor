@@ -3,6 +3,11 @@
 #ifdef TRACY_ENABLE
     #include "tracy/Tracy.hpp"
 
+    #if defined(_MSC_VER)
+        void* operator new(std::size_t count);
+        void operator delete(void* ptr) noexcept;
+    #endif
+
     #define Tracy_ZoneScoped ZoneScoped
     #define Tracy_ZoneScopedN(name) ZoneScopedN(name)
 
@@ -16,14 +21,12 @@
     #define Tracy_FrameMark FrameMark
     #define Tracy_FrameImage(image, width, height, offset, flip) FrameImage(image, width, height, offset, flip)
 
-    #if defined(_MSC_VER)
-        void* operator new(std::size_t count);
-        void operator delete(void* ptr) noexcept;
-    #endif
+    #define Tracy_CaptureImage(renderer) TracyProfilerInternal::CaptureImage(renderer)
 
-    #include "SDL3/SDL_render.h"
-    void CaptureImage(SDL_Renderer* renderer); // Работает, но медленно (~12-15 мс)
-
+    struct SDL_Renderer;
+    namespace TracyProfilerInternal {
+        void CaptureImage(SDL_Renderer* renderer); // Работает, но медленно (~15 мс)
+    }
 #else
     #define Tracy_ZoneScoped
     #define Tracy_ZoneScopedN(name)
@@ -36,8 +39,7 @@
     #define Tracy_MessageC(txt, size, color)
 
     #define Tracy_FrameMark
-    #define Tracy_FrameImage(image, width, height, offset, flip) 
+    #define Tracy_FrameImage(image, width, height, offset, flip)
 
-    struct SDL_Renderer;
-    void CaptureImage(SDL_Renderer* renderer);
+    #define Tracy_CaptureImage(renderer)
 #endif

@@ -1,7 +1,24 @@
 #include "TracyProfiler.h"
 
+#include "SDL3/SDL_render.h"
+
+#if defined(_MSC_VER)
+void* operator new(std::size_t count) {
+    auto ptr = malloc(count);
+    TracyAlloc(ptr, count);
+    return ptr;
+}
+
+void operator delete(void* ptr) noexcept {
+    TracyFree(ptr);
+    free(ptr);
+}
+#endif
+
+namespace TracyProfilerInternal {
+
 void CaptureImage(SDL_Renderer* renderer) {
-#ifdef TRACY_ENABLE
+
     SDL_Surface* screenSurface = SDL_RenderReadPixels(renderer, nullptr);
 
     SDL_Rect rgbaRect(0, 0, 320, 180);
@@ -16,18 +33,7 @@ void CaptureImage(SDL_Renderer* renderer) {
 
     SDL_DestroySurface(screenSurface);
     SDL_DestroySurface(rgbaSurface);
-#endif
+
 }
 
-#if defined(TRACY_ENABLE) && defined(_MSC_VER)
-void* operator new(std::size_t count) {
-    auto ptr = malloc(count);
-    TracyAlloc(ptr, count);
-    return ptr;
-}
-
-void operator delete(void* ptr) noexcept {
-    TracyFree(ptr);
-    free(ptr);
-}
-#endif
+} // TracyProfilerInternal
