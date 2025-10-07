@@ -16,10 +16,12 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
     int imageWidth = 0;
     int imageHeight = 0;
     int channels = 4;
+    Tracy_ZoneStartN("stbImageLoad");
     std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> imageDataPtr = {
         stbi_load_from_memory((const stbi_uc*)memory.data(), (int)memory.size(), &imageWidth, &imageHeight, NULL, channels),
         stbi_image_free
     };
+    Tracy_ZoneEnd();
 
     if (!imageDataPtr) {
         if (error)
@@ -32,8 +34,11 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
         return false;
     }
 
-    if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
-        return false;
+    {
+        Tracy_ZoneScopedN("updatePixels");
+        if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
+            return false;
+        }
     }
 
     outTexture = std::move(texture);

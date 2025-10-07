@@ -1,6 +1,7 @@
 #include "Texture.h"
 
-#include "SDL3/SDL_assert.h"
+#include <cassert>
+#include <cstring>
 
 Texture::~Texture() noexcept
 {
@@ -50,17 +51,41 @@ Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface,
 
 bool Texture::updatePixels(const void* pixels, const SDL_Rect* rect, std::string* error) noexcept
 {
-    SDL_assert(isValid());
+    assert(isValid());
 
     SDL_PropertiesID props = SDL_GetTextureProperties(m_texture);
     SDL_TextureAccess access = static_cast<SDL_TextureAccess>(SDL_GetNumberProperty(props, SDL_PROP_TEXTURE_ACCESS_NUMBER, 0));
-    SDL_PixelFormat format = static_cast<SDL_PixelFormat>(SDL_GetNumberProperty(props, SDL_PROP_TEXTURE_FORMAT_NUMBER, 0));
 
-    SDL_assert(access == SDL_TEXTUREACCESS_STATIC);
-    int bytesPerPixel = SDL_BYTESPERPIXEL(format);
-
+    assert(access == SDL_TEXTUREACCESS_STATIC || access == SDL_TEXTUREACCESS_STREAMING);
+    int bytesPerPixel = SDL_BYTESPERPIXEL(m_texture->format);
     int updatedWidth = rect ? rect->w : m_texture->w;
-    bool isOk = SDL_UpdateTexture(m_texture, rect, pixels, bytesPerPixel * updatedWidth);
+    int pitch = bytesPerPixel * updatedWidth;
+
+    bool isOk = false;
+    if (access == SDL_TEXTUREACCESS_STATIC) {
+        isOk = SDL_UpdateTexture(m_texture, rect, pixels, pitch);
+    } else if (access == SDL_TEXTUREACCESS_STREAMING) {
+        // https://github.com/libsdl-org/SDL/blob/c790572674b225de34fe53c0a0188dca8a05c722/src/render/ps2/SDL_render_ps2.c#L166
+        void* writePixels;
+        int destPitch;
+        isOk = SDL_LockTexture(m_texture, rect, &writePixels, &destPitch);
+        if (isOk) {
+            int updatedHeight = rect ? rect->h : m_texture->h;
+            if (pitch == destPitch) {
+                std::memcpy(writePixels, pixels, pitch * updatedHeight);
+            } else {
+                uint8_t* src = (uint8_t*)pixels;
+                uint8_t* dst = (uint8_t*)writePixels;
+                for (int row = 0; row < updatedHeight; ++row) {
+                    std::memcpy(dst, src, pitch);
+                    src += pitch;
+                    dst += destPitch;
+                }
+            }
+            SDL_UnlockTexture(m_texture);
+        }
+    }
+
     if (!isOk && error) {
         *error = std::string(SDL_GetError());
     }
