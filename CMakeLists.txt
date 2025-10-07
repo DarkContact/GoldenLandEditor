@@ -44,6 +44,8 @@ add_executable(GoldenLandEditor WIN32
     src/Texture.cpp
     src/utils/DebugLog.h
     src/utils/DebugLog.cpp
+    src/parsers/LAO_Parser.h
+    src/parsers/LAO_Parser.cpp
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)

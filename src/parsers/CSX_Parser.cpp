@@ -150,7 +150,7 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
         byteCount--;
 
         switch (x) {
-            case 107: { // [0x6B] Экранирование. Следующий байт - обычный цвет (для интерпретации 0x69, 0x6A, 0x6C как цвет, а не как команды)
+            case 107: { // [0x6B] Экранирование. Следующий байт - обычный цвет (для интерпретации 0x6B, 0x69, 0x6A, 0x6C как цвет, а не как команды)
                 pixels[pixelIndex] = bytes[byteIndex];
                 byteIndex++;
                 byteCount--;

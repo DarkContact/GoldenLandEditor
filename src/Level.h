@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
+#include "parsers/LAO_Parser.h"
 
 enum class MapTilesMode {
     Relief,
@@ -57,6 +58,7 @@ struct LevelData {
     Texture minimap;
     SEF_Data sefData;
     LVL_Data lvlData;
+    std::optional<LAO_Data> laoData;
     LevelImgui imgui;
 };
 
@@ -83,6 +85,8 @@ private:
     std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack) const;
     std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack) const;
     std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const;
+    std::string levelLao(std::string_view rootDirectory, std::string_view levelPack) const;
+    std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const;
 
     LevelData m_data;
 };

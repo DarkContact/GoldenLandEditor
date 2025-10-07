@@ -1,9 +1,11 @@
 #include "Level.h"
 
+#include <filesystem>
 #include <format>
 
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
+#include "utils/DebugLog.h"
 
 Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
     Tracy_ZoneScopedN("Level loading");
@@ -22,6 +24,26 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
 
     std::string minimapPath = levelMinimap(rootDirectory, m_data.sefData.pack);
     TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, m_data.minimap);
+
+    std::string laoPath = levelLao(rootDirectory, m_data.sefData.pack);
+    if (std::filesystem::exists(laoPath)) {
+        std::string error;
+        m_data.laoData = LAO_Parser::parse(laoPath, &error);
+        if (!m_data.laoData) {
+            LogFmt("Loading .lao failed. {}", error);
+        }
+    }
+
+    if (m_data.laoData) {
+        for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
+            std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
+            if (std::filesystem::exists(levelAnimationPath)) {
+                // TODO: Загрузка анимации
+            } else {
+                break;
+            }
+        }
+    }
 }
 
 std::string Level::levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType) const
@@ -42,6 +64,16 @@ std::string Level::levelBackground(std::string_view rootDirectory, std::string_v
 std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const
 {
     return std::format("{}/levels/pack/{}/bitmaps/minimap.csx", rootDirectory, levelPack);
+}
+
+std::string Level::levelLao(std::string_view rootDirectory, std::string_view levelPack) const
+{
+    return std::format("{0}/levels/pack/{1}/data/animated/{1}.lao", rootDirectory, levelPack);
+}
+
+std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const
+{
+    return std::format("{}/levels/pack/{}/bitmaps/animated/anim_{}.csx", rootDirectory, levelPack, index);
 }
 
 const LevelData& Level::data() const
