@@ -19,6 +19,8 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static int activeButtonIndex = 0;
     static ImGuiTextFilter textFilter;
 
+    bool needResetScroll = false;
+
     ImGui::Begin("CSX Viewer", &showWindow);
 
     // Left
@@ -36,6 +38,8 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                     csxTextures.clear();
                     TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTextures, &csxTextureError);
+
+                    needResetScroll = true;
                 }
             }
             ImGui::EndChild();
@@ -49,6 +53,10 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         ImGui::BeginGroup();
         {
             ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
+            if (needResetScroll) {
+                ImGui::SetScrollX(0.0f);
+                ImGui::SetScrollY(0.0f);
+            }
 
             ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ

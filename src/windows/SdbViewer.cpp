@@ -16,6 +16,8 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
     static ImGuiTextFilter textFilterFile;
     static ImGuiTextFilter textFilterString;
 
+    bool needResetScroll = false;
+
     ImGui::Begin("SDB Viewer", &showWindow);
 
     // Left
@@ -29,11 +31,12 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                 if (textFilterFile.PassFilter(files[i].c_str())
                     && ImGui::Selectable(files[i].c_str(), selectedIndex == i))
                 {
-                    // TODO: При переключении SDB сбрасывать ScrollY у таблицы
                     selectedIndex = i;
 
                     SDB_Parser parser(std::format("{}/{}", rootDirectory, files[i]));
                     sdbRecords = parser.parse();
+
+                    needResetScroll = true;
                 }
             }
             ImGui::EndChild();
@@ -48,6 +51,11 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
         textFilterString.Draw();
         if (!sdbRecords.strings.empty()) {
             if (ImGui::BeginTable("content", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+                if (needResetScroll) {
+                    ImGui::SetScrollX(0.0f);
+                    ImGui::SetScrollY(0.0f);
+                }
+
                 ImGui::TableSetupColumn("ID");
                 ImGui::TableSetupColumn("Текст");
                 ImGui::TableHeadersRow();
