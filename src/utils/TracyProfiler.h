@@ -2,6 +2,7 @@
 
 #ifdef TRACY_ENABLE
     #include "tracy/Tracy.hpp"
+    #include "tracy/TracyC.h"
 
     #if defined(_MSC_VER)
         void* operator new(std::size_t count);
@@ -10,6 +11,9 @@
 
     #define Tracy_ZoneScoped ZoneScoped
     #define Tracy_ZoneScopedN(name) ZoneScopedN(name)
+
+    #define Tracy_ZoneStartN(name) TracyCZoneN(ctx, name, true)
+    #define Tracy_ZoneEnd() TracyCZoneEnd(ctx)
 
     #define Tracy_ZoneText(txt, size) ZoneText(txt, size)
     #define Tracy_ZoneTextF(fmt, ...) ZoneTextF(fmt, ##__VA_ARGS__)
@@ -30,6 +34,9 @@
 #else
     #define Tracy_ZoneScoped
     #define Tracy_ZoneScopedN(name)
+
+    #define Tracy_ZoneStartN(name)
+    #define Tracy_ZoneEnd()
 
     #define Tracy_ZoneText(txt, size)
     #define Tracy_ZoneTextF(fmt, ...)
