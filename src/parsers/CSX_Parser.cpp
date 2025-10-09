@@ -1,10 +1,10 @@
 #include "CSX_Parser.h"
 
-#include "SDL3/SDL_surface.h"
-
 #include <algorithm>
 #include <cassert>
 #include <array>
+
+#include "SDL3/SDL_surface.h"
 
 #include "utils/TracyProfiler.h"
 
@@ -24,6 +24,12 @@ CSX_Parser::CSX_Parser(std::span<uint8_t> buffer) :
 
 }
 
+CSX_Parser::~CSX_Parser()
+{
+    if (m_metaInfo.pallete)
+        SDL_DestroyPalette(m_metaInfo.pallete);
+}
+
 std::span<const uint32_t> reinterpret_as_u32(std::span<const uint8_t> bytes) {
     assert(reinterpret_cast<uintptr_t>(bytes.data()) % alignof(uint32_t) == 0);
     assert(bytes.size_bytes() % sizeof(uint32_t) == 0);
@@ -33,21 +39,45 @@ std::span<const uint32_t> reinterpret_as_u32(std::span<const uint8_t> bytes) {
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error) {
     Tracy_ZoneScopedN("CSX_Parser::parse");
 
-    uint32_t colorCount = readUInt32(); // Читаем количество цветов в палитре
-    assert(colorCount > 0);
+    if (!preParse(error))
+        return nullptr;
+
+    // Создаём SDL_Surface
+    SDL_Surface* surface = SDL_CreateSurface(m_metaInfo.width, m_metaInfo.height, SDL_PIXELFORMAT_INDEX8);
+    if (!surface) {
+        if (error)
+            *error = std::string(SDL_GetError());
+        SDL_DestroySurface(surface);
+        return nullptr;
+    }
+
+    const bool needFillColor = (m_metaInfo.fillColorIndex != 0);
+    if (!parseLinesToSurface(surface, needFillColor, 0, m_metaInfo.height, isBackgroundTransparent, error)) {
+        SDL_DestroySurface(surface);
+        return nullptr;
+    }
+
+    return surface;
+}
+
+bool CSX_Parser::preParse(std::string* error)
+{
+    assert(!m_metaInfo.pallete);
+    assert(m_offset == 0);
+
+    m_metaInfo.colorCount = readUInt32(); // Читаем количество цветов в палитре
+    assert(m_metaInfo.colorCount > 0);
 
     ColorData fillColor;
     fillColor.u32 = readUInt32();
 
     // Читаем палитру цветов
-    int fillColorIndex = -1;
-    constexpr uint32_t kMaxColor = 256;
-    std::array<SDL_Color, kMaxColor> palleteColors = {};
-    for (int i = 0; i < colorCount; i++) {
+    std::array<SDL_Color, CsxMetaInfo::kMaxColors> palleteColors;
+    for (int i = 0; i < m_metaInfo.colorCount; i++) {
         ColorData color;
         color.u32 = readUInt32();
         if (fillColor.u32 == color.u32) {
-            fillColorIndex = i;
+            m_metaInfo.fillColorIndex = i;
         }
 
         palleteColors[i].r = color.r;
@@ -55,38 +85,37 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
         palleteColors[i].b = color.b;
         palleteColors[i].a = 255;
     }
-    fillColor.a = 255;
 
     // Читаем размеры изображения
-    uint32_t width = readUInt32();
-    uint32_t height = readUInt32();
+    m_metaInfo.width = readUInt32();
+    m_metaInfo.height = readUInt32();
 
     // read relative line offsets
-    uint32_t lineOffsetSize = (height + 1) * sizeof(uint32_t);
-    std::span<const uint32_t> lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
+    uint32_t lineOffsetSize = (m_metaInfo.height + 1) * sizeof(uint32_t);
+    m_metaInfo.lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
     m_offset += lineOffsetSize;
 
     // Читаем данные пикселей
-    std::span<const uint8_t> bytes = m_buffer.subspan(m_offset, lineOffsets[height]);
+    m_metaInfo.bytes = m_buffer.subspan(m_offset, m_metaInfo.lineOffsets[m_metaInfo.height]);
 
     // Добавляем заполняющий цвет в палитру
-    if (fillColorIndex == -1) {
+    if (m_metaInfo.fillColorIndex == -1) {
         // Если есть свободное место в палитре
-        if (colorCount < kMaxColor) {
-            palleteColors[colorCount].r = fillColor.r;
-            palleteColors[colorCount].g = fillColor.g;
-            palleteColors[colorCount].b = fillColor.b;
-            fillColorIndex = colorCount;
-            ++colorCount;
+        if (m_metaInfo.colorCount < CsxMetaInfo::kMaxColors) {
+            palleteColors[m_metaInfo.colorCount].r = fillColor.r;
+            palleteColors[m_metaInfo.colorCount].g = fillColor.g;
+            palleteColors[m_metaInfo.colorCount].b = fillColor.b;
+            m_metaInfo.fillColorIndex = m_metaInfo.colorCount;
+            ++m_metaInfo.colorCount;
         } else {
             // Если места нет - анализируем изображение. Если цвет в палитре не используется перезапишем его
-            std::array<size_t, kMaxColor> frequency = {};
-            for (uint8_t b : bytes) {
+            std::array<size_t, CsxMetaInfo::kMaxColors> frequency = {};
+            for (uint8_t b : m_metaInfo.bytes) {
                 ++frequency[b];
             }
 
             int firstUnusedIndex = -1;
-            for (int i = 0; i < kMaxColor; ++i) {
+            for (int i = 0; i < CsxMetaInfo::kMaxColors; ++i) {
                 if (frequency[i] == 0) {
                     firstUnusedIndex = i;
                     break;
@@ -97,50 +126,48 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
                 // NOTE: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
                 if (error)
                     *error = "Can't use fillColor value, because pallete is full";
-                return nullptr;
+                return false;
             }
 
             palleteColors[firstUnusedIndex].r = fillColor.r;
             palleteColors[firstUnusedIndex].g = fillColor.g;
             palleteColors[firstUnusedIndex].b = fillColor.b;
-            fillColorIndex = firstUnusedIndex;
+            m_metaInfo.fillColorIndex = firstUnusedIndex;
         }
     }
 
-    // Создаём SDL_Surface
-    SDL_Surface* surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_INDEX8);
-    if (!surface) {
-        if (error)
-            *error = std::string(SDL_GetError());
-        return nullptr;
-    }
+    // Создаём палитру
+    m_metaInfo.pallete = SDL_CreatePalette(m_metaInfo.colorCount);
+    SDL_SetPaletteColors(m_metaInfo.pallete, palleteColors.data(), 0, m_metaInfo.colorCount);
+
+    return true;
+}
+
+bool CSX_Parser::parseLinesToSurface(SDL_Surface* inOutSurface, bool needFillColor, int lineIndexStart, int lineCount, bool isBackgroundTransparent, std::string* error)
+{
     // Заливка цветом
-    SDL_FillSurfaceRect(surface, NULL, fillColorIndex);
+    if (needFillColor)
+        SDL_FillSurfaceRect(inOutSurface, NULL, m_metaInfo.fillColorIndex);
 
-    // Создаём и прикрепляем палитру
-    SDL_Palette* pallete = SDL_CreatePalette(colorCount);
-    SDL_SetPaletteColors(pallete, palleteColors.data(), 0, colorCount);
-    SDL_SetSurfacePalette(surface, pallete);
-    SDL_DestroyPalette(pallete);
+    // Прикрепляем палитру
+    SDL_SetSurfacePalette(inOutSurface, m_metaInfo.pallete);
 
+    // Устанавливаем прозрачный цвет
     if (isBackgroundTransparent) {
-        SDL_SetSurfaceColorKey(surface, true, fillColorIndex);
+        SDL_SetSurfaceColorKey(inOutSurface, true, m_metaInfo.fillColorIndex);
     }
 
     // Декодируем изображение
-    {
-        Tracy_ZoneScopedN("decodeLines");
-        std::span<uint8_t> pixels((uint8_t*)surface->pixels, surface->pitch * height);
-        #pragma omp parallel for
-        for (int y = 0; y < height; y++) {
-            size_t byteIndex = lineOffsets[y];
-            size_t pixelIndex = y * surface->pitch;
-            size_t byteCount = lineOffsets[y + 1] - lineOffsets[y];
-            decodeLine(bytes, byteIndex, pixels, pixelIndex, byteCount);
-        }
+    std::span<uint8_t> pixels((uint8_t*)inOutSurface->pixels, inOutSurface->pitch * m_metaInfo.height);
+    #pragma omp parallel for
+    for (int y = lineIndexStart; y < lineIndexStart + lineCount; y++) {
+        size_t byteIndex = m_metaInfo.lineOffsets[y];
+        size_t pixelIndex = y * inOutSurface->pitch;
+        size_t byteCount = m_metaInfo.lineOffsets[y + 1] - m_metaInfo.lineOffsets[y];
+        decodeLine(m_metaInfo.bytes, byteIndex, pixels, pixelIndex, byteCount);
     }
 
-    return surface;
+    return true;
 }
 
 void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, std::span<uint8_t> pixels, size_t pixelIndex, size_t byteCount) {
