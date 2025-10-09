@@ -52,6 +52,17 @@ struct LevelImgui {
     std::optional<int> highlightCellGroudIndex;
 };
 
+struct Animation {
+    Animation(LVL_Description& description) :
+        description(description)
+    {
+    }
+
+    std::vector<Texture> textures;
+    uint32_t duration = 0;         // Из laoData
+    LVL_Description& description;  // Из lvlData
+};
+
 struct LevelData {
     std::string name;
     Texture background;
@@ -59,6 +70,7 @@ struct LevelData {
     SEF_Data sefData;
     LVL_Data lvlData;
     std::optional<LAO_Data> laoData;
+    std::vector<Animation> animations;
     LevelImgui imgui;
 };
 

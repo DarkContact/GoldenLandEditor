@@ -145,3 +145,39 @@ bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Rende
 
     return true;
 }
+
+bool TextureLoader::loadFixedHeightTexturesFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+{
+    Tracy_ZoneScoped;
+
+    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    if (fileData.empty())
+        return false;
+
+    CSX_Parser csxParser(fileData);
+    if (!csxParser.preParse(error))
+        return false;
+
+    assert(csxParser.metaInfo().height % height == 0);
+
+    SDL_Surface* surface = SDL_CreateSurface(csxParser.metaInfo().width, height, SDL_PIXELFORMAT_INDEX8);
+    if (!surface) {
+        if (error)
+            *error = std::string(SDL_GetError());
+        return false;
+    }
+
+    int countTextures = csxParser.metaInfo().height / height;
+    for (int i = 0; i < countTextures; ++i) {
+        int lineIndexStart = i * height;
+        csxParser.parseLinesToSurface(surface, true, lineIndexStart, height, true, error);
+        Texture texture = Texture::createFromSurface(renderer, surface, error);
+        if (!texture) {
+            SDL_DestroySurface(surface);
+            return false;
+        }
+        outTextures.push_back(std::move(texture));
+    }
+    SDL_DestroySurface(surface);
+    return true;
+}

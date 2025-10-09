@@ -38,7 +38,13 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
         for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
             std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
             if (std::filesystem::exists(levelAnimationPath)) {
-                // TODO: Загрузка анимации
+                Animation animation(m_data.lvlData.animationDescriptions.at(i));
+                animation.duration = m_data.laoData->infos[i].duration;
+                std::string error;
+                if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, m_data.laoData->infos[i].height, renderer, animation.textures, &error)) {
+                    LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {}", error);
+                }
+                m_data.animations.push_back(std::move(animation));
             } else {
                 break;
             }

@@ -29,6 +29,8 @@ public:
     bool preParse(std::string* error = nullptr);
     bool parseLinesToSurface(SDL_Surface* inOutSurface, bool needFillColor, int lineIndexStart, int lineCount, bool isBackgroundTransparent = true, std::string* error = nullptr);
 
+    const CsxMetaInfo& metaInfo() const;
+
 private:
     inline uint32_t readUInt32() {
         uint32_t val = *(uint32_t*)(m_buffer.data() + m_offset);

@@ -47,7 +47,6 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     if (!surface) {
         if (error)
             *error = std::string(SDL_GetError());
-        SDL_DestroySurface(surface);
         return nullptr;
     }
 
@@ -158,11 +157,11 @@ bool CSX_Parser::parseLinesToSurface(SDL_Surface* inOutSurface, bool needFillCol
     }
 
     // Декодируем изображение
-    std::span<uint8_t> pixels((uint8_t*)inOutSurface->pixels, inOutSurface->pitch * m_metaInfo.height);
+    std::span<uint8_t> pixels((uint8_t*)inOutSurface->pixels, inOutSurface->pitch * lineCount);
     #pragma omp parallel for
     for (int y = lineIndexStart; y < lineIndexStart + lineCount; y++) {
         size_t byteIndex = m_metaInfo.lineOffsets[y];
-        size_t pixelIndex = y * inOutSurface->pitch;
+        size_t pixelIndex = (y - lineIndexStart) * inOutSurface->pitch;
         size_t byteCount = m_metaInfo.lineOffsets[y + 1] - m_metaInfo.lineOffsets[y];
         decodeLine(m_metaInfo.bytes, byteIndex, pixels, pixelIndex, byteCount);
     }
@@ -210,4 +209,8 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
                 break;
         }
     }
+}
+
+const CsxMetaInfo& CSX_Parser::metaInfo() const {
+    return m_metaInfo;
 }
