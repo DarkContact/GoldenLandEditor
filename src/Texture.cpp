@@ -23,17 +23,11 @@ Texture& Texture::operator=(Texture&& other) noexcept
     return *this;
 }
 
-Texture Texture::create(
-    SDL_Renderer* renderer,
-    SDL_PixelFormat format,
-    SDL_TextureAccess access,
-    int width,
-    int height,
-    std::string* error) noexcept
+Texture Texture::create(SDL_Renderer* renderer, SDL_PixelFormat format, SDL_TextureAccess access, int width, int height, std::string* error) noexcept
 {
     Texture texture;
     texture.m_texture = SDL_CreateTexture(renderer, format, access, width, height);
-    if (!texture.m_texture && error) {
+    if (!texture.isValid() && error) {
         *error = std::string(SDL_GetError());
     }
     return texture;
@@ -43,7 +37,7 @@ Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface,
 {
     Texture texture;
     texture.m_texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture.m_texture && error) {
+    if (!texture.isValid() && error) {
         *error = std::string(SDL_GetError());
     }
     return texture;

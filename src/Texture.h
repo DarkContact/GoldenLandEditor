@@ -33,7 +33,7 @@ public:
 
     SDL_Texture* get() const noexcept { return m_texture; }
 
-    const SDL_Texture* operator->() const { return m_texture; }
+    const SDL_Texture* operator->() const noexcept { return m_texture; }
 
 private:
     void freeTexture();
