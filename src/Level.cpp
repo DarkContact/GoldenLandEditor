@@ -38,14 +38,30 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
         }
     }
 
+    // Валидация анимаций
+    int animationDescCount = m_data.lvlData.animationDescriptions.size();
+    int animationLaoCount = m_data.laoData ? m_data.laoData->infos.size() : 0;
+    int animationFilesCount = 0;
+    std::string levelAnimationDirPath = levelAnimationDir(rootDirectory, m_data.sefData.pack);
+    if (std::filesystem::exists(levelAnimationDirPath)) {
+        animationFilesCount = std::distance(std::filesystem::directory_iterator(levelAnimationDirPath), std::filesystem::directory_iterator{});
+    }
+    bool animationOk = animationDescCount == animationLaoCount && animationLaoCount == animationFilesCount;
+    if (!animationOk) {
+        LogFmt("Animation counts mismatch (animationDescCount: {}, animationLaoCount: {}, animationFilesCount: {})", animationDescCount, animationLaoCount, animationFilesCount);
+    }
+
+    std::span<LVL_Description> animationDescriptionView(m_data.lvlData.animationDescriptions.data(),
+                                                        std::min((size_t)animationLaoCount, m_data.lvlData.animationDescriptions.size()));
+
     // Отсортируем описание анимаций
-    std::sort(m_data.lvlData.animationDescriptions.begin(),
-              m_data.lvlData.animationDescriptions.end(),
+    std::sort(animationDescriptionView.begin(),
+              animationDescriptionView.end(),
               [] (const LVL_Description& left, const LVL_Description& right) {
         return left.number < right.number;
     });
 
-    if (m_data.laoData && !m_data.lvlData.animationDescriptions.empty()) {
+    if (m_data.laoData && !animationDescriptionView.empty()) {
         for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
             std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
             if (std::filesystem::exists(levelAnimationPath)) {
@@ -86,6 +102,11 @@ std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view
 std::string Level::levelLao(std::string_view rootDirectory, std::string_view levelPack) const
 {
     return std::format("{0}/levels/pack/{1}/data/animated/{1}.lao", rootDirectory, levelPack);
+}
+
+std::string Level::levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack) const
+{
+    return std::format("{}/levels/pack/{}/bitmaps/animated", rootDirectory, levelPack);
 }
 
 std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const

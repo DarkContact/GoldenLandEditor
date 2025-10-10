@@ -133,6 +133,7 @@ private:
     std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack) const;
     std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const;
     std::string levelLao(std::string_view rootDirectory, std::string_view levelPack) const;
+    std::string levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack) const;
     std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const;
 
     LevelData m_data;
