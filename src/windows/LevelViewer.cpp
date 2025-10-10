@@ -750,7 +750,6 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 {
     uint64_t nowMs = SDL_GetTicks();
     for (Animation& animation : level.data().animations) {
-        // TODO: Не рисовать анимацию которую не видно
         animation.update(nowMs);
 
         ImVec2 animationPosition{drawPosition.x + animation.description.position.x,

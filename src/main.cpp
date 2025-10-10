@@ -13,7 +13,7 @@
 
 #include "Level.h"
 #include "Resources.h"
-#include "utils/ImguiHelper.h"
+#include "utils/ImGuiWidgets.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
 #include "windows/LevelViewer.h"
@@ -181,7 +181,7 @@ int main(int, char**)
 
         static bool loaderWindow = false;
         loaderWindow = backgroundWork;
-        ImguiHelper::Loader("Loading...", loaderWindow);
+        ImGuiWidgets::Loader("Loading...", loaderWindow);
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {

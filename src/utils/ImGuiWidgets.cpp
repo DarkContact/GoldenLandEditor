@@ -1,8 +1,8 @@
-#include "ImguiHelper.h"
+#include "ImGuiWidgets.h"
 
 #include "imgui.h"
 
-bool ImguiHelper::ComboBoxWithIndex(const char* label, const std::vector<std::string>& items, int& selectedIndex) {
+bool ImGuiWidgets::ComboBoxWithIndex(const char* label, const std::vector<std::string>& items, int& selectedIndex) {
     if (items.empty() || selectedIndex < 0 || selectedIndex >= static_cast<int>(items.size()))
         return false;
 
@@ -25,7 +25,7 @@ bool ImguiHelper::ComboBoxWithIndex(const char* label, const std::vector<std::st
     return changed;
 }
 
-void ImguiHelper::Loader(const char* label, bool& showWindow)
+void ImGuiWidgets::Loader(const char* label, bool& showWindow)
 {
     ImGuiIO& io = ImGui::GetIO();
 

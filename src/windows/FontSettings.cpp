@@ -5,7 +5,7 @@
 #include <filesystem>
 
 #include "imgui.h"
-#include "utils/ImguiHelper.h"
+#include "utils/ImGuiWidgets.h"
 
 void FontSettings::update(bool& showWindow)
 {
@@ -38,7 +38,7 @@ void FontSettings::update(bool& showWindow)
     if (ImGui::BeginPopupModal("Font Settings", &showWindow, ImGuiWindowFlags_NoResize)) {
 
         if (!fontNames.empty()) {
-            if (ImguiHelper::ComboBoxWithIndex("Font", fontNames, selectedFontIndex)) {
+            if (ImGuiWidgets::ComboBoxWithIndex("Font", fontNames, selectedFontIndex)) {
                 selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
             }
 

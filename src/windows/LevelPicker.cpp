@@ -1,7 +1,7 @@
 #include "LevelPicker.h"
 
 #include "imgui.h"
-#include "utils/ImguiHelper.h"
+#include "utils/ImGuiWidgets.h"
 
 bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& levelNames, int& selectedLevelIndex)
 {
@@ -15,7 +15,7 @@ bool LevelPicker::update(bool& showWindow, const std::vector<std::string>& level
 
     if (ImGui::BeginPopupModal("Level picker", &showWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        ImguiHelper::ComboBoxWithIndex("Levels", levelNames, selectedLevelIndex);
+        ImGuiWidgets::ComboBoxWithIndex("Levels", levelNames, selectedLevelIndex);
 
         if (ImGui::Button("Load")) {
             showWindow = false;

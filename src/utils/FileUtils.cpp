@@ -1,10 +1,10 @@
-#include "FileLoader.h"
+#include "FileUtils.h"
 
 #include <fstream>
 
 #include "utils/TracyProfiler.h"
 
-std::vector<uint8_t> FileLoader::loadFile(std::string_view filePath, std::string* error)
+std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string* error)
 {
     Tracy_ZoneScoped;
     std::ifstream in(filePath.data(), std::ios::binary | std::ios::ate);

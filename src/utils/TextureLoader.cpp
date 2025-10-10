@@ -7,7 +7,7 @@
 #include "Texture.h"
 #include "parsers/CSX_Parser.h"
 
-#include "utils/FileLoader.h"
+#include "utils/FileUtils.h"
 #include "utils/TracyProfiler.h"
 
 bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
@@ -48,7 +48,7 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
 bool TextureLoader::loadTextureFromFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
     if (fileData.empty())
         return false;
 
@@ -58,7 +58,7 @@ bool TextureLoader::loadTextureFromFile(std::string_view fileName, SDL_Renderer*
 bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
     if (fileData.empty())
         return false;
 
@@ -83,7 +83,7 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
 bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
     if (fileData.empty())
         return false;
 
@@ -150,7 +150,7 @@ bool TextureLoader::loadFixedHeightTexturesFromCsxFile(std::string_view fileName
 {
     Tracy_ZoneScoped;
 
-    std::vector<uint8_t> fileData = FileLoader::loadFile(fileName, error);
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
     if (fileData.empty())
         return false;
 

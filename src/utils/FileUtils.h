@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-class FileLoader
+class FileUtils
 {
 public:
-    FileLoader() = delete;
+    FileUtils() = delete;
 
     static std::vector<uint8_t> loadFile(std::string_view filePath, std::string* error = nullptr);
 };

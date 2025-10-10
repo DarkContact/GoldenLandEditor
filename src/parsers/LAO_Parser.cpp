@@ -2,11 +2,11 @@
 
 #include <cstring>
 
-#include "utils/FileLoader.h"
+#include "utils/FileUtils.h"
 
 std::optional<LAO_Data> LAO_Parser::parse(std::string_view laoPath, std::string* error = nullptr)
 {
-    auto fileData = FileLoader::loadFile(laoPath, error);
+    auto fileData = FileUtils::loadFile(laoPath, error);
     if (fileData.empty()) {
         return {};
     }

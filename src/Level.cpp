@@ -10,6 +10,7 @@
 
 Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
     Tracy_ZoneScopedN("Level loading");
+    LogFmt("Level loading: {}", level);
     m_data.name = level;
 
     std::string sefPath = levelSef(rootDirectory, level, levelType);

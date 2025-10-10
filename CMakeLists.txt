@@ -13,8 +13,8 @@ add_executable(GoldenLandEditor WIN32
     src/windows/FontSettings.cpp
     src/Resources.h
     src/Resources.cpp
-    src/utils/ImguiHelper.h
-    src/utils/ImguiHelper.cpp
+    src/utils/ImGuiWidgets.h
+    src/utils/ImGuiWidgets.cpp
     src/windows/LevelPicker.h
     src/windows/LevelPicker.cpp
     src/parsers/SEF_Parser.h
@@ -35,8 +35,8 @@ add_executable(GoldenLandEditor WIN32
     src/parsers/LVL_Parser.cpp
     src/parsers/SDB_Parser.h
     src/parsers/SDB_Parser.cpp
-    src/utils/FileLoader.h
-    src/utils/FileLoader.cpp
+    src/utils/FileUtils.h
+    src/utils/FileUtils.cpp
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
