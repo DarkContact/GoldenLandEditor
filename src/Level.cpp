@@ -40,11 +40,12 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
 
     // Отсортируем описание анимаций
     std::sort(m_data.lvlData.animationDescriptions.begin(),
-              m_data.lvlData.animationDescriptions.end(), [] (const LVL_Description& left, const LVL_Description& right) {
+              m_data.lvlData.animationDescriptions.end(),
+              [] (const LVL_Description& left, const LVL_Description& right) {
         return left.number < right.number;
     });
 
-    if (m_data.laoData) {
+    if (m_data.laoData && !m_data.lvlData.animationDescriptions.empty()) {
         for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
             std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
             if (std::filesystem::exists(levelAnimationPath)) {

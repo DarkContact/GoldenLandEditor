@@ -263,6 +263,10 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.c_str());
                 } else {
+                    // for (const std::string& levelName : rootDirectoryContext.levelNames) {
+                    //     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), levelName);
+                    // }
+
                     // Загрузка уровня
                     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
                 }
