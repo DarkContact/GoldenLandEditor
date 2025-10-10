@@ -51,8 +51,8 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
         LogFmt("Animation counts mismatch (animationDescCount: {}, animationLaoCount: {}, animationFilesCount: {})", animationDescCount, animationLaoCount, animationFilesCount);
     }
 
-    std::span<LVL_Description> animationDescriptionView(m_data.lvlData.animationDescriptions.data(),
-                                                        std::min((size_t)animationLaoCount, m_data.lvlData.animationDescriptions.size()));
+    int minimalSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
+    std::span<LVL_Description> animationDescriptionView(m_data.lvlData.animationDescriptions.data(), minimalSize);
 
     // Отсортируем описание анимаций
     std::sort(animationDescriptionView.begin(),

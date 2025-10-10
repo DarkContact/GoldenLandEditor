@@ -316,7 +316,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
         level.data().imgui.minimapHovered = hoveredMinimap;
 
         // Начало перетаскивания рамки
-        if (!imgui.draggingMinimap && hoveredView && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        if (ImGui::IsWindowFocused() && !imgui.draggingMinimap && hoveredView && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             imgui.draggingMinimap = true;
             imgui.minimapAnimating = false; // Останавливаем анимацию
             imgui.dragOffset = ImVec2(io.MousePos.x - viewTopLeft.x, io.MousePos.y - viewTopLeft.y);
@@ -341,7 +341,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
             ImGui::SetScrollY(newScrollY);
         }
         // Одиночный клик по миникарте (вне рамки)
-        else if (!imgui.draggingMinimap && hoveredMinimap && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        else if (ImGui::IsWindowFocused() && !imgui.draggingMinimap && hoveredMinimap && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             ImVec2 clickPos = ImVec2(io.MousePos.x - minimapPosition.x,
                                      io.MousePos.y - minimapPosition.y);
 
@@ -761,6 +761,7 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
     uint64_t nowMs = SDL_GetTicks();
     for (Animation& animation : level.data().animations) {
         animation.update(nowMs);
@@ -777,6 +778,8 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
             ImGui::IsWindowFocused() &&
             ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
             animationBox.Contains(ImGui::GetMousePos())) {
+
+            drawList->AddRect(animationBox.Min, animationBox.Max, IM_COL32(255, 228, 0, 192));
 
             ImGui::SetTooltip("Name: %s\n"
                               "Index: %u\n"
