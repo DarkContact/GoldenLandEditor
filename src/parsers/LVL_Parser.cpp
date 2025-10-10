@@ -121,8 +121,8 @@ std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(const std::vector<
         desc.param1 = *reinterpret_cast<const uint16_t*>(&block[offset]);
         desc.param2 = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
         desc.number = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
-        desc.position.x = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
-        desc.position.y = *reinterpret_cast<const uint32_t*>(&block[offset + 12]);
+        desc.position.x = *reinterpret_cast<const int32_t*>(&block[offset + 8]);
+        desc.position.y = *reinterpret_cast<const int32_t*>(&block[offset + 12]);
         offset += 16;
         desc.name = StringUtils::readStringWithLength(block, offset);
         result.push_back(desc);

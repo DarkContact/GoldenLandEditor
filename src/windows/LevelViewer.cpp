@@ -768,11 +768,13 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 
             ImGui::SetTooltip("Name: %s\n"
                               "Index: %u\n"
+                              "Position: %dx%d\n"
                               "Frames: %zu\n"
                               "Duration: %u\n"
                               "Params: %u %u",
                               animation.description.name.c_str(),
                               animation.description.number,
+                              animation.description.position.x, animation.description.position.y,
                               animation.textures.size(),
                               animation.duration,
                               animation.description.param1, animation.description.param2);

@@ -1,6 +1,7 @@
 #include "Level.h"
 
 #include <filesystem>
+#include <algorithm>
 #include <format>
 
 #include "utils/TextureLoader.h"
@@ -33,6 +34,12 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
             LogFmt("Loading .lao failed. {}", error);
         }
     }
+
+    // Отсортируем описание анимаций
+    std::sort(m_data.lvlData.animationDescriptions.begin(),
+              m_data.lvlData.animationDescriptions.end(), [] (const LVL_Description& left, const LVL_Description& right) {
+        return left.number < right.number;
+    });
 
     if (m_data.laoData) {
         for (int i = 0; i < m_data.laoData->infos.size(); ++i) {

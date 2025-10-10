@@ -11,8 +11,8 @@ struct MapSize {
 };
 
 struct PixelPosition {
-    uint32_t x = 0;
-    uint32_t y = 0;
+    int32_t x = 0;
+    int32_t y = 0;
 };
 
 struct LVL_Description {
