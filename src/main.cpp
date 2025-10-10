@@ -273,18 +273,20 @@ int main(int, char**)
             }
         }
 
-        for (auto it = rootDirectoryContext.levels.begin(); it != rootDirectoryContext.levels.end();) {
-            bool openLevel = true;
-            Level& level = *it;
-            if (level.data().background) {
-                LevelViewer::update(openLevel, level);
+        if (!backgroundWork) {
+            for (auto it = rootDirectoryContext.levels.begin(); it != rootDirectoryContext.levels.end();) {
+                bool openLevel = true;
+                Level& level = *it;
+                if (level.data().background) {
+                    LevelViewer::update(openLevel, level);
 
-                if (!openLevel) {
-                    it = rootDirectoryContext.levels.erase(it);
-                    continue;
+                    if (!openLevel) {
+                        it = rootDirectoryContext.levels.erase(it);
+                        continue;
+                    }
+
+                    ++it;
                 }
-
-                ++it;
             }
         }
 
