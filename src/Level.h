@@ -122,6 +122,8 @@ public:
     const LevelData& data() const;
     LevelData& data();
 
+    std::string levelPackDir() const;
+
     static const int tileWidth = 12;
     static const int tileHeight = 9;
 
@@ -134,4 +136,5 @@ private:
     std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const;
 
     LevelData m_data;
+    std::string_view m_rootDirectory;
 };

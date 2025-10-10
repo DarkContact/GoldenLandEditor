@@ -8,7 +8,9 @@
 #include "utils/TracyProfiler.h"
 #include "utils/DebugLog.h"
 
-Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) {
+Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) :
+    m_rootDirectory(rootDirectory)
+{
     Tracy_ZoneScopedN("Level loading");
     LogFmt("Level loading: {}", level);
     m_data.name = level;
@@ -98,4 +100,9 @@ const LevelData& Level::data() const
 LevelData& Level::data()
 {
     return m_data;
+}
+
+std::string Level::levelPackDir() const
+{
+    return std::format("{}/levels/pack/{}", m_rootDirectory, m_data.sefData.pack);
 }

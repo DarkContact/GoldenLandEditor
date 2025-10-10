@@ -6,6 +6,8 @@
 #include "imgui_internal.h"
 #include "imgui.h"
 
+#include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
 
 bool LevelViewer::update(bool& showWindow, Level& level)
@@ -53,6 +55,16 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             }
             if (ImGui::MenuItem("Mask", "Ctrl + 3", level.data().imgui.mapTilesMode == MapTilesMode::Mask)) {
                 level.data().imgui.mapTilesMode = MapTilesMode::Mask;
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Files")) {
+            if (ImGui::MenuItem("Open pack folder", NULL)) {
+                std::string error;
+                if (!FileUtils::openFolder(level.levelPackDir(), &error)) {
+                    Log(error);
+                }
             }
             ImGui::EndMenu();
         }
@@ -748,6 +760,7 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 
 void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 {
+    Tracy_ZoneScoped;
     uint64_t nowMs = SDL_GetTicks();
     for (Animation& animation : level.data().animations) {
         animation.update(nowMs);
