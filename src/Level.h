@@ -50,17 +50,50 @@ struct LevelImgui {
 
     bool showCellGroups = false;
     std::optional<int> highlightCellGroudIndex;
+
+    bool showAnimations = true;
 };
 
 struct Animation {
     Animation(LVL_Description& description) :
-        description(description)
-    {
+        description(description) {}
+
+    const Texture& currentTexture() const {
+        return textures[currentFrame];
+    }
+
+    void update(uint64_t timeMs) {
+        if (lastUpdate == 0) {
+            lastUpdate = timeMs;
+            return;
+        }
+
+        if (timeMs - lastUpdate >= duration) {
+            nextFrame();
+            lastUpdate = timeMs;
+        }
+    }
+
+    void stop() {
+        currentFrame = 0;
+        lastUpdate = 0;
     }
 
     std::vector<Texture> textures;
-    uint32_t duration = 0;         // Из laoData
     LVL_Description& description;  // Из lvlData
+    uint32_t duration = 0;         // Из laoData
+
+
+private:
+    void nextFrame() {
+        ++currentFrame;
+        if (currentFrame == textures.size()) {
+            currentFrame = 0;
+        }
+    }
+
+    uint32_t currentFrame = 0;
+    uint64_t lastUpdate = 0;
 };
 
 struct LevelData {

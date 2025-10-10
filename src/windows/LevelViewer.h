@@ -22,6 +22,7 @@ private:
     static void drawPersons(Level& level, ImVec2 drawPosition);
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);
     static void drawCellGroups(Level& level, ImVec2 drawPosition);
+    static void drawAnimations(Level& level, ImVec2 drawPosition);
 
     static std::string maskSoundToString(MapDataSound sound);
 

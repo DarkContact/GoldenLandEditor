@@ -2,8 +2,9 @@
 
 #include <format>
 
-#include "imgui.h"
+#include "SDL3/SDL_timer.h"
 #include "imgui_internal.h"
+#include "imgui.h"
 
 #include "utils/TracyProfiler.h"
 
@@ -36,6 +37,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             }
             if (ImGui::MenuItem("Cells groups", "C", level.data().imgui.showCellGroups)) {
                 level.data().imgui.showCellGroups = !level.data().imgui.showCellGroups;
+            }
+            if (ImGui::MenuItem("Animations", "A", level.data().imgui.showAnimations)) {
+                level.data().imgui.showAnimations = !level.data().imgui.showAnimations;
             }
             ImGui::EndMenu();
         }
@@ -76,6 +80,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_C, false)) {
             level.data().imgui.showCellGroups = !level.data().imgui.showCellGroups;
         }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_A, false)) {
+            level.data().imgui.showAnimations = !level.data().imgui.showAnimations;
+        }
 
         if (level.data().imgui.showMapTiles) {
             if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1, false)) {
@@ -93,6 +100,11 @@ bool LevelViewer::update(bool& showWindow, Level& level)
     // Отрисовка уровня
     ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+
+    if (level.data().imgui.showAnimations)
+    {
+        drawAnimations(level, startPos);
+    }
 
     handleLevelDragScroll(level);
 
@@ -732,6 +744,40 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     }
 
     drawList->Flags = drawListFlags;
+}
+
+void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
+{
+    uint64_t nowMs = SDL_GetTicks();
+    for (Animation& animation : level.data().animations) {
+        // TODO: Не рисовать анимацию которую не видно
+        animation.update(nowMs);
+
+        ImVec2 animationPosition{drawPosition.x + animation.description.position.x,
+                                 drawPosition.y + animation.description.position.y};
+        ImGui::SetCursorScreenPos(animationPosition);
+
+        const Texture& texture = animation.currentTexture();
+        ImGui::Image((ImTextureID)texture.get(), ImVec2(texture->w, texture->h));
+
+        ImRect animationBox = {animationPosition, {animationPosition.x + texture->w, animationPosition.y + texture->h}};
+        if (!level.data().imgui.minimapHovered &&
+            ImGui::IsWindowFocused() &&
+            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            animationBox.Contains(ImGui::GetMousePos())) {
+
+            ImGui::SetTooltip("Name: %s\n"
+                              "Index: %u\n"
+                              "Frames: %zu\n"
+                              "Duration: %u\n"
+                              "Params: %u %u",
+                              animation.description.name.c_str(),
+                              animation.description.number,
+                              animation.textures.size(),
+                              animation.duration,
+                              animation.description.param1, animation.description.param2);
+        }
+    }
 }
 
 std::string LevelViewer::maskSoundToString(MapDataSound sound)
