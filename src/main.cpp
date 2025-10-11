@@ -248,7 +248,7 @@ int main(int, char**)
             SdbViewer::update(rootDirectoryContext.showSdbWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
         }
 
-        std::string loadedLevelName;
+        std::string_view loadedLevelName;
         if (showLevelsWindow && !rootDirectoryContext.levelNames.empty()) {
             if (LevelPicker::update(showLevelsWindow, rootDirectoryContext.levelNames, rootDirectoryContext.selectedLevelIndex)) {
                 loadedLevelName = rootDirectoryContext.levelNames[rootDirectoryContext.selectedLevelIndex];
@@ -261,7 +261,7 @@ int main(int, char**)
                 }
 
                 if (alreadyLoaded) {
-                    ImGui::SetWindowFocus(loadedLevelName.c_str());
+                    ImGui::SetWindowFocus(loadedLevelName.data());
                 } else {
                     // for (const std::string& levelName : rootDirectoryContext.levelNames) {
                     //     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), levelName);
