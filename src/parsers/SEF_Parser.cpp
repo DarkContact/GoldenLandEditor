@@ -47,7 +47,7 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
             } else if (line.starts_with("exit_to_globalmap:")) {
                 m_data.exitToGlobalMap = (getValue(line) == "1");
             } else if (line.starts_with("weather:")) {
-                m_data.weather = std::stoi(getValue(line));
+                m_data.weather = StringUtils::toInt(getValue(line));
             }
         } else if (currentSection == ParseSection::PERSONS) {
             parsePersonLine(line);
@@ -86,7 +86,7 @@ RouteType SEF_Parser::parseRouteType(const std::string& type) {
     throw std::runtime_error("Unknown route type: " + type);
 }
 
-std::string SEF_Parser::getValue(const std::string& rawLine)
+std::string_view SEF_Parser::getValue(std::string_view rawLine)
 {
     size_t sepPos = rawLine.find_first_of("\t ");
     if (sepPos == std::string::npos) {
@@ -97,14 +97,14 @@ std::string SEF_Parser::getValue(const std::string& rawLine)
 }
 
 void SEF_Parser::parsePersonLine(const std::string& rawLine) {
-    std::string line = StringUtils::trim(rawLine);
+    std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
 
-    std::string key = StringUtils::trim(line.substr(0, sepPos));
-    std::string value = StringUtils::trim(line.substr(sepPos + 1));
+    std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
+    std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
 
     if (key == "name:") {
         SEF_Person newPerson;
@@ -116,7 +116,7 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
         // Удаление комментария
         auto commentPos = line.find("//");
         if (commentPos != std::string::npos) {
-            std::string comment = StringUtils::trim(line.substr(commentPos + 2));
+            std::string_view comment = StringUtils::trim(line.substr(commentPos + 2));
             // TODO: Брать имя из sdb
             currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
             line = StringUtils::trim(line.substr(0, commentPos));
@@ -124,13 +124,9 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
         }
 
         if (key == "position") {
-            auto tokens = StringUtils::splitBySpaces(value);
-            if (tokens.size() == 2) {
-                currentPerson.position.x = std::stoi(tokens[0]);
-                currentPerson.position.y = std::stoi(tokens[1]);
-            }
+            StringUtils::parsePosition(value, currentPerson.position.x, currentPerson.position.y);
         } else if (key == "literary_name") {
-            currentPerson.literaryNameIndex = std::stoi(value);
+            currentPerson.literaryNameIndex = StringUtils::toInt(value);
         } else if (key == "direction") {
             currentPerson.direction = StringUtils::extractQuotedValue(value);
         } else if (key == "route_type") {
@@ -138,11 +134,11 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
         } else if (key == "route") {
             currentPerson.route = StringUtils::extractQuotedValue(value);
         } else if (key == "radius") {
-            currentPerson.radius = std::stoi(value);
+            currentPerson.radius = StringUtils::toInt(value);
         } else if (key == "delay_min") {
-            currentPerson.delayMin = std::stoi(value);
+            currentPerson.delayMin = StringUtils::toInt(value);
         } else if (key == "delay_max") {
-            currentPerson.delayMax = std::stoi(value);
+            currentPerson.delayMax = StringUtils::toInt(value);
         } else if (key == "tribe") {
             currentPerson.tribe = StringUtils::extractQuotedValue(value);
         } else if (key == "scr_dialog") {
@@ -155,14 +151,14 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
 
 void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
 {
-    std::string line = StringUtils::trim(rawLine);
+    std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
 
-    std::string key = StringUtils::trim(line.substr(0, sepPos));
-    std::string value = StringUtils::trim(line.substr(sepPos + 1));
+    std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
+    std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
 
     if (key == "name:") {
         SEF_PointEntrance newPoint;
@@ -171,11 +167,7 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
     } else {
         SEF_PointEntrance& currentPoint = m_data.pointsEntrance.back();
         if (key == "position") {
-            auto tokens = StringUtils::splitBySpaces(value);
-            if (tokens.size() == 2) {
-                currentPoint.position.x = std::stoi(tokens[0]);
-                currentPoint.position.y = std::stoi(tokens[1]);
-            }
+            StringUtils::parsePosition(value, currentPoint.position.x, currentPoint.position.y);
         } else if (key == "direction") {
             currentPoint.direction = StringUtils::extractQuotedValue(value);
         }
@@ -184,14 +176,14 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
 
 void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
 {
-    std::string line = StringUtils::trim(rawLine);
+    std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
     size_t sepPos = line.find_first_of("\t ");
     if (sepPos == std::string::npos) return;
 
-    std::string key = StringUtils::trim(line.substr(0, sepPos));
-    std::string value = StringUtils::trim(line.substr(sepPos + 1));
+    std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
+    std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
 
     if (key == "name:") {
         SEF_CellGroup newGroup;
@@ -200,13 +192,9 @@ void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
     } else {
         SEF_CellGroup& currentGroup = m_data.cellGroups.back();
         if (key.starts_with("cell")) {
-            auto tokens = StringUtils::splitBySpaces(value);
-            if (tokens.size() == 2) {
-                TilePosition position;
-                position.x = std::stoi(tokens[0]);
-                position.y = std::stoi(tokens[1]);
-                currentGroup.cells.push_back(position);
-            }
+            TilePosition position;
+            StringUtils::parsePosition(value, position.x, position.y);
+            currentGroup.cells.push_back(position);
         }
     }
 }

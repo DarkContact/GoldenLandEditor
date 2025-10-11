@@ -1,12 +1,13 @@
 #include "StringUtils.h"
 
 #include <algorithm>
+#include <charconv>
 
 constexpr static bool isSpace(int ch) noexcept {
-    return ((ch >= '\t' && ch <= '\r') || ch == ' ');
+    return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
 }
 
-static const std::string win1251_to_utf8[] = {
+static constexpr const char* win1251_to_utf8[] = {
     "Ђ", "Ѓ", "‚", "ѓ", "„", "…", "†", "‡", "€", "‰", "Љ", "‹", "Њ", "Ќ", "Ћ", "Џ",  // 0x80 - 0x8F
     "ђ", "‘", "’", "“", "”", "•", "–", "—", "?", "™", "љ", "›", "њ", "ќ", "ћ", "џ",  // 0x90 - 0x9F
     " ", "Ў", "ў", "Ј", "¤", "Ґ", "¦", "§", "Ё", "©", "Є", "«", "¬", "\xAD", "®", "Ї", // 0xA0 - 0xAF
@@ -24,46 +25,59 @@ std::string StringUtils::toLower(std::string_view input) {
     return result;
 }
 
-std::string StringUtils::trim(std::string_view input) {
-    auto begin = input.cbegin();
-    auto end = input.cend();
-    // skip white space from end
-    while (begin < end && isSpace(end[-1])) {
-        --end;
+std::string_view StringUtils::trimLeft(std::string_view input) noexcept {
+    while (!input.empty() && isSpace(input.front())) {
+        input.remove_prefix(1);
     }
-    // skip white space from start
-    while (begin < end && isSpace(*begin)) {
-        begin++;
-    }
-    return {begin, end};
+    return input;
 }
 
-std::string StringUtils::extractQuotedValue(const std::string& line) {
+std::string_view StringUtils::trimRight(std::string_view input) noexcept {
+    while (!input.empty() && isSpace(input.back())) {
+        input.remove_suffix(1);
+    }
+    return input;
+}
+
+std::string_view StringUtils::trim(std::string_view input) noexcept {
+    return trimRight(trimLeft(input));
+}
+
+int StringUtils::toInt(std::string_view input, int defaultValue) noexcept
+{
+    int result = 0;
+    auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), result);
+
+    if (ec != std::errc()) {
+        return defaultValue;
+    }
+
+    return result;
+}
+
+bool StringUtils::parsePosition(std::string_view input, int& x, int& y) noexcept {
+    auto spacePos = input.find(' ');
+    if (spacePos == std::string_view::npos)
+        return false;
+
+    std::string_view xStr = trimRight(input.substr(0, spacePos));
+    std::string_view yStr = trimLeft(input.substr(spacePos + 1));
+
+    auto [px, ecx] = std::from_chars(xStr.data(), xStr.data() + xStr.size(), x);
+    auto [py, ecy] = std::from_chars(yStr.data(), yStr.data() + yStr.size(), y);
+
+    return ecx == std::errc() && ecy == std::errc();
+}
+
+std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept {
     size_t firstQuote = line.find('"');
     size_t lastQuote  = line.rfind('"');
 
-    if (firstQuote != std::string::npos && lastQuote != std::string::npos && firstQuote < lastQuote) {
+    if (firstQuote != std::string_view::npos && lastQuote != std::string_view::npos && firstQuote < lastQuote) {
         return line.substr(firstQuote + 1, lastQuote - firstQuote - 1);
     }
 
     return {};
-}
-
-std::vector<std::string> StringUtils::splitBySpaces(const std::string& line) {
-    std::vector<std::string> tokens;
-    std::string current;
-    for (char ch : line) {
-        if (std::isspace(ch)) {
-            if (!current.empty()) {
-                tokens.push_back(current);
-                current.clear();
-            }
-        } else {
-            current += ch;
-        }
-    }
-    if (!current.empty()) tokens.push_back(current);
-    return tokens;
 }
 
 std::string StringUtils::readStringWithLength(const std::vector<uint8_t>& block, size_t& offset) {
@@ -76,7 +90,7 @@ std::string StringUtils::readStringWithLength(const std::vector<uint8_t>& block,
     return s;
 }
 
-std::string StringUtils::decodeWin1251ToUtf8(const std::string& input) {
+std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     std::string result;
     for (unsigned char c : input) {
         if (c < 0x80) {

@@ -86,7 +86,7 @@ private:
     Direction parseDirection(const std::string& dir);
     RouteType parseRouteType(const std::string& type);
 
-    std::string getValue(const std::string& rawLine);
+    std::string_view getValue(std::string_view rawLine);
 
     void parsePersonLine(const std::string& rawLine);
     void parsePointEntranceLine(const std::string& rawLine);
