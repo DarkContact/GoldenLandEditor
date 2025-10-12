@@ -117,10 +117,6 @@ public:
     LVL_Data& parse();
 
 private:
-    void extractBlocks(const std::vector<uint8_t>& dataBuf);
-
-    LVL_Data interpretData();
-
     std::string parseVersion(std::span<const uint8_t> block);
     MapSize parseMapSize(std::span<const uint8_t> block);
     MapTiles parseMapTiles(std::span<const uint8_t> block);
@@ -133,6 +129,5 @@ private:
     uint32_t parseLevelFloors(std::span<const uint8_t> block);
 
     std::string m_filePath;
-    std::map<std::string, std::vector<uint8_t>> m_blocks;
     LVL_Data m_data;
 };

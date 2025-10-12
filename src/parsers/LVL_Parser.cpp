@@ -12,41 +12,33 @@ LVL_Parser::LVL_Parser(std::string_view lvlPath) :
 
 LVL_Data& LVL_Parser::parse() {
     Tracy_ZoneScopedN("LVL_Parser::parse");
-    auto buffer = FileUtils::loadFile(m_filePath);
-    extractBlocks(buffer);
-    m_data = interpretData();
+    auto fileData = FileUtils::loadFile(m_filePath);
+
+    // В файле уровня должны присутствовать все 12 блоков данных
+    // Блоки данных следуют друг за другом в строгой последовательности
+    constexpr int kLevelBlocks = 12;
+    size_t offset = 0;
+    for (int i = 0; i < kLevelBlocks; ++i) {
+        std::string_view blockName(reinterpret_cast<const char*>(&fileData[offset]), 8);
+        offset += 8;
+        uint32_t blockSize = *reinterpret_cast<const uint32_t*>(&fileData[offset]);
+        offset += sizeof(uint32_t);
+
+        std::span<const uint8_t> block(fileData.data() + offset, fileData.data() + offset + blockSize);
+        if      (blockName == "BLK_LVER") { m_data.version = parseVersion(block); }
+        else if (blockName == "BLK_MPSZ") { m_data.mapSize = parseMapSize(block); }
+        else if (blockName == "BLK_MHDR") { m_data.mapTiles = parseMapTiles(block); }
+        else if (blockName == "BLK_MDSC") { m_data.maskDescriptions = parseMaskDescriptions(block); }
+        else if (blockName == "BLK_SDSC") { m_data.staticDescriptions = parseStructuredBlock(block); }
+        else if (blockName == "BLK_ADSC") { m_data.animationDescriptions = parseStructuredBlock(block); }
+        else if (blockName == "BLK_TDSC") { m_data.triggerDescription = parseStructuredBlock(block); }
+        else if (blockName == "BLK_CGRP") { m_data.cellGroups = parseCellGroups(block); }
+        else if (blockName == "BLK_SENV") { m_data.environmentSounds = parseSoundEnv(block); }
+        else if (blockName == "BLK_WTHR") { m_data.weather = parseWeather(block); }
+        else if (blockName == "BLK_DOOR") { m_data.doors = parseDoors(block); }
+        else if (blockName == "BLK_LFLS") { m_data.levelFloors = parseLevelFloors(block); }
+    }
     return m_data;
-}
-
-void LVL_Parser::extractBlocks(const std::vector<uint8_t>& dataBuf) {
-    size_t index = 0, n = dataBuf.size();
-    while (index + 12 <= n) {
-        std::string blockId(reinterpret_cast<const char*>(&dataBuf[index]), 8);
-        uint32_t blockSize = *reinterpret_cast<const uint32_t*>(&dataBuf[index + 8]);
-        index += 12;
-        if (index + blockSize > n) break;
-        m_blocks[blockId] = std::vector<uint8_t>(dataBuf.begin()+index, dataBuf.begin()+index+blockSize);
-        index += blockSize;
-    }
-}
-
-LVL_Data LVL_Parser::interpretData() {
-    LVL_Data d = m_data;
-    for (auto& [name, block]: m_blocks) {
-        if      (name == "BLK_LVER") d.version = parseVersion(block);
-        else if (name == "BLK_MPSZ") d.mapSize = parseMapSize(block);
-        else if (name == "BLK_MHDR") d.mapTiles = parseMapTiles(block);
-        else if (name == "BLK_MDSC") d.maskDescriptions = parseMaskDescriptions(block);
-        else if (name == "BLK_SDSC") d.staticDescriptions = parseStructuredBlock(block);
-        else if (name == "BLK_ADSC") d.animationDescriptions = parseStructuredBlock(block);
-        else if (name == "BLK_TDSC") d.triggerDescription = parseStructuredBlock(block);
-        else if (name == "BLK_CGRP") d.cellGroups = parseCellGroups(block);
-        else if (name == "BLK_SENV") d.environmentSounds = parseSoundEnv(block);
-        else if (name == "BLK_WTHR") d.weather = parseWeather(block);
-        else if (name == "BLK_DOOR") d.doors = parseDoors(block);
-        else if (name == "BLK_LFLS") d.levelFloors = parseLevelFloors(block);
-    }
-    return d;
 }
 
 std::string LVL_Parser::parseVersion(std::span<const uint8_t> block) {
