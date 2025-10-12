@@ -49,14 +49,14 @@ LVL_Data LVL_Parser::interpretData() {
     return d;
 }
 
-std::string LVL_Parser::parseVersion(const std::vector<uint8_t>& block) {
+std::string LVL_Parser::parseVersion(std::span<const uint8_t> block) {
     if (block.size() < 4) return "-1";
     uint16_t minor = *reinterpret_cast<const uint16_t*>(&block[0]);
     uint16_t major = *reinterpret_cast<const uint16_t*>(&block[2]);
     return std::to_string(major) + "." + std::to_string(minor);
 }
 
-MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
+MapSize LVL_Parser::parseMapSize(std::span<const uint8_t> block) {
     if (block.size() < 8) return {};
     return {
         *reinterpret_cast<const uint32_t*>(&block[0]),
@@ -64,7 +64,7 @@ MapSize LVL_Parser::parseMapSize(const std::vector<uint8_t>& block) {
     };
 }
 
-MapTiles LVL_Parser::parseMapTiles(const std::vector<uint8_t>& block) {
+MapTiles LVL_Parser::parseMapTiles(std::span<const uint8_t> block) {
     MapTiles mapTiles;
     if (block.size() < 8) return mapTiles;
     mapTiles.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
@@ -89,7 +89,7 @@ MapTiles LVL_Parser::parseMapTiles(const std::vector<uint8_t>& block) {
     return mapTiles;
 }
 
-std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector<uint8_t>& block) {
+std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(std::span<const uint8_t> block) {
     std::vector<MaskDescription> result;
     if (block.size() < 4) return result;
     size_t offset = 0;
@@ -108,7 +108,7 @@ std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(const std::vector
     return result;
 }
 
-std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(const std::vector<uint8_t>& block) {
+std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block) {
     std::vector<LVL_Description> result;
     if (block.size() < 4) return result;
     size_t offset = 0;
@@ -131,7 +131,7 @@ std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(const std::vector<
     return result;
 }
 
-CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
+CellGroups LVL_Parser::parseCellGroups(std::span<const uint8_t> block) {
     CellGroups groups;
     if (block.size() < 4) return groups;
     size_t offset = 0;
@@ -139,7 +139,7 @@ CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
     offset += 4;
 
     for (uint32_t i = 0; i < groupCount; ++i) {
-        std::string groupName = StringUtils::readStringWithLength(block, offset);
+        std::string groupName(StringUtils::readStringWithLength(block, offset));
         if (offset + 4 > block.size()) break;
         uint32_t groupSize = *reinterpret_cast<const uint32_t*>(&block[offset]);
         offset += 4;
@@ -158,7 +158,7 @@ CellGroups LVL_Parser::parseCellGroups(const std::vector<uint8_t>& block) {
     return groups;
 }
 
-EnvironmentSounds LVL_Parser::parseSoundEnv(const std::vector<uint8_t>& block) {
+EnvironmentSounds LVL_Parser::parseSoundEnv(std::span<const uint8_t> block) {
     EnvironmentSounds result;
     if (block.size() < 16) return result;
 
@@ -194,7 +194,7 @@ EnvironmentSounds LVL_Parser::parseSoundEnv(const std::vector<uint8_t>& block) {
     return result;
 }
 
-Weather LVL_Parser::parseWeather(const std::vector<uint8_t>& block) {
+Weather LVL_Parser::parseWeather(std::span<const uint8_t> block) {
     if (block.size() < 4) return {};
     return {
         *reinterpret_cast<const uint16_t*>(&block[0]),
@@ -202,7 +202,7 @@ Weather LVL_Parser::parseWeather(const std::vector<uint8_t>& block) {
     };
 }
 
-std::vector<Door> LVL_Parser::parseDoors(const std::vector<uint8_t>& block) {
+std::vector<Door> LVL_Parser::parseDoors(std::span<const uint8_t> block) {
     std::vector<Door> result;
     if (block.size() < 4) return result;
     size_t offset = 0;
@@ -223,7 +223,7 @@ std::vector<Door> LVL_Parser::parseDoors(const std::vector<uint8_t>& block) {
     return result;
 }
 
-uint32_t LVL_Parser::parseLevelFloors(const std::vector<uint8_t>& block) {
+uint32_t LVL_Parser::parseLevelFloors(std::span<const uint8_t> block) {
     if (block.size() < 4) return 0;
     return *reinterpret_cast<const uint32_t*>(&block[0]);
 }

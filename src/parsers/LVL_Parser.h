@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <span>
 #include <map>
 
 struct MapSize {
@@ -120,16 +121,16 @@ private:
 
     LVL_Data interpretData();
 
-    std::string parseVersion(const std::vector<uint8_t>& block);
-    MapSize parseMapSize(const std::vector<uint8_t>& block);
-    MapTiles parseMapTiles(const std::vector<uint8_t>& block);
-    std::vector<MaskDescription> parseMaskDescriptions(const std::vector<uint8_t>& block);
-    std::vector<LVL_Description> parseStructuredBlock(const std::vector<uint8_t>& block);
-    CellGroups parseCellGroups(const std::vector<uint8_t>& block);
-    EnvironmentSounds parseSoundEnv(const std::vector<uint8_t>& block);
-    Weather parseWeather(const std::vector<uint8_t>& block);
-    std::vector<Door> parseDoors(const std::vector<uint8_t>& block);
-    uint32_t parseLevelFloors(const std::vector<uint8_t>& block);
+    std::string parseVersion(std::span<const uint8_t> block);
+    MapSize parseMapSize(std::span<const uint8_t> block);
+    MapTiles parseMapTiles(std::span<const uint8_t> block);
+    std::vector<MaskDescription> parseMaskDescriptions(std::span<const uint8_t> block);
+    std::vector<LVL_Description> parseStructuredBlock(std::span<const uint8_t> block);
+    CellGroups parseCellGroups(std::span<const uint8_t> block);
+    EnvironmentSounds parseSoundEnv(std::span<const uint8_t> block);
+    Weather parseWeather(std::span<const uint8_t> block);
+    std::vector<Door> parseDoors(std::span<const uint8_t> block);
+    uint32_t parseLevelFloors(std::span<const uint8_t> block);
 
     std::string m_filePath;
     std::map<std::string, std::vector<uint8_t>> m_blocks;

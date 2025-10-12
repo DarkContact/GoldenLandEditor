@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cassert>
 
 constexpr static bool isSpace(int ch) noexcept {
     return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
@@ -80,14 +81,17 @@ std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept
     return {};
 }
 
-std::string StringUtils::readStringWithLength(const std::vector<uint8_t>& block, size_t& offset) {
-    if (offset + 4 > block.size()) return "";
-    uint32_t len = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
-    if (offset + len > block.size()) return "";
-    std::string s(reinterpret_cast<const char*>(&block[offset]), len);
-    offset += len;
-    return s;
+std::string_view StringUtils::readStringWithLength(std::span<const uint8_t> block, size_t& offset) noexcept {
+    assert(offset + 4 <= block.size());
+
+    uint32_t length = *reinterpret_cast<const uint32_t*>(&block[offset]);
+    offset += sizeof(uint32_t);
+
+    assert(offset + length <= block.size());
+
+    std::string_view sv(reinterpret_cast<const char*>(&block[offset]), length);
+    offset += length;
+    return sv;
 }
 
 std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
