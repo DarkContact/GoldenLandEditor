@@ -37,6 +37,8 @@ LVL_Data& LVL_Parser::parse() {
         else if (blockName == "BLK_WTHR") { m_data.weather = parseWeather(block); }
         else if (blockName == "BLK_DOOR") { m_data.doors = parseDoors(block); }
         else if (blockName == "BLK_LFLS") { m_data.levelFloors = parseLevelFloors(block); }
+
+        offset += blockSize;
     }
     return m_data;
 }
