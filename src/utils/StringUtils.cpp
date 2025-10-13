@@ -56,7 +56,7 @@ int StringUtils::toInt(std::string_view input, int defaultValue) noexcept
     return result;
 }
 
-bool StringUtils::parsePosition(std::string_view input, int& x, int& y) noexcept {
+bool StringUtils::parsePosition(std::string_view input, uint16_t& x, uint16_t& y) noexcept {
     auto spacePos = input.find(' ');
     if (spacePos == std::string_view::npos)
         return false;

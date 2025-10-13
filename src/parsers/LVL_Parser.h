@@ -4,7 +4,13 @@
 #include <vector>
 #include <array>
 #include <span>
-#include <map>
+
+#include "Types.h"
+
+struct LevelVersion {
+    uint16_t major = 0;
+    uint16_t minor = 0;
+};
 
 struct MapSize {
     uint32_t pixelWidth = 1;
@@ -21,7 +27,7 @@ struct LVL_Description {
     uint16_t param1 = 0;
     uint16_t param2 = 0;
     uint32_t number = 0;
-    PixelPosition position{};
+    PixelPosition position;
 };
 
 struct MaskDescription {
@@ -36,10 +42,9 @@ struct Weather {
 };
 
 struct CellGroup {
-    uint16_t x = 0;
-    uint16_t y = 0;
+    std::string name;
+    std::vector<TilePosition> cells;
 };
-using CellGroups = std::map<std::string, std::vector<CellGroup>>;
 
 struct Door {
     std::string sefName;
@@ -95,39 +100,35 @@ struct MapTiles {
 };
 
 struct LVL_Data {
-    std::string version;
+    LevelVersion version;
     MapSize mapSize;
     MapTiles mapTiles;
     std::vector<MaskDescription> maskDescriptions;
     std::vector<LVL_Description> staticDescriptions;
     std::vector<LVL_Description> animationDescriptions;
-    std::vector<LVL_Description> triggerDescription;
-    CellGroups cellGroups;
+    std::vector<LVL_Description> triggerDescriptions;
+    std::vector<CellGroup> cellGroups;
     EnvironmentSounds environmentSounds;
     Weather weather;
     std::vector<Door> doors;
     uint32_t levelFloors = 0;
 };
 
-class LVL_Parser
-{
+class LVL_Parser {
 public:
-    LVL_Parser(std::string_view lvlPath);
+    LVL_Parser() = delete;
 
-    LVL_Data& parse();
+    static bool parse(std::string_view lvlPath, LVL_Data& data);
 
 private:
-    std::string parseVersion(std::span<const uint8_t> block);
-    MapSize parseMapSize(std::span<const uint8_t> block);
-    MapTiles parseMapTiles(std::span<const uint8_t> block);
-    std::vector<MaskDescription> parseMaskDescriptions(std::span<const uint8_t> block);
-    std::vector<LVL_Description> parseStructuredBlock(std::span<const uint8_t> block);
-    CellGroups parseCellGroups(std::span<const uint8_t> block);
-    EnvironmentSounds parseSoundEnv(std::span<const uint8_t> block);
-    Weather parseWeather(std::span<const uint8_t> block);
-    std::vector<Door> parseDoors(std::span<const uint8_t> block);
-    uint32_t parseLevelFloors(std::span<const uint8_t> block);
-
-    std::string m_filePath;
-    LVL_Data m_data;
+    static void parseVersion(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseMapSize(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseMapTiles(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseMaskDescriptions(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data);
+    static void parseCellGroups(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseSounds(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseWeather(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseDoors(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data);
 };

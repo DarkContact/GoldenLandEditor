@@ -3,10 +3,7 @@
 #include <string>
 #include <vector>
 
-struct TilePosition {
-    int x = -1;
-    int y = -1;
-};
+#include "Types.h"
 
 enum class Direction {
     LEFT,
@@ -75,8 +72,7 @@ struct SEF_Data {
     std::vector<SEF_CellGroup> cellGroups;
 };
 
-class SEF_Parser
-{
+class SEF_Parser {
 public:
     SEF_Parser(std::string_view sefPath);
 

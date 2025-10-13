@@ -15,7 +15,7 @@ public:
     static std::string_view trim(std::string_view input) noexcept;
 
     static int toInt(std::string_view input, int defaultValue = -1) noexcept;
-    static bool parsePosition(std::string_view input, int& x, int& y) noexcept;
+    static bool parsePosition(std::string_view input, uint16_t& x, uint16_t& y) noexcept;
 
     static std::string_view extractQuotedValue(std::string_view line) noexcept;
     static std::string_view readStringWithLength(std::span<const uint8_t> block, size_t& offset) noexcept;

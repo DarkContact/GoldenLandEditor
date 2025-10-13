@@ -1,18 +1,15 @@
 #include "LVL_Parser.h"
 
+#include <cassert>
+
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
-LVL_Parser::LVL_Parser(std::string_view lvlPath) :
-    m_filePath(lvlPath)
-{
 
-}
-
-LVL_Data& LVL_Parser::parse() {
+bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data) {
     Tracy_ZoneScopedN("LVL_Parser::parse");
-    auto fileData = FileUtils::loadFile(m_filePath);
+    auto fileData = FileUtils::loadFile(lvlPath);
 
     // В файле уровня должны присутствовать все 12 блоков данных
     // Блоки данных следуют друг за другом в строгой последовательности
@@ -21,203 +18,191 @@ LVL_Data& LVL_Parser::parse() {
     for (int i = 0; i < kLevelBlocks; ++i) {
         std::string_view blockName(reinterpret_cast<const char*>(&fileData[offset]), 8);
         offset += 8;
+
         uint32_t blockSize = *reinterpret_cast<const uint32_t*>(&fileData[offset]);
         offset += sizeof(uint32_t);
 
         std::span<const uint8_t> block(fileData.data() + offset, fileData.data() + offset + blockSize);
-        if      (blockName == "BLK_LVER") { m_data.version = parseVersion(block); }
-        else if (blockName == "BLK_MPSZ") { m_data.mapSize = parseMapSize(block); }
-        else if (blockName == "BLK_MHDR") { m_data.mapTiles = parseMapTiles(block); }
-        else if (blockName == "BLK_MDSC") { m_data.maskDescriptions = parseMaskDescriptions(block); }
-        else if (blockName == "BLK_SDSC") { m_data.staticDescriptions = parseStructuredBlock(block); }
-        else if (blockName == "BLK_ADSC") { m_data.animationDescriptions = parseStructuredBlock(block); }
-        else if (blockName == "BLK_TDSC") { m_data.triggerDescription = parseStructuredBlock(block); }
-        else if (blockName == "BLK_CGRP") { m_data.cellGroups = parseCellGroups(block); }
-        else if (blockName == "BLK_SENV") { m_data.environmentSounds = parseSoundEnv(block); }
-        else if (blockName == "BLK_WTHR") { m_data.weather = parseWeather(block); }
-        else if (blockName == "BLK_DOOR") { m_data.doors = parseDoors(block); }
-        else if (blockName == "BLK_LFLS") { m_data.levelFloors = parseLevelFloors(block); }
-
+        if      (blockName == "BLK_LVER") { parseVersion(block, data); }
+        else if (blockName == "BLK_MPSZ") { parseMapSize(block, data); }
+        else if (blockName == "BLK_MHDR") { parseMapTiles(block, data); }
+        else if (blockName == "BLK_MDSC") { parseMaskDescriptions(block, data); }
+        else if (blockName == "BLK_SDSC") { parseStructuredBlock(block, data.staticDescriptions); }
+        else if (blockName == "BLK_ADSC") { parseStructuredBlock(block, data.animationDescriptions); }
+        else if (blockName == "BLK_TDSC") { parseStructuredBlock(block, data.triggerDescriptions); }
+        else if (blockName == "BLK_CGRP") { parseCellGroups(block, data); }
+        else if (blockName == "BLK_SENV") { parseSounds(block, data); }
+        else if (blockName == "BLK_WTHR") { parseWeather(block, data); }
+        else if (blockName == "BLK_DOOR") { parseDoors(block, data); }
+        else if (blockName == "BLK_LFLS") { parseLevelFloors(block, data); }
         offset += blockSize;
     }
-    return m_data;
+    return true;
 }
 
-std::string LVL_Parser::parseVersion(std::span<const uint8_t> block) {
-    if (block.size() < 4) return "-1";
-    uint16_t minor = *reinterpret_cast<const uint16_t*>(&block[0]);
-    uint16_t major = *reinterpret_cast<const uint16_t*>(&block[2]);
-    return std::to_string(major) + "." + std::to_string(minor);
+void LVL_Parser::parseVersion(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() == 4);
+    data.version.minor = *reinterpret_cast<const uint16_t*>(&block[0]);
+    data.version.major = *reinterpret_cast<const uint16_t*>(&block[2]);
 }
 
-MapSize LVL_Parser::parseMapSize(std::span<const uint8_t> block) {
-    if (block.size() < 8) return {};
-    return {
-        *reinterpret_cast<const uint32_t*>(&block[0]),
-        *reinterpret_cast<const uint32_t*>(&block[4])
-    };
+void LVL_Parser::parseMapSize(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() == 8);
+    data.mapSize.pixelWidth = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.mapSize.pixelHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
 }
 
-MapTiles LVL_Parser::parseMapTiles(std::span<const uint8_t> block) {
-    MapTiles mapTiles;
-    if (block.size() < 8) return mapTiles;
-    mapTiles.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
-    mapTiles.chunkHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
+void LVL_Parser::parseMapTiles(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() >= 8);
+    data.mapTiles.chunkWidth  = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.mapTiles.chunkHeight = *reinterpret_cast<const uint32_t*>(&block[4]);
 
     size_t offset = 8;
-    const size_t numChunks = mapTiles.chunkWidth * mapTiles.chunkHeight;
-    mapTiles.chunks.reserve(numChunks);
-    for (size_t i = 0; i < numChunks; ++i) {
+    const size_t nChunks = data.mapTiles.chunkWidth * data.mapTiles.chunkHeight;
+    assert(block.size() == offset + nChunks * 6 * 4);
+    data.mapTiles.chunks.reserve(nChunks);
+    for (size_t i = 0; i < nChunks; ++i) {
         MapChunk chunk;
-        for (size_t j = 0; j < chunk.size(); ++j) {
+        for (size_t t = 0; t < chunk.size(); ++t) {
             MapTile tile;
             tile.relief = *reinterpret_cast<const uint16_t*>(&block[offset]);
             tile.sound  = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
             tile.mask   = *reinterpret_cast<const uint16_t*>(&block[offset + 4]);
-            chunk[j] = tile;
+            chunk[t] = std::move(tile);
             offset += 6;
         }
-        mapTiles.chunks.push_back(chunk);
+        data.mapTiles.chunks.push_back(std::move(chunk));
     }
-
-    return mapTiles;
+    assert(block.size() == offset);
 }
 
-std::vector<MaskDescription> LVL_Parser::parseMaskDescriptions(std::span<const uint8_t> block) {
-    std::vector<MaskDescription> result;
-    if (block.size() < 4) return result;
-    size_t offset = 0;
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
+void LVL_Parser::parseMaskDescriptions(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() >= 4);
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.maskDescriptions.reserve(count);
 
-    for (uint32_t i = 0; i < count && offset + 16 <= block.size(); ++i) {
+    size_t offset = sizeof(uint32_t);
+    assert(block.size() == offset + count * 16);
+    for (size_t i = 0; i < count; ++i) {
+        MaskDescription mask;
         offset += 4; // skip padding
-        MaskDescription m;
-        m.number = *reinterpret_cast<const uint32_t*>(&block[offset]);
-        m.x      = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
-        m.y      = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
+        mask.number = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        mask.x      = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
+        mask.y      = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
         offset += 12;
-        result.push_back(m);
+        data.maskDescriptions.push_back(std::move(mask));
     }
-    return result;
+    assert(block.size() == offset);
 }
 
-std::vector<LVL_Description> LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block) {
-    std::vector<LVL_Description> result;
-    if (block.size() < 4) return result;
-    size_t offset = 0;
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
+void LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data) {
+    assert(block.size() >= 4);
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.reserve(count);
 
-    for (uint32_t i = 0; i < count; ++i) {
-        if (offset + 16 > block.size()) break;
+    size_t offset = sizeof(uint32_t);
+    for (size_t i = 0; i < count; ++i) {
         LVL_Description desc;
-        desc.param1 = *reinterpret_cast<const uint16_t*>(&block[offset]);
-        desc.param2 = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
-        desc.number = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
-        desc.position.x = *reinterpret_cast<const int32_t*>(&block[offset + 8]);
-        desc.position.y = *reinterpret_cast<const int32_t*>(&block[offset + 12]);
+        desc.param1 =     *reinterpret_cast<const uint16_t*>(&block[offset]);
+        desc.param2 =     *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
+        desc.number =     *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
+        desc.position.x = *reinterpret_cast<const  int32_t*>(&block[offset + 8]);
+        desc.position.y = *reinterpret_cast<const  int32_t*>(&block[offset + 12]);
         offset += 16;
         desc.name = StringUtils::readStringWithLength(block, offset);
-        result.push_back(desc);
+        data.push_back(std::move(desc));
     }
-
-    return result;
+    assert(block.size() == offset);
 }
 
-CellGroups LVL_Parser::parseCellGroups(std::span<const uint8_t> block) {
-    CellGroups groups;
-    if (block.size() < 4) return groups;
-    size_t offset = 0;
-    uint32_t groupCount = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
+void LVL_Parser::parseCellGroups(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() >= 4);
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.cellGroups.reserve(count);
 
-    for (uint32_t i = 0; i < groupCount; ++i) {
-        std::string groupName(StringUtils::readStringWithLength(block, offset));
-        if (offset + 4 > block.size()) break;
+    size_t offset = sizeof(uint32_t);
+    for (size_t i = 0; i < count; ++i) {
+        CellGroup cellGroup;
+        cellGroup.name = StringUtils::readStringWithLength(block, offset);
+
         uint32_t groupSize = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        cellGroup.cells.reserve(groupSize);
         offset += 4;
-        std::vector<CellGroup> cells;
         for (uint32_t j = 0; j < groupSize; ++j) {
-            if (offset + 4 > block.size()) break;
-            CellGroup cg;
-            cg.x = *reinterpret_cast<const uint16_t*>(&block[offset]);
-            cg.y = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
+            TilePosition pos;
+            pos.x = *reinterpret_cast<const uint16_t*>(&block[offset]);
+            pos.y = *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
             offset += 4;
-            cells.push_back(cg);
+            cellGroup.cells.push_back(std::move(pos));
         }
-        groups[groupName] = cells;
+        data.cellGroups.push_back(std::move(cellGroup));
     }
 
-    return groups;
+    assert(block.size() == offset);
 }
 
-EnvironmentSounds LVL_Parser::parseSoundEnv(std::span<const uint8_t> block) {
-    EnvironmentSounds result;
-    if (block.size() < 16) return result;
+void LVL_Parser::parseSounds(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() >= 16);
 
-    size_t offset = 0;
-    result.header.param1 = *reinterpret_cast<const int32_t*>(&block[offset]);
-    result.header.param2 = *reinterpret_cast<const float*>(&block[offset + 4]);
-    result.header.param3 = *reinterpret_cast<const float*>(&block[offset + 8]);
-    result.header.param4 = *reinterpret_cast<const float*>(&block[offset + 12]);
-    offset += 16;
+    auto& sounds = data.environmentSounds;
 
-    if (offset + 4 > block.size()) return result;
+    sounds.header.param1 = *reinterpret_cast<const int32_t*>(&block[0]);
+    sounds.header.param2 = *reinterpret_cast<const float*>(&block[4]);
+    sounds.header.param3 = *reinterpret_cast<const float*>(&block[8]);
+    sounds.header.param4 = *reinterpret_cast<const float*>(&block[12]);
+    size_t offset = 16;
+
     uint32_t soundCount = *reinterpret_cast<const uint32_t*>(&block[offset]);
     offset += 4;
 
-    result.levelTheme = StringUtils::readStringWithLength(block, offset);
-    result.dayAmbience = StringUtils::readStringWithLength(block, offset);
-    result.nightAmbience = StringUtils::readStringWithLength(block, offset);
+    sounds.levelTheme = StringUtils::readStringWithLength(block, offset);
+    sounds.dayAmbience = StringUtils::readStringWithLength(block, offset);
+    sounds.nightAmbience = StringUtils::readStringWithLength(block, offset);
 
+    sounds.otherSounds.reserve(soundCount);
     for (uint32_t i = 0; i < soundCount; ++i) {
-        ExtraSound s;
-        s.path = StringUtils::readStringWithLength(block, offset);
-        if (offset + 48 > block.size()) break;
+        ExtraSound extraSound;
+        extraSound.path = StringUtils::readStringWithLength(block, offset);
+
         for (int p = 0; p < 8; ++p)
-            reinterpret_cast<float*>(&s.param1)[p] = *reinterpret_cast<const float*>(&block[offset + p * 4]);
+            reinterpret_cast<float*>(&extraSound.param1)[p] = *reinterpret_cast<const float*>(&block[offset + p * 4]);
         offset += 32;
-        s.param9  = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
-        s.param10 = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
-        s.param11 = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
-        s.param12 = *reinterpret_cast<const uint32_t*>(&block[offset]); offset += 4;
-        result.otherSounds.push_back(s);
+        extraSound.param9  = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        extraSound.param10 = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        extraSound.param11 = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        extraSound.param12 = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        offset += 16;
+        sounds.otherSounds.push_back(std::move(extraSound));
     }
-
-    return result;
+    assert(block.size() == offset);
 }
 
-Weather LVL_Parser::parseWeather(std::span<const uint8_t> block) {
-    if (block.size() < 4) return {};
-    return {
-        *reinterpret_cast<const uint16_t*>(&block[0]),
-        *reinterpret_cast<const uint16_t*>(&block[2])
-    };
+void LVL_Parser::parseWeather(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() == 4);
+    data.weather.type = *reinterpret_cast<const uint16_t*>(&block[0]);
+    data.weather.intensity = *reinterpret_cast<const uint16_t*>(&block[2]);
 }
 
-std::vector<Door> LVL_Parser::parseDoors(std::span<const uint8_t> block) {
-    std::vector<Door> result;
-    if (block.size() < 4) return result;
-    size_t offset = 0;
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += 4;
+void LVL_Parser::parseDoors(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() >= 4);
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.doors.reserve(count);
 
+    size_t offset = sizeof(uint32_t);
     for (uint32_t i = 0; i < count; ++i) {
-        Door d;
-        d.sefName = StringUtils::readStringWithLength(block, offset);
-        d.openAction = StringUtils::readStringWithLength(block, offset);
-        d.closeAction = StringUtils::readStringWithLength(block, offset);
-        d.cellGroup = StringUtils::readStringWithLength(block, offset);
-        d.param1 = StringUtils::readStringWithLength(block, offset);
-        d.staticName = StringUtils::readStringWithLength(block, offset);
-        result.push_back(d);
+        Door door;
+        door.sefName = StringUtils::readStringWithLength(block, offset);
+        door.openAction = StringUtils::readStringWithLength(block, offset);
+        door.closeAction = StringUtils::readStringWithLength(block, offset);
+        door.cellGroup = StringUtils::readStringWithLength(block, offset);
+        door.param1 = StringUtils::readStringWithLength(block, offset);
+        door.staticName = StringUtils::readStringWithLength(block, offset);
+        data.doors.push_back(std::move(door));
     }
-
-    return result;
+    assert(block.size() == offset);
 }
 
-uint32_t LVL_Parser::parseLevelFloors(std::span<const uint8_t> block) {
-    if (block.size() < 4) return 0;
-    return *reinterpret_cast<const uint32_t*>(&block[0]);
+void LVL_Parser::parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data) {
+    assert(block.size() == 4);
+    data.levelFloors = *reinterpret_cast<const uint32_t*>(&block[0]);
 }

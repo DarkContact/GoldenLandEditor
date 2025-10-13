@@ -169,6 +169,8 @@ bool TextureLoader::loadFixedHeightTexturesFromCsxFile(std::string_view fileName
 
     int countTextures = csxParser.metaInfo().height / height;
     for (int i = 0; i < countTextures; ++i) {
+        Tracy_ZoneScopedN("Create texture");
+        Tracy_ZoneTextF("%d", i);
         int lineIndexStart = i * height;
         csxParser.parseLinesToSurface(surface, true, lineIndexStart, height, true, error);
         Texture texture = Texture::createFromSurface(renderer, surface, error);
