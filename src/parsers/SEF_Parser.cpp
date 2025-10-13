@@ -64,7 +64,7 @@ const SEF_Data& SEF_Parser::data() const
     return m_data;
 }
 
-Direction SEF_Parser::parseDirection(const std::string& dir) {
+Direction SEF_Parser::parseDirection(std::string_view dir) {
     if (dir == "LEFT") return Direction::LEFT;
     if (dir == "RIGHT") return Direction::RIGHT;
     if (dir == "UP") return Direction::UP;
@@ -73,17 +73,17 @@ Direction SEF_Parser::parseDirection(const std::string& dir) {
     if (dir == "UP_RIGHT") return Direction::UP_RIGHT;
     if (dir == "DOWN_LEFT") return Direction::DOWN_LEFT;
     if (dir == "DOWN_RIGHT") return Direction::DOWN_RIGHT;
-    throw std::runtime_error("Unknown direction: " + dir);
+    return Direction::LEFT;
 }
 
-RouteType SEF_Parser::parseRouteType(const std::string& type) {
+RouteType SEF_Parser::parseRouteType(std::string_view type) {
     if (type == "STAY") return RouteType::STAY;
     if (type == "RANDOM_RADIUS") return RouteType::RANDOM_RADIUS;
     if (type == "STAY_ROTATE") return RouteType::STAY_ROTATE;
     if (type == "MOVED_FLIP") return RouteType::MOVED_FLIP;
     if (type == "MOVED") return RouteType::MOVED;
     if (type == "RANDOM") return RouteType::RANDOM;
-    throw std::runtime_error("Unknown route type: " + type);
+    return RouteType::STAY;
 }
 
 std::string_view SEF_Parser::getValue(std::string_view rawLine)

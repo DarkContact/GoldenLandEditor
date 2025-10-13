@@ -121,8 +121,8 @@ bool CSX_Parser::preParse(std::string* error)
                 }
             }
 
+            // При проверке всех csx таких случаев не было
             if (firstUnusedIndex == -1) {
-                // NOTE: Для такого случая можно использовать SDL_PIXELFORMAT_BGRA32
                 if (error)
                     *error = "Can't use fillColor value, because pallete is full";
                 return false;

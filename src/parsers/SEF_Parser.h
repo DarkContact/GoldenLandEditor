@@ -79,8 +79,8 @@ public:
     const SEF_Data& data() const;
 
 private:
-    Direction parseDirection(const std::string& dir);
-    RouteType parseRouteType(const std::string& type);
+    Direction parseDirection(std::string_view dir);
+    RouteType parseRouteType(std::string_view type);
 
     std::string_view getValue(std::string_view rawLine);
 
