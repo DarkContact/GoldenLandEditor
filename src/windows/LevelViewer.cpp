@@ -109,35 +109,33 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         }
     }
 
-    // Отрисовка уровня
-    ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
-
-    if (level.data().imgui.showAnimations)
-    {
-        drawAnimations(level, startPos);
+    if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) {
+        ImGui::SetWindowFocus();
     }
 
     handleLevelDragScroll(level);
 
-    // Отрисовка персонажей
-    if (level.data().imgui.showPersons)
-    {
+    // Отрисовка уровня
+    ImVec2 startPos = ImGui::GetCursorScreenPos();
+    ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+
+    if (level.data().imgui.showAnimations) {
+        drawAnimations(level, startPos);
+    }
+
+    if (level.data().imgui.showPersons) {
         drawPersons(level, startPos);
     }
 
-    if (level.data().imgui.showEntrancePoints)
-    {
+    if (level.data().imgui.showEntrancePoints) {
         drawPointsEntrance(level, startPos);
     }
 
-    if (level.data().imgui.showCellGroups)
-    {
+    if (level.data().imgui.showCellGroups) {
         drawCellGroups(level, startPos);
     }
 
-    if (level.data().imgui.showMapTiles)
-    {
+    if (level.data().imgui.showMapTiles) {
         drawMapTiles(level, startPos);
     }
 
@@ -156,8 +154,7 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         level.data().imgui.minimapHovered = false;
     }
 
-    if (level.data().imgui.showMetaInfo)
-    {
+    if (level.data().imgui.showMetaInfo) {
         drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
     }
 
@@ -207,7 +204,6 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
     return pointInTarget;
 }
 
-// TODO: Добавить проверку что курсор мыши в активной области уровня
 void LevelViewer::handleLevelDragScroll(Level& level) {
     Tracy_ZoneScoped;
     ImGuiIO& io = ImGui::GetIO();
