@@ -6,6 +6,34 @@
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
+using namespace std::literals::string_view_literals;
+
+using BlockParser = void(*)(std::span<const uint8_t>, LVL_Data&);
+struct BlockParserEntry {
+    std::string_view name;
+    BlockParser parser;
+};
+
+consteval auto LVL_Parser::makeParsers() {
+    return std::to_array<BlockParserEntry>({
+        { "BLK_LVER"sv, &parseVersion },
+        { "BLK_MPSZ"sv, &parseMapSize },
+        { "BLK_MHDR"sv, &parseMapTiles },
+        { "BLK_MDSC"sv, &parseMaskDescriptions },
+        { "BLK_SDSC"sv, &parseStaticDescriptions },
+        { "BLK_ADSC"sv, &parseAnimationDescriptions },
+        { "BLK_TDSC"sv, &parseTriggerDescriptions },
+        { "BLK_CGRP"sv, &parseCellGroups },
+        { "BLK_SENV"sv, &parseSounds },
+        { "BLK_WTHR"sv, &parseWeather },
+        { "BLK_DOOR"sv, &parseDoors },
+        { "BLK_LFLS"sv, &parseLevelFloors }
+    });
+}
+
+struct ParsersPrivate {
+    static constexpr auto kParsers = LVL_Parser::makeParsers();
+};
 
 bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data) {
     Tracy_ZoneScopedN("LVL_Parser::parse");
@@ -13,28 +41,17 @@ bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data) {
 
     // В файле уровня должны присутствовать все 12 блоков данных
     // Блоки данных следуют друг за другом в строгой последовательности
-    constexpr int kLevelBlocks = 12;
     size_t offset = 0;
-    for (int i = 0; i < kLevelBlocks; ++i) {
+    for (const auto& parserEntry : ParsersPrivate::kParsers) {
         std::string_view blockName(reinterpret_cast<const char*>(&fileData[offset]), 8);
+        assert(blockName == parserEntry.name);
         offset += 8;
 
         uint32_t blockSize = *reinterpret_cast<const uint32_t*>(&fileData[offset]);
         offset += sizeof(uint32_t);
 
         std::span<const uint8_t> block(fileData.data() + offset, fileData.data() + offset + blockSize);
-        if      (blockName == "BLK_LVER") { parseVersion(block, data); }
-        else if (blockName == "BLK_MPSZ") { parseMapSize(block, data); }
-        else if (blockName == "BLK_MHDR") { parseMapTiles(block, data); }
-        else if (blockName == "BLK_MDSC") { parseMaskDescriptions(block, data); }
-        else if (blockName == "BLK_SDSC") { parseStructuredBlock(block, data.staticDescriptions); }
-        else if (blockName == "BLK_ADSC") { parseStructuredBlock(block, data.animationDescriptions); }
-        else if (blockName == "BLK_TDSC") { parseStructuredBlock(block, data.triggerDescriptions); }
-        else if (blockName == "BLK_CGRP") { parseCellGroups(block, data); }
-        else if (blockName == "BLK_SENV") { parseSounds(block, data); }
-        else if (blockName == "BLK_WTHR") { parseWeather(block, data); }
-        else if (blockName == "BLK_DOOR") { parseDoors(block, data); }
-        else if (blockName == "BLK_LFLS") { parseLevelFloors(block, data); }
+        parserEntry.parser(block, data);
         offset += blockSize;
     }
     return true;
@@ -95,24 +112,16 @@ void LVL_Parser::parseMaskDescriptions(std::span<const uint8_t> block, LVL_Data&
     assert(block.size() == offset);
 }
 
-void LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data) {
-    assert(block.size() >= 4);
-    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
-    data.reserve(count);
+void LVL_Parser::parseStaticDescriptions(std::span<const uint8_t> block, LVL_Data& data) {
+    return parseStructuredBlock(block, data.staticDescriptions);
+}
 
-    size_t offset = sizeof(uint32_t);
-    for (size_t i = 0; i < count; ++i) {
-        LVL_Description desc;
-        desc.param1 =     *reinterpret_cast<const uint16_t*>(&block[offset]);
-        desc.param2 =     *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
-        desc.number =     *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
-        desc.position.x = *reinterpret_cast<const  int32_t*>(&block[offset + 8]);
-        desc.position.y = *reinterpret_cast<const  int32_t*>(&block[offset + 12]);
-        offset += 16;
-        desc.name = StringUtils::readStringWithLength(block, offset);
-        data.push_back(std::move(desc));
-    }
-    assert(block.size() == offset);
+void LVL_Parser::parseAnimationDescriptions(std::span<const uint8_t> block, LVL_Data& data) {
+    return parseStructuredBlock(block, data.animationDescriptions);
+}
+
+void LVL_Parser::parseTriggerDescriptions(std::span<const uint8_t> block, LVL_Data& data) {
+    return parseStructuredBlock(block, data.triggerDescriptions);
 }
 
 void LVL_Parser::parseCellGroups(std::span<const uint8_t> block, LVL_Data& data) {
@@ -205,4 +214,24 @@ void LVL_Parser::parseDoors(std::span<const uint8_t> block, LVL_Data& data) {
 void LVL_Parser::parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data) {
     assert(block.size() == 4);
     data.levelFloors = *reinterpret_cast<const uint32_t*>(&block[0]);
+}
+
+void LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data) {
+    assert(block.size() >= 4);
+    uint32_t count = *reinterpret_cast<const uint32_t*>(&block[0]);
+    data.reserve(count);
+
+    size_t offset = sizeof(uint32_t);
+    for (size_t i = 0; i < count; ++i) {
+        LVL_Description desc;
+        desc.param1 =     *reinterpret_cast<const uint16_t*>(&block[offset]);
+        desc.param2 =     *reinterpret_cast<const uint16_t*>(&block[offset + 2]);
+        desc.number =     *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
+        desc.position.x = *reinterpret_cast<const  int32_t*>(&block[offset + 8]);
+        desc.position.y = *reinterpret_cast<const  int32_t*>(&block[offset + 12]);
+        offset += 16;
+        desc.name = StringUtils::readStringWithLength(block, offset);
+        data.push_back(std::move(desc));
+    }
+    assert(block.size() == offset);
 }

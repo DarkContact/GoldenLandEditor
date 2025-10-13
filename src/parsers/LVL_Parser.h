@@ -121,14 +121,21 @@ public:
     static bool parse(std::string_view lvlPath, LVL_Data& data);
 
 private:
+    friend struct ParsersPrivate;
+    static consteval auto makeParsers();
+
     static void parseVersion(std::span<const uint8_t> block, LVL_Data& data);
     static void parseMapSize(std::span<const uint8_t> block, LVL_Data& data);
     static void parseMapTiles(std::span<const uint8_t> block, LVL_Data& data);
     static void parseMaskDescriptions(std::span<const uint8_t> block, LVL_Data& data);
-    static void parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data);
+    static void parseStaticDescriptions(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseAnimationDescriptions(std::span<const uint8_t> block, LVL_Data& data);
+    static void parseTriggerDescriptions(std::span<const uint8_t> block, LVL_Data& data);
     static void parseCellGroups(std::span<const uint8_t> block, LVL_Data& data);
     static void parseSounds(std::span<const uint8_t> block, LVL_Data& data);
     static void parseWeather(std::span<const uint8_t> block, LVL_Data& data);
     static void parseDoors(std::span<const uint8_t> block, LVL_Data& data);
     static void parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data);
+
+    static void parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data);
 };
