@@ -6,7 +6,7 @@
 #include "utils/TracyProfiler.h"
 
 SEF_Parser::SEF_Parser(std::string_view sefPath) {
-    Tracy_ZoneScopedN("SEF_Parser::parse");
+    Tracy_ZoneScoped;
     std::ifstream file(sefPath.data());
     if (!file) {
         fprintf(stderr, "Error: cannot open file: %.*s\n", static_cast<int>(sefPath.size()), sefPath.data());

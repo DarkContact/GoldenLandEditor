@@ -36,13 +36,16 @@ struct ParsersPrivate {
 };
 
 bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data) {
-    Tracy_ZoneScopedN("LVL_Parser::parse");
+    Tracy_ZoneScoped;
     auto fileData = FileUtils::loadFile(lvlPath);
 
     // В файле уровня должны присутствовать все 12 блоков данных
     // Блоки данных следуют друг за другом в строгой последовательности
     size_t offset = 0;
     for (const auto& parserEntry : ParsersPrivate::kParsers) {
+        Tracy_ZoneScopedN("parserFunc");
+        Tracy_ZoneText(parserEntry.name.data(), parserEntry.name.size());
+
         std::string_view blockName(reinterpret_cast<const char*>(&fileData[offset]), 8);
         assert(blockName == parserEntry.name);
         offset += 8;
