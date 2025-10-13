@@ -10,14 +10,16 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
 {
     Tracy_ZoneScoped;
     std::ifstream in(filePath.data(), std::ios::binary | std::ios::ate);
-    if (!in && error) {
-        *error = "Can't open file";
+    if (!in) {
+        if (error)
+            *error = "Can't open file";
         return {};
     }
 
     auto size = in.tellg();
-    if (size == 0 && error) {
-        *error = "Empty file";
+    if (size == 0) {
+        if (error)
+            *error = "Empty file";
         return {};
     }
 
