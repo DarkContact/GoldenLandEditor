@@ -9,10 +9,9 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "ini.h"
-
 #include "Level.h"
 #include "Resources.h"
+#include "Settings.h"
 #include "utils/ImGuiWidgets.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
@@ -36,7 +35,7 @@ struct RootDirectoryContext {
 
     const std::string& rootDirectory() const { return m_rootDirectory; }
 
-    void setRootDirectory(const std::string& rootDirectory) {
+    void setRootDirectory(std::string_view rootDirectory) {
         levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
         selectedLevelIndex = 0;
         showCsxWindow = false;
@@ -54,24 +53,12 @@ int main(int, char**)
 {
     RootDirectoryContext rootDirectoryContext;
 
-    std::string fontFilepath;
-    int fontSize = 13;
-
-    auto settingsFilename = "settings.ini";
-    mINI::INIFile settingsFile(settingsFilename);
-    mINI::INIStructure settingsFileIni;
-    if (std::filesystem::exists(settingsFilename)) {
-        settingsFile.read(settingsFileIni);
-        fontFilepath = settingsFileIni.get("fonts").get("filepath");
-        auto fontSizeString = settingsFileIni.get("fonts").get("size");
-        if (!fontSizeString.empty())
-            fontSize = std::stoi(fontSizeString);
-
-        rootDirectoryContext.setRootDirectory(settingsFileIni.get("resources").get("root_dir"));
-    } else {
-        settingsFileIni["fonts"]["filepath"] = fontFilepath;
-        settingsFileIni["fonts"]["size"] = fontSize;
-        settingsFile.write(settingsFileIni, true);
+    Settings settings("settings.ini");
+    std::string fontFilepath = settings.readString(Setting::kFontFilepath);
+    int fontSize = settings.readInt(Setting::kFontSize, 13);
+    std::string rootDir = settings.readString(Setting::kRootDir);
+    if (!rootDir.empty()) {
+        rootDirectoryContext.setRootDirectory(rootDir);
     }
 
     auto backgroundTask = [] (RootDirectoryContext& rootDirectoryContext) {
