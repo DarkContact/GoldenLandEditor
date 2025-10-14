@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "utils/DebugLog.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
@@ -9,7 +10,7 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
     Tracy_ZoneScoped;
     std::ifstream file(sefPath.data());
     if (!file) {
-        fprintf(stderr, "Error: cannot open file: %.*s\n", static_cast<int>(sefPath.size()), sefPath.data());
+        LogFmt("Can't open file: {}", sefPath);
         return;
     }
 

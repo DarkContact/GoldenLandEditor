@@ -118,7 +118,7 @@ class LVL_Parser {
 public:
     LVL_Parser() = delete;
 
-    static bool parse(std::string_view lvlPath, LVL_Data& data);
+    static bool parse(std::string_view lvlPath, LVL_Data& data, std::string* error);
 
 private:
     friend struct ParsersPrivate;

@@ -19,8 +19,11 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     SEF_Parser sefParser(sefPath);
     m_data.sefData = sefParser.data();
 
+    std::string lvlError;
     std::string lvlPath = levelLvl(rootDirectory, m_data.sefData.pack);
-    LVL_Parser::parse(lvlPath, m_data.lvlData);
+    if (!LVL_Parser::parse(lvlPath, m_data.lvlData, &lvlError)) {
+        LogFmt("Loading .lvl failed. {}", lvlError);
+    }
 
     std::string bgPath = levelBackground(rootDirectory, m_data.sefData.pack);
     TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, m_data.background);

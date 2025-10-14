@@ -35,9 +35,12 @@ struct ParsersPrivate {
     static constexpr auto kParsers = LVL_Parser::makeParsers();
 };
 
-bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data) {
+bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data, std::string* error) {
     Tracy_ZoneScoped;
-    auto fileData = FileUtils::loadFile(lvlPath);
+    auto fileData = FileUtils::loadFile(lvlPath, error);
+    if (fileData.empty()) {
+        return false;
+    }
 
     // В файле уровня должны присутствовать все 12 блоков данных
     // Блоки данных следуют друг за другом в строгой последовательности
