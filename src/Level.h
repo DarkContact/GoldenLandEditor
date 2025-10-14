@@ -68,7 +68,7 @@ struct Animation {
             return;
         }
 
-        if (timeMs - lastUpdate >= duration) {
+        if (timeMs - lastUpdate >= delay) {
             nextFrame();
             lastUpdate = timeMs;
         }
@@ -81,7 +81,7 @@ struct Animation {
 
     std::vector<Texture> textures;
     LVL_Description& description;  // Из lvlData
-    uint32_t duration = 0;         // Из laoData
+    uint32_t delay = 0;            // Из laoData
 
 
 private:

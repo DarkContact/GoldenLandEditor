@@ -177,12 +177,12 @@ void LVL_Parser::parseSounds(std::span<const uint8_t> block, LVL_Data& data) {
         extraSound.path = StringUtils::readStringWithLength(block, offset);
 
         for (int p = 0; p < 8; ++p)
-            reinterpret_cast<float*>(&extraSound.param1)[p] = *reinterpret_cast<const float*>(&block[offset + p * 4]);
+            reinterpret_cast<float*>(&extraSound.chunkPositionX)[p] = *reinterpret_cast<const float*>(&block[offset + p * 4]);
         offset += 32;
-        extraSound.param9  = *reinterpret_cast<const uint32_t*>(&block[offset]);
-        extraSound.param10 = *reinterpret_cast<const uint32_t*>(&block[offset]);
-        extraSound.param11 = *reinterpret_cast<const uint32_t*>(&block[offset]);
-        extraSound.param12 = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        extraSound.param09  = *reinterpret_cast<const uint32_t*>(&block[offset]);
+        extraSound.param10 = *reinterpret_cast<const uint32_t*>(&block[offset + 4]);
+        extraSound.param11 = *reinterpret_cast<const uint32_t*>(&block[offset + 8]);
+        extraSound.param12 = *reinterpret_cast<const uint32_t*>(&block[offset + 12]);
         offset += 16;
         sounds.otherSounds.push_back(std::move(extraSound));
     }

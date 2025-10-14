@@ -7,7 +7,7 @@
 
 struct AnimationInfo {
     uint32_t height = 0;
-    uint32_t duration = 0;
+    uint32_t delay = 0;
 };
 
 struct LAO_Data {

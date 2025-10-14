@@ -65,7 +65,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
             std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
             if (std::filesystem::exists(levelAnimationPath)) {
                 Animation animation(m_data.lvlData.animationDescriptions.at(i));
-                animation.duration = m_data.laoData->infos[i].duration;
+                animation.delay = m_data.laoData->infos[i].delay;
                 std::string error;
                 if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, m_data.laoData->infos[i].height, renderer, animation.textures, &error)) {
                     LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {}", error);

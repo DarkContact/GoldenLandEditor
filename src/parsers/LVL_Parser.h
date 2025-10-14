@@ -57,15 +57,15 @@ struct Door {
 
 struct ExtraSound {
     std::string path;
-    float param1 = 0;
-    float param2 = 0;
-    float param3 = 0;
-    float param4 = 0;
-    float param5 = 0;
-    float param6 = 0;
-    float param7 = 0;
-    float param8 = 0;
-    uint32_t param9 = 0;
+    float chunkPositionX = 0;
+    float chunkPositionY = 0;
+    float param03 = 0;
+    float param04 = 0;
+    float param05 = 0;
+    float param06 = 0;
+    float param07 = 0;
+    float param08 = 0;
+    uint32_t param09 = 0;
     uint32_t param10 = 0;
     uint32_t param11 = 0;
     uint32_t param12 = 0;
