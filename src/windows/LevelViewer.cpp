@@ -446,7 +446,9 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     "Internal location: {}\n"
                     "Exit to global map: {}\n"
                     "\n"
-                    "Big cells: {}x{}\n"
+                    "Tiles: {}x{}\n"
+                    "Chunks: {}x{}\n"
+                    "\n"
                     "Masks: {}\n"
                     "Statics: {}\n"
                     "Animations: {}\n"
@@ -458,6 +460,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     level.data().sefData.pack,
                     level.data().sefData.internalLocation,
                     level.data().sefData.exitToGlobalMap,
+                    level.data().lvlData.mapTiles.chunkWidth * 2, level.data().lvlData.mapTiles.chunkHeight * 2,
                     level.data().lvlData.mapTiles.chunkWidth, level.data().lvlData.mapTiles.chunkHeight,
                     level.data().lvlData.maskDescriptions.size(),
                     level.data().lvlData.staticDescriptions.size(),
@@ -587,11 +590,14 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
                 {
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
-                    ImGui::SetTooltip("%dx%d\n"
+                    ImGui::SetTooltip("Tile: %dx%d\n"
+                                      "Chunk: %dx%d\n"
+                                      "\n"
                                       "Relief: %u\n"
                                       "Sound: %s (%u)\n"
                                       "Mask: %u",
                                       (tileX / Level::tileWidth), (tileY / Level::tileHeight),
+                                      (tileX / Level::chunkWidth), (tileY / Level::chunkHeight),
                                       tile.relief,
                                       maskSoundToString(static_cast<MapDataSound>(tile.sound)).c_str(), tile.sound,
                                       tile.mask);

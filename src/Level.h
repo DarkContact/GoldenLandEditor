@@ -127,6 +127,9 @@ public:
     static const int tileWidth = 12;
     static const int tileHeight = 9;
 
+    static const int chunkWidth = tileWidth * 2;
+    static const int chunkHeight = tileHeight * 2;
+
 private:
     std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType) const;
     std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack) const;
