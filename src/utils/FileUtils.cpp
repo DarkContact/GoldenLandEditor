@@ -1,31 +1,54 @@
 #include "FileUtils.h"
 
 #include <algorithm>
-#include <fstream>
+#include <cassert>
 #include <format>
+
+#include "SDL3/SDL_iostream.h"
 
 #include "utils/TracyProfiler.h"
 
 std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::ifstream in(filePath.data(), std::ios::binary | std::ios::ate);
-    if (!in) {
+    SDL_IOStream* stream = SDL_IOFromFile(filePath.data(), "rb");
+    if (!stream) {
         if (error)
-            *error = "Can't open file";
+            *error = SDL_GetError();
         return {};
     }
 
-    auto size = in.tellg();
-    if (size == 0) {
+    auto fileSize = SDL_GetIOSize(stream);
+    if (fileSize < 0) {
+        SDL_CloseIO(stream);
+        if (error)
+            *error = SDL_GetError();
+        return {};
+    } else if (fileSize == 0) {
+        SDL_CloseIO(stream);
         if (error)
             *error = "Empty file";
         return {};
     }
 
-    in.seekg(0, std::ios::beg);
-    std::vector<uint8_t> buffer(size);
-    in.read(reinterpret_cast<char*>(buffer.data()), size);
+    int64_t bytesReadedTotal = 0;
+    int64_t bytesReaded = 1;
+    std::vector<uint8_t> buffer(fileSize);
+    uint8_t* pos = buffer.data();
+    while (bytesReaded != 0) {
+        bytesReaded = SDL_ReadIO(stream, pos, 1024);
+        if (SDL_GetIOStatus(stream) == SDL_IO_STATUS_ERROR) {
+            SDL_CloseIO(stream);
+            if (error)
+                *error = SDL_GetError();
+            return {};
+        }
+        bytesReadedTotal += bytesReaded;
+        pos += bytesReaded;
+    }
+    SDL_CloseIO(stream);
+
+    assert(bytesReadedTotal == fileSize);
     return buffer;
 }
 
