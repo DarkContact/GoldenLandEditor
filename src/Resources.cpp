@@ -4,6 +4,10 @@
 #include <format>
 #include <future>
 
+#include "utils/DebugLog.h"
+#include "utils/StringUtils.h"
+#include "utils/TracyProfiler.h"
+
 namespace fs = std::filesystem;
 
 enum MainDirectories {
@@ -27,6 +31,7 @@ enum MainDirectories {
 Resources::Resources(std::string_view rootDirectory) :
     m_rootDirectory(rootDirectory)
 {
+    Tracy_ZoneScoped;
     m_mainDirectories[Engineres] = std::format("{}/engineres", m_rootDirectory);
     m_mainDirectories[Items] = std::format("{}/items", m_rootDirectory);
     m_mainDirectories[Levels] = std::format("{}/levels", m_rootDirectory);
@@ -46,13 +51,15 @@ Resources::Resources(std::string_view rootDirectory) :
 
 std::vector<std::string> Resources::levelNames() const
 {
+    Tracy_ZoneScoped;
     std::vector<std::string> results;
     try {
-        for (const auto& entry : fs::directory_iterator(std::format("{}/levels/single", m_rootDirectory))) {
+        auto dir = std::format("{}/levels/single", m_rootDirectory);
+        for (const auto& entry : fs::directory_iterator(StringUtils::utf8View(dir))) {
             results.push_back(entry.path().filename().string());
         }
     } catch (const fs::filesystem_error& e) {
-        fprintf(stderr, "Filesystem error: %s\n", e.what());
+        LogFmt("Filesystem error: {}", e.what());
     }
     return results;
 }
@@ -70,11 +77,12 @@ std::vector<std::string> Resources::csxFiles() const
 std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {
     std::vector<std::string> files;
     for (int index : indices) {
-        if (!fs::is_directory(m_mainDirectories[index])) continue;
+        auto dir = StringUtils::utf8View(m_mainDirectories[index]);
+        if (!fs::is_directory(dir)) continue;
 
-        for (const auto& entry : fs::recursive_directory_iterator(m_mainDirectories[index])) {
+        for (const auto& entry : fs::recursive_directory_iterator(dir)) {
             if (entry.path().extension() == extension) {
-                files.push_back(entry.path().lexically_relative(m_rootDirectory).string());
+                files.push_back(entry.path().lexically_relative(StringUtils::utf8View(m_rootDirectory)).string());
             }
         }
     }
@@ -88,12 +96,13 @@ std::vector<std::string> Resources::filesWithExtensionAsync(std::initializer_lis
     // Запускаем асинхронные задачи для каждой директории
     for (int index : indices) {
         futures.push_back(std::async(std::launch::async, [this, index, extension]() {
+            auto dir = StringUtils::utf8View(m_mainDirectories[index]);
             std::vector<std::string> localFiles;
-            if (!fs::is_directory(m_mainDirectories[index])) return localFiles;
+            if (!fs::is_directory(dir)) return localFiles;
 
-            for (const auto& entry : fs::recursive_directory_iterator(m_mainDirectories[index])) {
+            for (const auto& entry : fs::recursive_directory_iterator(dir)) {
                 if (entry.path().extension() == extension) {
-                    localFiles.push_back(entry.path().lexically_relative(m_rootDirectory).string());
+                    localFiles.push_back(entry.path().lexically_relative(StringUtils::utf8View(m_rootDirectory)).string());
                 }
             }
             return localFiles;

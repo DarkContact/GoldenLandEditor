@@ -20,5 +20,7 @@ public:
     static std::string_view extractQuotedValue(std::string_view line) noexcept;
     static std::string_view readStringWithLength(std::span<const uint8_t> block, size_t& offset) noexcept;
     static std::string decodeWin1251ToUtf8(std::string_view input) noexcept;
+
+    static std::u8string_view utf8View(std::string_view input) noexcept;
 };
 

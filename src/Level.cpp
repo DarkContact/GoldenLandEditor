@@ -6,6 +6,7 @@
 
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
 Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) :
@@ -32,7 +33,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, m_data.minimap);
 
     std::string laoPath = levelLao(rootDirectory, m_data.sefData.pack);
-    if (std::filesystem::exists(laoPath)) {
+    if (std::filesystem::exists(StringUtils::utf8View(laoPath))) {
         std::string error;
         m_data.laoData = LAO_Parser::parse(laoPath, &error);
         if (!m_data.laoData) {
@@ -45,8 +46,9 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     int animationLaoCount = m_data.laoData ? m_data.laoData->infos.size() : 0;
     int animationFilesCount = 0;
     std::string levelAnimationDirPath = levelAnimationDir(rootDirectory, m_data.sefData.pack);
-    if (std::filesystem::exists(levelAnimationDirPath)) {
-        animationFilesCount = std::distance(std::filesystem::directory_iterator(levelAnimationDirPath), std::filesystem::directory_iterator{});
+    if (std::filesystem::exists(StringUtils::utf8View(levelAnimationDirPath))) {
+        animationFilesCount = std::distance(std::filesystem::directory_iterator(StringUtils::utf8View(levelAnimationDirPath)),
+                                            std::filesystem::directory_iterator{});
     }
     bool animationOk = animationDescCount == animationLaoCount && animationLaoCount == animationFilesCount;
     if (!animationOk) {
@@ -66,7 +68,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     if (m_data.laoData && !animationDescriptionView.empty()) {
         for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
             std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
-            if (std::filesystem::exists(levelAnimationPath)) {
+            if (std::filesystem::exists(StringUtils::utf8View(levelAnimationPath))) {
                 Animation animation(m_data.lvlData.animationDescriptions.at(i));
                 animation.delay = m_data.laoData->infos[i].delay;
                 std::string error;

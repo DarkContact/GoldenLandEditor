@@ -105,3 +105,7 @@ std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     }
     return result;
 }
+
+std::u8string_view StringUtils::utf8View(std::string_view input) noexcept {
+    return {(char8_t*)input.data(), input.size()};
+}
