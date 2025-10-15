@@ -32,18 +32,20 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
     }
 
     int64_t bytesReadedTotal = 0;
-    int64_t bytesReaded = 1;
     std::vector<uint8_t> buffer(fileSize);
     uint8_t* pos = buffer.data();
-    while (bytesReaded != 0) {
-        bytesReaded = SDL_ReadIO(stream, pos, 1024);
-        if (SDL_GetIOStatus(stream) == SDL_IO_STATUS_ERROR) {
+    while (true) {
+        auto bytesReaded = SDL_ReadIO(stream, pos, 1); // FIXME: есть проблемы при чтении по 1024, нужно разобраться
+        auto status = SDL_GetIOStatus(stream);
+        if (status == SDL_IO_STATUS_ERROR) {
             SDL_CloseIO(stream);
             if (error)
                 *error = SDL_GetError();
             return {};
         }
         bytesReadedTotal += bytesReaded;
+
+        if (status == SDL_IO_STATUS_EOF) break;
         pos += bytesReaded;
     }
     SDL_CloseIO(stream);

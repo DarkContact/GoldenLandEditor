@@ -84,9 +84,9 @@ private:
 
     std::string_view getValue(std::string_view rawLine);
 
-    void parsePersonLine(const std::string& rawLine);
-    void parsePointEntranceLine(const std::string& rawLine);
-    void parseCellGroupLine(const std::string& rawLine);
+    void parsePersonLine(std::string_view rawLine);
+    void parsePointEntranceLine(std::string_view rawLine);
+    void parseCellGroupLine(std::string_view rawLine);
 
     SEF_Data m_data;
 };

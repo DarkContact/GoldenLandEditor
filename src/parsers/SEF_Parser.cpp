@@ -1,23 +1,27 @@
 #include "SEF_Parser.h"
 
-#include <fstream>
-
 #include "utils/DebugLog.h"
+#include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
+// TODO: Обработка ошибок на верхнем уровне
+
 SEF_Parser::SEF_Parser(std::string_view sefPath) {
     Tracy_ZoneScoped;
-    std::ifstream file(sefPath.data());
-    if (!file) {
-        LogFmt("Can't open file: {}", sefPath);
+    std::string error;
+    auto fileData = FileUtils::loadFile(sefPath, &error);
+    if (fileData.empty()) {
+        Log(error);
         return;
     }
 
-    std::string line;
-    ParseSection currentSection = ParseSection::NONE;
-    while (std::getline(file, line)) {
+    // FIMXE: Временное решение, сделать оптимальнее
+    std::string_view allFile((char*)fileData.data(), fileData.size());
+    auto lines = StringUtils::splitLines(allFile);
 
+    ParseSection currentSection = ParseSection::NONE;
+    for (auto line : lines) {
         if (line == "persons:") {
             currentSection = ParseSection::PERSONS;
             continue;
@@ -97,7 +101,7 @@ std::string_view SEF_Parser::getValue(std::string_view rawLine)
     return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
-void SEF_Parser::parsePersonLine(const std::string& rawLine) {
+void SEF_Parser::parsePersonLine(std::string_view rawLine) {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
@@ -150,7 +154,7 @@ void SEF_Parser::parsePersonLine(const std::string& rawLine) {
     }
 }
 
-void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
+void SEF_Parser::parsePointEntranceLine(std::string_view rawLine)
 {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
@@ -175,7 +179,7 @@ void SEF_Parser::parsePointEntranceLine(const std::string& rawLine)
     }
 }
 
-void SEF_Parser::parseCellGroupLine(const std::string& rawLine)
+void SEF_Parser::parseCellGroupLine(std::string_view rawLine)
 {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;

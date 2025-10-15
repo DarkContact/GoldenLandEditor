@@ -106,6 +106,37 @@ std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     return result;
 }
 
+std::vector<std::string_view> StringUtils::splitLines(std::string_view buffer) noexcept {
+    std::vector<std::string_view> lines;
+
+    size_t start = 0;
+    const size_t length = buffer.size();
+
+    for (size_t i = 0; i < length; ++i) {
+        if (buffer[i] == '\r' || buffer[i] == '\n') {
+            // Добавляем строку от start до i (не включая разделитель)
+            lines.emplace_back(buffer.substr(start, i - start));
+
+            // Если последовательность \r\n — пропускаем \n, чтобы не делать пустую строку
+            if (buffer[i] == '\r' && (i + 1) < length && buffer[i + 1] == '\n') {
+                ++i;
+            }
+
+            start = i + 1; // следующий старт строки
+        }
+    }
+
+    // Добавляем последнюю строку, если осталась
+    if (start < length) {
+        lines.emplace_back(buffer.substr(start));
+    } else if (start == length) {
+        // Если буфер заканчивается переводом строки — добавляем пустую строку
+        lines.emplace_back(buffer.substr(length, 0));
+    }
+
+    return lines;
+}
+
 std::u8string_view StringUtils::utf8View(std::string_view input) noexcept {
     return {(char8_t*)input.data(), input.size()};
 }
