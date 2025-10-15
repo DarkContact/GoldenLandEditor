@@ -22,7 +22,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     std::string lvlError;
     std::string lvlPath = levelLvl(rootDirectory, m_data.sefData.pack);
     if (!LVL_Parser::parse(lvlPath, m_data.lvlData, &lvlError)) {
-        LogFmt("Loading .lvl failed. {}", lvlError);
+        LogFmt("Loading .lvl failed. {} {}", lvlError, lvlPath);
     }
 
     std::string bgPath = levelBackground(rootDirectory, m_data.sefData.pack);
@@ -36,7 +36,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
         std::string error;
         m_data.laoData = LAO_Parser::parse(laoPath, &error);
         if (!m_data.laoData) {
-            LogFmt("Loading .lao failed. {}", error);
+            LogFmt("Loading .lao failed. {} {}", error, laoPath);
         }
     }
 
@@ -71,7 +71,7 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
                 animation.delay = m_data.laoData->infos[i].delay;
                 std::string error;
                 if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, m_data.laoData->infos[i].height, renderer, animation.textures, &error)) {
-                    LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {}", error);
+                    LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {} {}", error, levelAnimationPath);
                 }
                 m_data.animations.push_back(std::move(animation));
             } else {

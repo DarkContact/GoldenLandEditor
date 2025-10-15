@@ -20,6 +20,7 @@
 #include "windows/SdbViewer.h"
 
 #include "utils/TracyProfiler.h"
+#include "utils/DebugLog.h"
 
 // TODO: Сохранение уровня
 // TODO: Изменение данных уровня с поддержкой undo/redo
@@ -200,13 +201,14 @@ int main(int, char**)
                         }
 
                         if (*filelist) {
+                            LogFmt("Selected folder: {}", *filelist);
                             RootDirectoryContext* rootDirectoryContext = static_cast<RootDirectoryContext*>(userdata);
                             if (rootDirectoryContext->rootDirectory() == *filelist) return;
 
                             backgroundWork = true;
                             rootDirectoryContext->setRootDirectory(*filelist);
                             auto backgroundTask = [] (RootDirectoryContext* rootDirectoryContext) {
-                              Resources resources(rootDirectoryContext->rootDirectory());
+                                Resources resources(rootDirectoryContext->rootDirectory());
                                 rootDirectoryContext->levelNames = resources.levelNames();
                                 rootDirectoryContext->csxFiles = resources.csxFiles();
                                 rootDirectoryContext->sdbFiles = resources.sdbFiles();
@@ -271,9 +273,8 @@ int main(int, char**)
                         it = rootDirectoryContext.levels.erase(it);
                         continue;
                     }
-
-                    ++it;
                 }
+                ++it;
             }
         }
 
