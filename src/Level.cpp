@@ -128,6 +128,11 @@ LevelData& Level::data()
     return m_data;
 }
 
+std::string Level::levelDir(std::string_view levelType) const
+{
+    return std::format("{}/levels/{}/{}", m_rootDirectory, levelType, m_data.name);
+}
+
 std::string Level::levelPackDir() const
 {
     return std::format("{}/levels/pack/{}", m_rootDirectory, m_data.sefData.pack);

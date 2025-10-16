@@ -122,6 +122,7 @@ public:
     const LevelData& data() const;
     LevelData& data();
 
+    std::string levelDir(std::string_view levelType) const;
     std::string levelPackDir() const;
 
     static const int tileWidth = 12;

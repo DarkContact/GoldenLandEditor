@@ -16,30 +16,28 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
         return;
     }
 
-    // FIMXE: Временное решение, сделать оптимальнее
     std::string_view allFile((char*)fileData.data(), fileData.size());
-    auto lines = StringUtils::splitLines(allFile);
 
     ParseSection currentSection = ParseSection::NONE;
-    for (auto line : lines) {
+    StringUtils::forEachLine(allFile, [this, &currentSection] (std::string_view line) {
         if (line == "persons:") {
             currentSection = ParseSection::PERSONS;
-            continue;
+            return;
         } else if (line == "points_entrance:") {
             currentSection = ParseSection::POINTS_ENTRANCE;
-            continue;
+            return;
         } else if (line == "cell_groups:") {
             currentSection = ParseSection::CELL_GROUPS;
-            continue;
+            return;
         } else if (line == "triggers:") {
             currentSection = ParseSection::TRIGGERS;
-            continue;
+            return;
         } else if (line == "doors:") {
             currentSection = ParseSection::DOORS;
-            continue;
+            return;
         } else if (line == "}") {
             currentSection = ParseSection::NONE;
-            continue;
+            return;
         }
 
         if (currentSection == ParseSection::NONE) {
@@ -61,7 +59,7 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
         } else if (currentSection == ParseSection::CELL_GROUPS) {
             parseCellGroupLine(line);
         }
-    }
+    });
 }
 
 const SEF_Data& SEF_Parser::data() const

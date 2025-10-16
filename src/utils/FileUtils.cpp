@@ -35,7 +35,7 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
     }
 
     int64_t bytesReadTotal = 0;
-    std::vector<uint8_t> result(fileSize + 1);
+    std::vector<uint8_t> result(fileSize);
     while (true) {
         auto bytesRead = SDL_ReadIO(stream, result.data() + bytesReadTotal, (size_t)(fileSize - bytesReadTotal));
         auto status = SDL_GetIOStatus(stream);
@@ -53,7 +53,6 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
             break;
         }
     }
-    result[fileSize] = '\0';
     SDL_CloseIO(stream);
 
     assert(bytesReadTotal == fileSize);
