@@ -5,6 +5,7 @@
 #include <format>
 
 #include "SDL3/SDL_iostream.h"
+#include "SDL3/SDL_timer.h"
 
 #include "utils/TracyProfiler.h"
 
@@ -20,6 +21,8 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
 
     auto fileSize = SDL_GetIOSize(stream);
     if (fileSize < 0) {
+        // Здесь возможно чтение чанками, пока не реализовано
+        // https://github.com/libsdl-org/SDL/blob/79dae1b9d60cc69251380660aca2507c6c2df481/src/io/SDL_iostream.c#L1254
         SDL_CloseIO(stream);
         if (error)
             *error = SDL_GetError();
@@ -31,27 +34,30 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
         return {};
     }
 
-    int64_t bytesReadedTotal = 0;
-    std::vector<uint8_t> buffer(fileSize);
-    uint8_t* pos = buffer.data();
+    int64_t bytesReadTotal = 0;
+    std::vector<uint8_t> result(fileSize + 1);
     while (true) {
-        auto bytesReaded = SDL_ReadIO(stream, pos, 1); // FIXME: есть проблемы при чтении по 1024, нужно разобраться
+        auto bytesRead = SDL_ReadIO(stream, result.data() + bytesReadTotal, (size_t)(fileSize - bytesReadTotal));
         auto status = SDL_GetIOStatus(stream);
-        if (status == SDL_IO_STATUS_ERROR) {
+        if (status == SDL_IO_STATUS_NOT_READY) {
+            SDL_Delay(1);
+        } else if (status == SDL_IO_STATUS_ERROR) {
             SDL_CloseIO(stream);
             if (error)
                 *error = SDL_GetError();
             return {};
         }
-        bytesReadedTotal += bytesReaded;
 
-        if (status == SDL_IO_STATUS_EOF) break;
-        pos += bytesReaded;
+        bytesReadTotal += bytesRead;
+        if (bytesReadTotal == fileSize) {
+            break;
+        }
     }
+    result[fileSize] = '\0';
     SDL_CloseIO(stream);
 
-    assert(bytesReadedTotal == fileSize);
-    return buffer;
+    assert(bytesReadTotal == fileSize);
+    return result;
 }
 
 std::string normalizePathForWindows(std::string_view inputPath) {
