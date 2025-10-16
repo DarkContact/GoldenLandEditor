@@ -1,25 +1,21 @@
 #include "SEF_Parser.h"
 
-#include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
-// TODO: Обработка ошибок на верхнем уровне
-
-SEF_Parser::SEF_Parser(std::string_view sefPath) {
+bool SEF_Parser::parse(std::string_view sefPath, SEF_Data& data, std::string* error) {
     Tracy_ZoneScoped;
-    std::string error;
-    auto fileData = FileUtils::loadFile(sefPath, &error);
+    auto fileData = FileUtils::loadFile(sefPath, error);
     if (fileData.empty()) {
-        Log(error);
-        return;
+        return false;
     }
 
-    std::string_view allFile((char*)fileData.data(), fileData.size());
-
+    std::string_view fileStringView((char*)fileData.data(), fileData.size());
     ParseSection currentSection = ParseSection::NONE;
-    StringUtils::forEachLine(allFile, [this, &currentSection] (std::string_view line) {
+    StringUtils::forEachLine(fileStringView, [&data, &currentSection] (std::string_view line) {
+        if (line.empty()) return;
+
         if (line == "persons:") {
             currentSection = ParseSection::PERSONS;
             return;
@@ -42,29 +38,25 @@ SEF_Parser::SEF_Parser(std::string_view sefPath) {
 
         if (currentSection == ParseSection::NONE) {
             if (line.starts_with("version:")) {
-                m_data.version = getValue(line);
+                data.version = getValue(line);
             } else if (line.starts_with("pack:")) {
-                m_data.pack = StringUtils::extractQuotedValue(line);
+                data.pack = StringUtils::extractQuotedValue(line);
             } else if (line.starts_with("internal_location:")) {
-                m_data.internalLocation = (getValue(line) == "1");
+                data.internalLocation = (getValue(line) == "1");
             } else if (line.starts_with("exit_to_globalmap:")) {
-                m_data.exitToGlobalMap = (getValue(line) == "1");
+                data.exitToGlobalMap = (getValue(line) == "1");
             } else if (line.starts_with("weather:")) {
-                m_data.weather = StringUtils::toInt(getValue(line));
+                data.weather = StringUtils::toInt(getValue(line));
             }
         } else if (currentSection == ParseSection::PERSONS) {
-            parsePersonLine(line);
+            parsePersonLine(line, data);
         } else if (currentSection == ParseSection::POINTS_ENTRANCE) {
-            parsePointEntranceLine(line);
+            parsePointEntranceLine(line, data);
         } else if (currentSection == ParseSection::CELL_GROUPS) {
-            parseCellGroupLine(line);
+            parseCellGroupLine(line, data);
         }
     });
-}
-
-const SEF_Data& SEF_Parser::data() const
-{
-    return m_data;
+    return true;
 }
 
 Direction SEF_Parser::parseDirection(std::string_view dir) {
@@ -99,7 +91,7 @@ std::string_view SEF_Parser::getValue(std::string_view rawLine)
     return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
-void SEF_Parser::parsePersonLine(std::string_view rawLine) {
+void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
 
@@ -112,9 +104,9 @@ void SEF_Parser::parsePersonLine(std::string_view rawLine) {
     if (key == "name:") {
         SEF_Person newPerson;
         newPerson.techName = StringUtils::extractQuotedValue(value);
-        m_data.persons.push_back(newPerson);
+        data.persons.push_back(newPerson);
     } else {
-        SEF_Person& currentPerson = m_data.persons.back();
+        SEF_Person& currentPerson = data.persons.back();
 
         // Удаление комментария
         auto commentPos = line.find("//");
@@ -152,7 +144,7 @@ void SEF_Parser::parsePersonLine(std::string_view rawLine) {
     }
 }
 
-void SEF_Parser::parsePointEntranceLine(std::string_view rawLine)
+void SEF_Parser::parsePointEntranceLine(std::string_view rawLine, SEF_Data& data)
 {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
@@ -166,9 +158,9 @@ void SEF_Parser::parsePointEntranceLine(std::string_view rawLine)
     if (key == "name:") {
         SEF_PointEntrance newPoint;
         newPoint.techName = StringUtils::extractQuotedValue(value);
-        m_data.pointsEntrance.push_back(newPoint);
+        data.pointsEntrance.push_back(newPoint);
     } else {
-        SEF_PointEntrance& currentPoint = m_data.pointsEntrance.back();
+        SEF_PointEntrance& currentPoint = data.pointsEntrance.back();
         if (key == "position") {
             StringUtils::parsePosition(value, currentPoint.position.x, currentPoint.position.y);
         } else if (key == "direction") {
@@ -177,7 +169,7 @@ void SEF_Parser::parsePointEntranceLine(std::string_view rawLine)
     }
 }
 
-void SEF_Parser::parseCellGroupLine(std::string_view rawLine)
+void SEF_Parser::parseCellGroupLine(std::string_view rawLine, SEF_Data& data)
 {
     std::string_view line = StringUtils::trim(rawLine);
     if (line.empty() || line == "{" || line == "}") return;
@@ -191,9 +183,9 @@ void SEF_Parser::parseCellGroupLine(std::string_view rawLine)
     if (key == "name:") {
         SEF_CellGroup newGroup;
         newGroup.techName = StringUtils::extractQuotedValue(value);
-        m_data.cellGroups.push_back(newGroup);
+        data.cellGroups.push_back(newGroup);
     } else {
-        SEF_CellGroup& currentGroup = m_data.cellGroups.back();
+        SEF_CellGroup& currentGroup = data.cellGroups.back();
         if (key.starts_with("cell")) {
             TilePosition position;
             StringUtils::parsePosition(value, position.x, position.y);

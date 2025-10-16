@@ -16,9 +16,11 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     LogFmt("Level loading: {}", level);
     m_data.name = level;
 
+    std::string sefError;
     std::string sefPath = levelSef(rootDirectory, level, levelType);
-    SEF_Parser sefParser(sefPath);
-    m_data.sefData = sefParser.data();
+    if (!SEF_Parser::parse(sefPath, m_data.sefData, &sefError)) {
+        LogFmt("Loading .sef failed. {} {}", sefError, sefPath);
+    }
 
     std::string lvlError;
     std::string lvlPath = levelLvl(rootDirectory, m_data.sefData.pack);

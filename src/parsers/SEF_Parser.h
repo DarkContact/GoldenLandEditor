@@ -74,19 +74,17 @@ struct SEF_Data {
 
 class SEF_Parser {
 public:
-    SEF_Parser(std::string_view sefPath);
+    SEF_Parser() = delete;
 
-    const SEF_Data& data() const;
+    static bool parse(std::string_view sefPath, SEF_Data& data, std::string* error);
 
 private:
-    Direction parseDirection(std::string_view dir);
-    RouteType parseRouteType(std::string_view type);
+    static Direction parseDirection(std::string_view dir);
+    static RouteType parseRouteType(std::string_view type);
 
-    std::string_view getValue(std::string_view rawLine);
+    static std::string_view getValue(std::string_view rawLine);
 
-    void parsePersonLine(std::string_view rawLine);
-    void parsePointEntranceLine(std::string_view rawLine);
-    void parseCellGroupLine(std::string_view rawLine);
-
-    SEF_Data m_data;
+    static void parsePersonLine(std::string_view rawLine, SEF_Data& data);
+    static void parsePointEntranceLine(std::string_view rawLine, SEF_Data& data);
+    static void parseCellGroupLine(std::string_view rawLine, SEF_Data& data);
 };
