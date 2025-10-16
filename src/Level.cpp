@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <algorithm>
+#include <cassert>
 #include <format>
 
 #include "utils/TextureLoader.h"
@@ -13,6 +14,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 {
     Tracy_ZoneScoped;
     LogFmt("Load level: {}", level);
+    assert(error);
 
     Level levelObj;
     levelObj.m_rootDirectory = rootDirectory;
@@ -22,11 +24,13 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 
     std::string sefPath = levelSef(rootDirectory, level, levelType);
     if (!SEF_Parser::parse(sefPath, levelData.sefData, error)) {
+        LogFmt("Load .sef failed. {}", *error);
         return {};
     }
 
     std::string lvlPath = levelLvl(rootDirectory, levelData.sefData.pack);
     if (!LVL_Parser::parse(lvlPath, levelData.lvlData, error)) {
+        LogFmt("Load .lvl failed. {}", *error);
         return {};
     }
 
@@ -38,10 +42,10 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 
     std::string laoPath = levelLao(rootDirectory, levelData.sefData.pack);
     if (std::filesystem::exists(StringUtils::utf8View(laoPath))) {
-        std::string error;
-        levelData.laoData = LAO_Parser::parse(laoPath, &error);
+        std::string laoError;
+        levelData.laoData = LAO_Parser::parse(laoPath, &laoError);
         if (!levelData.laoData) {
-            LogFmt("Loading .lao failed. {} {}", error, laoPath);
+            LogFmt("Load .lao failed. {}", laoError); // Допустимо
         }
     }
 
@@ -62,28 +66,24 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     int minimalSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
     std::span<LVL_Description> animationDescriptionView(levelData.lvlData.animationDescriptions.data(), minimalSize);
 
-    // Отсортируем описание анимаций
-    std::sort(animationDescriptionView.begin(),
-              animationDescriptionView.end(),
-              [] (const LVL_Description& left, const LVL_Description& right) {
-                  return left.number < right.number;
-              });
+    if (animationDescCount > 1) {
+        // Отсортируем описание анимаций
+        std::sort(animationDescriptionView.begin(),
+                  animationDescriptionView.end(),
+                  [] (const LVL_Description& left, const LVL_Description& right) {
+                      return left.number < right.number;
+                  });
+    }
 
-    if (levelData.laoData && !animationDescriptionView.empty()) {
-        for (int i = 0; i < levelData.laoData->infos.size(); ++i) {
-            std::string levelAnimationPath = levelAnimation(rootDirectory, levelData.sefData.pack, i);
-            if (std::filesystem::exists(StringUtils::utf8View(levelAnimationPath))) {
-                Animation animation(levelData.lvlData.animationDescriptions.at(i));
-                animation.delay = levelData.laoData->infos[i].delay;
-                std::string error;
-                if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, levelData.laoData->infos[i].height, renderer, animation.textures, &error)) {
-                    LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {} {}", error, levelAnimationPath);
-                }
-                levelData.animations.push_back(std::move(animation));
-            } else {
-                break;
-            }
+    for (int i = 0; i < minimalSize; ++i) {
+        std::string levelAnimationPath = levelAnimation(rootDirectory, levelData.sefData.pack, i);
+        Animation animation(levelData.lvlData.animationDescriptions.at(i));
+        animation.delay = levelData.laoData->infos[i].delay;
+        if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, levelData.laoData->infos[i].height, renderer, animation.textures, error)) {
+            LogFmt("Load texture for animation failed. {}", *error);
+            return {};
         }
+        levelData.animations.push_back(std::move(animation));
     }
 
     return std::make_optional(std::move(levelObj));
