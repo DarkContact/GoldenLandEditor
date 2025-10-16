@@ -1,5 +1,6 @@
 #pragma once
 #include <string_view>
+#include <optional>
 
 #include "imgui.h"
 #include "Texture.h"
@@ -110,8 +111,9 @@ struct LevelData {
 class Level
 {
 public:
-    Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType = "single");
     ~Level() = default;
+
+    static std::optional<Level> loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType, std::string* error);
 
     Level(const Level&) = delete;
     Level& operator=(const Level&) = delete;
@@ -132,13 +134,15 @@ public:
     static const int chunkHeight = tileHeight * 2;
 
 private:
-    std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType) const;
-    std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack) const;
-    std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack) const;
-    std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const;
-    std::string levelLao(std::string_view rootDirectory, std::string_view levelPack) const;
-    std::string levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack) const;
-    std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const;
+    Level() noexcept = default;
+
+    static std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType);
+    static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelLao(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index);
 
     LevelData m_data;
     std::string_view m_rootDirectory;

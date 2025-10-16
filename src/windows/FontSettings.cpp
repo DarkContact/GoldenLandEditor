@@ -30,7 +30,7 @@ void FontSettings::update(bool& showWindow)
     static ImFont* selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
 
     if (showWindow)
-        ImGui::OpenPopup("Font Settings");
+        ImGui::OpenPopup("Font Settings"); // FIXME: Вызывать 1 раз
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.3f, 0.0f), ImGuiCond_Always);

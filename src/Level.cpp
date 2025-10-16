@@ -9,45 +9,47 @@
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
-Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType) :
-    m_rootDirectory(rootDirectory)
+std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType, std::string* error)
 {
-    Tracy_ZoneScopedN("Level loading");
-    LogFmt("Level loading: {}", level);
-    m_data.name = level;
+    Tracy_ZoneScoped;
+    LogFmt("Load level: {}", level);
 
-    std::string sefError;
+    Level levelObj;
+    levelObj.m_rootDirectory = rootDirectory;
+
+    auto& levelData = levelObj.m_data;
+    levelData.name = level;
+
     std::string sefPath = levelSef(rootDirectory, level, levelType);
-    if (!SEF_Parser::parse(sefPath, m_data.sefData, &sefError)) {
-        LogFmt("Loading .sef failed. {} {}", sefError, sefPath);
+    if (!SEF_Parser::parse(sefPath, levelData.sefData, error)) {
+        return {};
     }
 
-    std::string lvlError;
-    std::string lvlPath = levelLvl(rootDirectory, m_data.sefData.pack);
-    if (!LVL_Parser::parse(lvlPath, m_data.lvlData, &lvlError)) {
-        LogFmt("Loading .lvl failed. {} {}", lvlError, lvlPath);
+    std::string lvlPath = levelLvl(rootDirectory, levelData.sefData.pack);
+    if (!LVL_Parser::parse(lvlPath, levelData.lvlData, error)) {
+        return {};
     }
 
-    std::string bgPath = levelBackground(rootDirectory, m_data.sefData.pack);
-    TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, m_data.background);
+    std::string bgPath = levelBackground(rootDirectory, levelData.sefData.pack);
+    TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, levelData.background);
 
-    std::string minimapPath = levelMinimap(rootDirectory, m_data.sefData.pack);
-    TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, m_data.minimap);
+    std::string minimapPath = levelMinimap(rootDirectory, levelData.sefData.pack);
+    TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, levelData.minimap);
 
-    std::string laoPath = levelLao(rootDirectory, m_data.sefData.pack);
+    std::string laoPath = levelLao(rootDirectory, levelData.sefData.pack);
     if (std::filesystem::exists(StringUtils::utf8View(laoPath))) {
         std::string error;
-        m_data.laoData = LAO_Parser::parse(laoPath, &error);
-        if (!m_data.laoData) {
+        levelData.laoData = LAO_Parser::parse(laoPath, &error);
+        if (!levelData.laoData) {
             LogFmt("Loading .lao failed. {} {}", error, laoPath);
         }
     }
 
     // Валидация анимаций
-    int animationDescCount = m_data.lvlData.animationDescriptions.size();
-    int animationLaoCount = m_data.laoData ? m_data.laoData->infos.size() : 0;
+    int animationDescCount = levelData.lvlData.animationDescriptions.size();
+    int animationLaoCount = levelData.laoData ? levelData.laoData->infos.size() : 0;
     int animationFilesCount = 0;
-    std::string levelAnimationDirPath = levelAnimationDir(rootDirectory, m_data.sefData.pack);
+    std::string levelAnimationDirPath = levelAnimationDir(rootDirectory, levelData.sefData.pack);
     if (std::filesystem::exists(StringUtils::utf8View(levelAnimationDirPath))) {
         animationFilesCount = std::distance(std::filesystem::directory_iterator(StringUtils::utf8View(levelAnimationDirPath)),
                                             std::filesystem::directory_iterator{});
@@ -58,64 +60,66 @@ Level::Level(SDL_Renderer* renderer, std::string_view rootDirectory, std::string
     }
 
     int minimalSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
-    std::span<LVL_Description> animationDescriptionView(m_data.lvlData.animationDescriptions.data(), minimalSize);
+    std::span<LVL_Description> animationDescriptionView(levelData.lvlData.animationDescriptions.data(), minimalSize);
 
     // Отсортируем описание анимаций
     std::sort(animationDescriptionView.begin(),
               animationDescriptionView.end(),
               [] (const LVL_Description& left, const LVL_Description& right) {
-        return left.number < right.number;
-    });
+                  return left.number < right.number;
+              });
 
-    if (m_data.laoData && !animationDescriptionView.empty()) {
-        for (int i = 0; i < m_data.laoData->infos.size(); ++i) {
-            std::string levelAnimationPath = levelAnimation(rootDirectory, m_data.sefData.pack, i);
+    if (levelData.laoData && !animationDescriptionView.empty()) {
+        for (int i = 0; i < levelData.laoData->infos.size(); ++i) {
+            std::string levelAnimationPath = levelAnimation(rootDirectory, levelData.sefData.pack, i);
             if (std::filesystem::exists(StringUtils::utf8View(levelAnimationPath))) {
-                Animation animation(m_data.lvlData.animationDescriptions.at(i));
-                animation.delay = m_data.laoData->infos[i].delay;
+                Animation animation(levelData.lvlData.animationDescriptions.at(i));
+                animation.delay = levelData.laoData->infos[i].delay;
                 std::string error;
-                if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, m_data.laoData->infos[i].height, renderer, animation.textures, &error)) {
+                if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, levelData.laoData->infos[i].height, renderer, animation.textures, &error)) {
                     LogFmt("TextureLoader::loadFixedHeightTexturesFromCsxFile failed. {} {}", error, levelAnimationPath);
                 }
-                m_data.animations.push_back(std::move(animation));
+                levelData.animations.push_back(std::move(animation));
             } else {
                 break;
             }
         }
     }
+
+    return std::make_optional(std::move(levelObj));
 }
 
-std::string Level::levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType) const
+std::string Level::levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType)
 {
     return std::format("{0}/levels/{1}/{2}/{2}.sef", rootDirectory, levelType, level);
 }
 
-std::string Level::levelLvl(std::string_view rootDirectory, std::string_view levelPack) const
+std::string Level::levelLvl(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{}/levels/lvl/{}.lvl", rootDirectory, levelPack);
 }
 
-std::string Level::levelBackground(std::string_view rootDirectory, std::string_view levelPack) const
+std::string Level::levelBackground(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{}/levels/pack/{}/bitmaps/layer.jpg", rootDirectory, levelPack);
 }
 
-std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view levelPack) const
+std::string Level::levelMinimap(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{}/levels/pack/{}/bitmaps/minimap.csx", rootDirectory, levelPack);
 }
 
-std::string Level::levelLao(std::string_view rootDirectory, std::string_view levelPack) const
+std::string Level::levelLao(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{0}/levels/pack/{1}/data/animated/{1}.lao", rootDirectory, levelPack);
 }
 
-std::string Level::levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack) const
+std::string Level::levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{}/levels/pack/{}/bitmaps/animated", rootDirectory, levelPack);
 }
 
-std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index) const
+std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index)
 {
     return std::format("{}/levels/pack/{}/bitmaps/animated/anim_{}.csx", rootDirectory, levelPack, index);
 }

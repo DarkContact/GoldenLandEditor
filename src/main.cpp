@@ -140,6 +140,7 @@ int main(int, char**)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    std::string uiError;
 
     // Main loop
     bool done = false;
@@ -170,6 +171,7 @@ int main(int, char**)
         static bool loaderWindow = false;
         loaderWindow = backgroundWork;
         ImGuiWidgets::Loader("Loading...", loaderWindow);
+        ImGuiWidgets::ShowMessageModal("Error", uiError);
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
@@ -252,12 +254,14 @@ int main(int, char**)
                 if (alreadyLoaded) {
                     ImGui::SetWindowFocus(loadedLevelName.data());
                 } else {
-                    // for (const std::string& levelName : rootDirectoryContext.levelNames) {
-                    //     rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), levelName);
-                    // }
-
                     // Загрузка уровня
-                    rootDirectoryContext.levels.emplace_back(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName);
+                    std::string error;
+                    auto level = Level::loadLevel(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName, "single", &error);
+                    if (level) {
+                        rootDirectoryContext.levels.push_back(std::move(*level));
+                    } else {
+                        uiError = std::move(error);
+                    }
                 }
             }
         }
