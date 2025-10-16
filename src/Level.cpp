@@ -13,7 +13,7 @@
 std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType, std::string* error)
 {
     Tracy_ZoneScoped;
-    LogFmt("Load level: {}", level);
+    LogFmt("Loading level: {}", level);
     assert(error);
 
     Level levelObj;
@@ -24,13 +24,13 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 
     std::string sefPath = levelSef(rootDirectory, level, levelType);
     if (!SEF_Parser::parse(sefPath, levelData.sefData, error)) {
-        LogFmt("Load .sef failed. {}", *error);
+        LogFmt("Loading .sef failed. {}", *error);
         return {};
     }
 
     std::string lvlPath = levelLvl(rootDirectory, levelData.sefData.pack);
     if (!LVL_Parser::parse(lvlPath, levelData.lvlData, error)) {
-        LogFmt("Load .lvl failed. {}", *error);
+        LogFmt("Loading .lvl failed. {}", *error);
         return {};
     }
 
@@ -45,7 +45,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         std::string laoError;
         levelData.laoData = LAO_Parser::parse(laoPath, &laoError);
         if (!levelData.laoData) {
-            LogFmt("Load .lao failed. {}", laoError); // Допустимо
+            LogFmt("Loading .lao failed. {}", laoError); // Допустимо
         }
     }
 
@@ -80,7 +80,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         Animation animation(levelData.lvlData.animationDescriptions.at(i));
         animation.delay = levelData.laoData->infos[i].delay;
         if (!TextureLoader::loadFixedHeightTexturesFromCsxFile(levelAnimationPath, levelData.laoData->infos[i].height, renderer, animation.textures, error)) {
-            LogFmt("Load texture for animation failed. {}", *error);
+            LogFmt("Loading texture for animation failed. {}", *error);
             return {};
         }
         levelData.animations.push_back(std::move(animation));
