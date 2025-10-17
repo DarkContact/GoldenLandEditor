@@ -603,8 +603,29 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
     for (int chunkColumn = minVisibleColumn; chunkColumn <= maxVisibleColumn; ++chunkColumn) {
         for (int chunkRow = minVisibleRow; chunkRow <= maxVisibleRow; ++chunkRow) {
             size_t chunkIndex = chunkColumn * chunksPerColumn + chunkRow;
-
             const MapChunk& chunk = mapTiles.chunks[chunkIndex];
+
+            bool allSameColor = true;
+            ImU32 firstColor = getTileColor(chunk.front(), level.data().imgui.mapTilesMode);
+            for (size_t i = 1; i < chunk.size(); ++i) {
+                ImU32 color = getTileColor(chunk[i], level.data().imgui.mapTilesMode);
+                if (firstColor != color) {
+                    allSameColor = false;
+                    break;
+                }
+            }
+
+            ImVec2 chunkTopLeft = ImVec2(drawPosition.x + (chunkColumn * Level::chunkWidth),
+                                         drawPosition.y + (chunkRow * Level::chunkHeight));
+
+            if (allSameColor) {
+                ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + Level::chunkWidth,
+                                                 chunkTopLeft.y + Level::chunkHeight);
+
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                drawList->AddRectFilled(chunkTopLeft, chunkBottomRight, firstColor);
+            }
+
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
                 const MapTile& tile = chunk[tileIndex];
 
@@ -613,11 +634,16 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 
                 ImVec2 tileTopLeft = ImVec2(drawPosition.x + (tileColumn * Level::tileWidth),
                                             drawPosition.y + (tileRow * Level::tileHeight));
-                drawTile(tile, tileTopLeft, tileColumn, tileRow, chunkColumn, chunkRow, level);
+
+                ImVec2 tileBottomRight = ImVec2(tileTopLeft.x + Level::tileWidth,
+                                                tileTopLeft.y + Level::tileHeight);
+
+                if (!allSameColor) {
+                    drawTileBg(tile, tileTopLeft, tileBottomRight, level);
+                }
+                drawTileBorderAndTooltip(tile, tileTopLeft, tileBottomRight, tileColumn, tileRow, chunkColumn, chunkRow, level);
             }
 
-            ImVec2 chunkTopLeft = ImVec2(drawPosition.x + (chunkColumn * Level::chunkWidth),
-                                         drawPosition.y + (chunkRow * Level::chunkHeight));
             drawChunkBorder(chunkTopLeft, level);
         }
     }
@@ -649,11 +675,8 @@ ImU32 LevelViewer::getTileColor(const MapTile& tile, MapTilesMode mode) {
     return IM_COL32(255, 255, 255, 255);
 }
 
-void LevelViewer::drawTile(const MapTile& tile, ImVec2 tileTopLeft, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level)
-{
+void LevelViewer::drawTileBg(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, Level& level) {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 tileBottomRight = ImVec2(tileTopLeft.x + Level::tileWidth,
-                                    tileTopLeft.y + Level::tileHeight);
 
     MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
     ImU32 color = getTileColor(tile, mapTilesMode);
@@ -665,6 +688,11 @@ void LevelViewer::drawTile(const MapTile& tile, ImVec2 tileTopLeft, int tileColu
         ImGui::Text("%u", tile.mask);
         ImGui::PopFont();
     }
+}
+
+void LevelViewer::drawTileBorderAndTooltip(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     ImVec2 mousePos = ImGui::GetMousePos();
     if (leftMouseDownOnLevel(level) &&

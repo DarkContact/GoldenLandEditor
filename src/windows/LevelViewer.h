@@ -24,7 +24,8 @@ private:
 
     static void drawMapTiles(Level& level, ImVec2 drawPosition);
     static ImU32 getTileColor(const MapTile& tile, MapTilesMode mode);
-    static void drawTile(const MapTile& tile, ImVec2 tileTopLeft, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level);
+    static void drawTileBg(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, Level& level);
+    static void drawTileBorderAndTooltip(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level);
     static void drawChunkBorder(ImVec2 chunkTopLeft, Level& level);
 
     static void drawPersons(Level& level, ImVec2 drawPosition);

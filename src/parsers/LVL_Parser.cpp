@@ -1,6 +1,7 @@
 #include "LVL_Parser.h"
 
 #include <cassert>
+#include <cstring>
 
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
