@@ -21,8 +21,12 @@ private:
     static void handleLevelDragScroll(Level& level);
     static void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
     static void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
+
     static void drawMapTiles(Level& level, ImVec2 drawPosition);
     static ImU32 getTileColor(const MapTile& tile, MapTilesMode mode);
+    static void drawTile(const MapTile& tile, ImVec2 tileTopLeft, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level);
+    static void drawChunkBorder(ImVec2 chunkTopLeft, Level& level);
+
     static void drawPersons(Level& level, ImVec2 drawPosition);
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);
     static void drawCellGroups(Level& level, ImVec2 drawPosition);

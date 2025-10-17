@@ -589,82 +589,36 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
     const int chunksPerColumn = mapTiles.chunkHeight;
     const int chunksPerRow = mapTiles.chunkWidth;
 
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
                             clipMin.y + ImGui::GetContentRegionAvail().y);
 
     // Вычисляем диапазон видимых чанков
-    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / Level::chunkWidth));
-    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - drawPosition.x) / Level::chunkWidth));
+    int minVisibleColumn = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / Level::chunkWidth));
+    int maxVisibleColumn = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - drawPosition.x) / Level::chunkWidth));
 
     int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - drawPosition.y) / Level::chunkHeight));
     int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - drawPosition.y) / Level::chunkHeight));
 
-    for (int col = minVisibleCol; col <= maxVisibleCol; ++col)
-    {
-        for (int row = minVisibleRow; row <= maxVisibleRow; ++row)
-        {
-            size_t chunkIndex = col * chunksPerColumn + row;
-            if (chunkIndex >= mapTiles.chunks.size()) continue;
+    for (int chunkColumn = minVisibleColumn; chunkColumn <= maxVisibleColumn; ++chunkColumn) {
+        for (int chunkRow = minVisibleRow; chunkRow <= maxVisibleRow; ++chunkRow) {
+            size_t chunkIndex = chunkColumn * chunksPerColumn + chunkRow;
 
             const MapChunk& chunk = mapTiles.chunks[chunkIndex];
-
-            int correctX = col * Level::chunkWidth;
-            int correctY = row * Level::chunkHeight;
-
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
                 const MapTile& tile = chunk[tileIndex];
 
-                int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * Level::tileWidth;
-                int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * Level::tileHeight;
+                int tileColumn = chunkColumn * chunkSize + (tileIndex / chunkSize);
+                int tileRow = chunkRow * chunkSize + (tileIndex % chunkSize);
 
-                ImVec2 tileTopLeft = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
-                ImVec2 tileBottomRight = ImVec2(tileTopLeft.x + Level::tileWidth, tileTopLeft.y + Level::tileHeight);
-
-                MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
-                ImU32 color = getTileColor(tile, mapTilesMode);
-                drawList->AddRectFilled(tileTopLeft, tileBottomRight, color);
-
-                if (mapTilesMode == MapTilesMode::Mask && tile.mask != 0xffff) {
-                    ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
-                    ImGui::PushFont(NULL, 10.0f);
-                    ImGui::Text("%u", tile.mask);
-                    ImGui::PopFont();
-                }
-
-                ImVec2 mousePos = ImGui::GetMousePos();
-                if (leftMouseDownOnLevel(level) &&
-                    mousePos.x >= tileTopLeft.x && mousePos.x < tileBottomRight.x &&
-                    mousePos.y >= tileTopLeft.y && mousePos.y < tileBottomRight.y)
-                {
-                    drawList->AddRect(tileTopLeft, tileBottomRight, IM_COL32(255, 255, 0, 255));
-
-                    ImGui::SetTooltip("[MAP TILE]\n"
-                                      "Tile: %dx%d\n"
-                                      "Chunk: %dx%d\n"
-                                      "\n"
-                                      "Relief: %u\n"
-                                      "Sound: %s (%u)\n"
-                                      "Mask: %u",
-                                      (tileX / Level::tileWidth), (tileY / Level::tileHeight),
-                                      (tileX / Level::chunkWidth), (tileY / Level::chunkHeight),
-                                      tile.relief,
-                                      maskSoundToString(static_cast<MapDataSound>(tile.sound)).c_str(), tile.sound,
-                                      tile.mask);
-                }
+                ImVec2 tileTopLeft = ImVec2(drawPosition.x + (tileColumn * Level::tileWidth),
+                                            drawPosition.y + (tileRow * Level::tileHeight));
+                drawTile(tile, tileTopLeft, tileColumn, tileRow, chunkColumn, chunkRow, level);
             }
 
-            ImVec2 chunkMin = ImVec2(drawPosition.x + correctX, drawPosition.y + correctY);
-            ImVec2 chunkMax = ImVec2(chunkMin.x + Level::chunkWidth, chunkMin.y + Level::chunkHeight);
-
-            ImVec2 mousePos = ImGui::GetMousePos();
-            if (leftMouseDownOnLevel(level) &&
-                mousePos.x >= chunkMin.x && mousePos.x < chunkMax.x &&
-                mousePos.y >= chunkMin.y && mousePos.y < chunkMax.y)
-            {
-                drawList->AddRect(chunkMin, chunkMax, IM_COL32(255, 228, 0, 180));
-            }
+            ImVec2 chunkTopLeft = ImVec2(drawPosition.x + (chunkColumn * Level::chunkWidth),
+                                         drawPosition.y + (chunkRow * Level::chunkHeight));
+            drawChunkBorder(chunkTopLeft, level);
         }
     }
 }
@@ -693,6 +647,61 @@ ImU32 LevelViewer::getTileColor(const MapTile& tile, MapTilesMode mode) {
                                        : IM_COL32(0, 0, 0, 96);
     }
     return IM_COL32(255, 255, 255, 255);
+}
+
+void LevelViewer::drawTile(const MapTile& tile, ImVec2 tileTopLeft, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 tileBottomRight = ImVec2(tileTopLeft.x + Level::tileWidth,
+                                    tileTopLeft.y + Level::tileHeight);
+
+    MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
+    ImU32 color = getTileColor(tile, mapTilesMode);
+    drawList->AddRectFilled(tileTopLeft, tileBottomRight, color);
+
+    if (mapTilesMode == MapTilesMode::Mask && tile.mask != 0xffff) {
+        ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
+        ImGui::PushFont(NULL, 10.0f);
+        ImGui::Text("%u", tile.mask);
+        ImGui::PopFont();
+    }
+
+    ImVec2 mousePos = ImGui::GetMousePos();
+    if (leftMouseDownOnLevel(level) &&
+        mousePos.x >= tileTopLeft.x && mousePos.x < tileBottomRight.x &&
+        mousePos.y >= tileTopLeft.y && mousePos.y < tileBottomRight.y)
+    {
+        drawList->AddRect(tileTopLeft, tileBottomRight, IM_COL32(255, 255, 0, 255));
+
+        ImGui::SetTooltip("[MAP TILE]\n"
+                          "Tile: %dx%d\n"
+                          "Chunk: %dx%d\n"
+                          "\n"
+                          "Relief: %u\n"
+                          "Sound: %s (%u)\n"
+                          "Mask: %u",
+                          tileColumn, tileRow,
+                          chunkColumn, chunkRow,
+                          tile.relief,
+                          maskSoundToString(static_cast<MapDataSound>(tile.sound)).c_str(), tile.sound,
+                          tile.mask);
+    }
+}
+
+void LevelViewer::drawChunkBorder(ImVec2 chunkTopLeft, Level& level)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + Level::chunkWidth,
+                                     chunkTopLeft.y + Level::chunkHeight);
+
+    ImVec2 mousePos = ImGui::GetMousePos();
+    if (leftMouseDownOnLevel(level) &&
+        mousePos.x >= chunkTopLeft.x && mousePos.x < chunkBottomRight.x &&
+        mousePos.y >= chunkTopLeft.y && mousePos.y < chunkBottomRight.y)
+    {
+        drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(255, 228, 0, 180));
+    }
 }
 
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
