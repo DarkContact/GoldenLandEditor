@@ -22,6 +22,7 @@ private:
     static void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
     static void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
     static void drawMapTiles(Level& level, ImVec2 drawPosition);
+    static ImU32 getTileColor(const MapTile& tile, MapTilesMode mode);
     static void drawPersons(Level& level, ImVec2 drawPosition);
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);
     static void drawCellGroups(Level& level, ImVec2 drawPosition);

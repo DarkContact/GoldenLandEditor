@@ -574,7 +574,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
     ImGui::Text("%s", infoMessage.c_str());
 }
 
-// Чанки и тайлы начинают отсчёт слева сверху и дальше идут по столбцам:
+// Порядок отрисовки чанков и тайлов:
 // [0] [2]
 // [1] [3]
 void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
@@ -619,62 +619,26 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
                 int tileX = correctX + static_cast<int>(tileIndex / chunkSize) * Level::tileWidth;
                 int tileY = correctY + static_cast<int>(tileIndex % chunkSize) * Level::tileHeight;
 
-                ImVec2 p0 = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
-                ImVec2 p1 = ImVec2(p0.x + Level::tileWidth, p0.y + Level::tileHeight);
+                ImVec2 tileTopLeft = ImVec2(drawPosition.x + tileX, drawPosition.y + tileY);
+                ImVec2 tileBottomRight = ImVec2(tileTopLeft.x + Level::tileWidth, tileTopLeft.y + Level::tileHeight);
 
-                ImU32 color;
                 MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
-                if (mapTilesMode == MapTilesMode::Relief) {
-                    if (tile.relief <= 1000) {
-                        color = IM_COL32(0, 255, 0, 64);
-                    } else if (tile.relief <= 2000) {
-                        color = IM_COL32(0, 140, 0, 88);
-                    } else if (tile.relief <= 15000) {
-                        color = IM_COL32(140, 0, 0, 88);
-                    } else if (tile.relief <= 35000) {
-                        color = IM_COL32(180, 0, 0, 96);
-                    } else if (tile.relief <= 55000) {
-                        color = IM_COL32(220, 0, 0, 96);
-                    } else {
-                        color = IM_COL32(255, 0, 0, 104);
-                    }
-                } else if (mapTilesMode == MapTilesMode::Sound) {
-                    if (tile.sound == MapDataSound::Ground) {
-                        color = IM_COL32(0, 0, 0, 96);
-                    } else if (tile.sound == MapDataSound::Grass) {
-                        color = IM_COL32(0, 204, 0, 96);
-                    } else if (tile.sound == MapDataSound::Sand) {
-                        color = IM_COL32(255, 220, 0, 96);
-                    } else if (tile.sound == MapDataSound::Wood) {
-                        color = IM_COL32(160, 82, 45, 96);
-                    } else if (tile.sound == MapDataSound::Stone) {
-                        color = IM_COL32(128, 128, 128, 96);
-                    } else if (tile.sound == MapDataSound::Water) {
-                        color = IM_COL32(70, 130, 180, 96);
-                    } else if (tile.sound == MapDataSound::Snow) {
-                        color = IM_COL32(255, 255, 255, 96);
-                    }
-                } else if (mapTilesMode == MapTilesMode::Mask) {
-                    if (tile.mask == 0xffff) {
-                        color = IM_COL32(255, 0, 0, 96);
-                    } else {
-                        color = IM_COL32(0, 0, 0, 96);
+                ImU32 color = getTileColor(tile, mapTilesMode);
+                drawList->AddRectFilled(tileTopLeft, tileBottomRight, color);
 
-                        ImGui::SetCursorScreenPos({p0.x, p0.y});
-                        ImGui::PushFont(NULL, 10.0f);
-                        ImGui::Text("%u", tile.mask);
-                        ImGui::PopFont();
-                    }
+                if (mapTilesMode == MapTilesMode::Mask && tile.mask != 0xffff) {
+                    ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
+                    ImGui::PushFont(NULL, 10.0f);
+                    ImGui::Text("%u", tile.mask);
+                    ImGui::PopFont();
                 }
-
-                drawList->AddRectFilled(p0, p1, color);
 
                 ImVec2 mousePos = ImGui::GetMousePos();
                 if (leftMouseDownOnLevel(level) &&
-                    mousePos.x >= p0.x && mousePos.x < p1.x &&
-                    mousePos.y >= p0.y && mousePos.y < p1.y)
+                    mousePos.x >= tileTopLeft.x && mousePos.x < tileBottomRight.x &&
+                    mousePos.y >= tileTopLeft.y && mousePos.y < tileBottomRight.y)
                 {
-                    drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
+                    drawList->AddRect(tileTopLeft, tileBottomRight, IM_COL32(255, 255, 0, 255));
 
                     ImGui::SetTooltip("[MAP TILE]\n"
                                       "Tile: %dx%d\n"
@@ -703,6 +667,32 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
             }
         }
     }
+}
+
+ImU32 LevelViewer::getTileColor(const MapTile& tile, MapTilesMode mode) {
+    switch (mode) {
+        case MapTilesMode::Relief:
+            if (tile.relief <= 1000)        return IM_COL32(0, 255, 0, 64);
+            else if (tile.relief <= 2000)   return IM_COL32(0, 140, 0, 88);
+            else if (tile.relief <= 15000)  return IM_COL32(140, 0, 0, 88);
+            else if (tile.relief <= 35000)  return IM_COL32(180, 0, 0, 96);
+            else if (tile.relief <= 55000)  return IM_COL32(220, 0, 0, 96);
+            else                            return IM_COL32(255, 0, 0, 104);
+        case MapTilesMode::Sound:
+            switch (tile.sound) {
+                case MapDataSound::Ground: return IM_COL32(0, 0, 0, 96);
+                case MapDataSound::Grass:  return IM_COL32(0, 204, 0, 96);
+                case MapDataSound::Sand:   return IM_COL32(255, 220, 0, 96);
+                case MapDataSound::Wood:   return IM_COL32(160, 82, 45, 96);
+                case MapDataSound::Stone:  return IM_COL32(128, 128, 128, 96);
+                case MapDataSound::Water:  return IM_COL32(70, 130, 180, 96);
+                case MapDataSound::Snow:   return IM_COL32(255, 255, 255, 96);
+            }
+        case MapTilesMode::Mask:
+            return tile.mask == 0xffff ? IM_COL32(255, 0, 0, 96)
+                                       : IM_COL32(0, 0, 0, 96);
+    }
+    return IM_COL32(255, 255, 255, 255);
 }
 
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
