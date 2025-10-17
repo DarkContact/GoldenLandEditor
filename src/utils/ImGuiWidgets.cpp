@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "imgui.h"
+#include "imgui_internal.h"
 
 bool ImGuiWidgets::ComboBoxWithIndex(std::string_view label, const std::vector<std::string>& items, int& selectedIndex) {
     if (items.empty() || selectedIndex < 0 || selectedIndex >= static_cast<int>(items.size()))
@@ -76,4 +77,18 @@ void ImGuiWidgets::ShowMessageModal(std::string_view title, std::string& message
 
         ImGui::EndPopup();
     }
+}
+
+void SetTooltipVStacked(const char* fmt, va_list args) {
+    if (!ImGui::BeginTooltipEx(ImGuiTooltipFlags_None, ImGuiWindowFlags_None))
+        return;
+    ImGui::TextV(fmt, args);
+    ImGui::EndTooltip();
+}
+
+void ImGuiWidgets::SetTooltipStacked(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    SetTooltipVStacked(fmt, args);
+    va_end(args);
 }

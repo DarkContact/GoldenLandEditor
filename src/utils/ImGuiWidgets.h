@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "imgui.h"
+
 class ImGuiWidgets
 {
 public:
@@ -12,5 +14,6 @@ public:
     static void Loader(std::string_view label, bool& showWindow);
     static void ShowMessageModal(std::string_view title, std::string& message);
 
+    static void SetTooltipStacked(const char* fmt, ...) IM_FMTARGS(1);
 };
 

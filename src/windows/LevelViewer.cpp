@@ -6,6 +6,7 @@
 #include "imgui_internal.h"
 #include "imgui.h"
 
+#include "utils/ImGuiWidgets.h"
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
@@ -667,7 +668,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGui::SetTooltip("%s", personInfo(person).c_str());
+            ImGuiWidgets::SetTooltipStacked("%s", personInfo(person).c_str());
         } else if (!level.data().imgui.minimapHovered &&
                    ImGui::IsWindowFocused() &&
                    ImGui::IsMouseDown(ImGuiMouseButton_Left))
@@ -703,10 +704,12 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGui::SetTooltip("Position: %dx%d\n"
-                              "Direction: %s",
-                              pointEnt.position.x, pointEnt.position.y,
-                              pointEnt.direction.c_str());
+            ImGuiWidgets::SetTooltipStacked("Name: %s\n"
+                                            "Position: %dx%d\n"
+                                            "Direction: %s",
+                                            pointEnt.techName.c_str(),
+                                            pointEnt.position.x, pointEnt.position.y,
+                                            pointEnt.direction.c_str());
         } else if (!level.data().imgui.minimapHovered &&
                    ImGui::IsWindowFocused() &&
                    ImGui::IsMouseDown(ImGuiMouseButton_Left))
@@ -731,7 +734,11 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     auto drawListFlags = drawList->Flags;
-    drawList->Flags = ImDrawListFlags_None;
+    drawList->Flags &= ~ImDrawListFlags_AntiAliasedLines; // Disable flag
+
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        level.data().imgui.highlightCellGroudIndex = std::nullopt;
+    }
 
     bool drawSef = level.data().imgui.cellGroupMode == CellGroupMode::Both
                    || level.data().imgui.cellGroupMode == CellGroupMode::OnlySef;
@@ -739,21 +746,23 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     bool drawLvl = level.data().imgui.cellGroupMode == CellGroupMode::Both
                    || level.data().imgui.cellGroupMode == CellGroupMode::OnlyLvl;
 
+    int groupIndex = 0;
     if (drawSef) {
-        for (int groupIndex = 0; groupIndex < level.data().sefData.cellGroups.size(); ++groupIndex) {
-            const CellGroup& group = level.data().sefData.cellGroups[groupIndex];
+        for (const CellGroup& group : level.data().sefData.cellGroups) {
             if (group.cells.empty()) continue;
 
             drawCellGroup(level.data().imgui, drawPosition, group, groupIndex, SDL_Color{51, 255, 204, 192}, true);
+            ++groupIndex;
         }
     }
 
+    groupIndex = level.data().sefData.cellGroups.size();
     if (drawLvl) {
-        for (int groupIndex = 0; groupIndex < level.data().lvlData.cellGroups.size(); ++groupIndex) {
-            const CellGroup& group = level.data().lvlData.cellGroups[groupIndex];
+        for (const CellGroup& group : level.data().lvlData.cellGroups) {
             if (group.cells.empty()) continue;
 
-            drawCellGroup(level.data().imgui, drawPosition, group, level.data().sefData.cellGroups.size() + groupIndex, SDL_Color{40, 200, 200, 192}, false);
+            drawCellGroup(level.data().imgui, drawPosition, group, groupIndex, SDL_Color{40, 200, 200, 192}, false);
+            ++groupIndex;
         }
     }
 
@@ -772,15 +781,13 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
     if (drawConnectedLine && group.cells.size() >= 2) {
         std::vector<ImVec2> centers;
         centers.reserve(group.cells.size());
-        for (int i = 0; i < group.cells.size(); ++i) {
-            const TilePosition& cellPosition = group.cells[i];
-
+        for (const TilePosition& cellPosition : group.cells) {
             ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
                             drawPosition.y + cellPosition.y * Level::tileHeight);
 
-            centers.push_back({position.x + Level::tileWidth / 2, position.y + Level::tileHeight / 2});
+            centers.push_back({position.x + Level::tileWidth / 2.0f, position.y + Level::tileHeight / 2.0f});
         }
-        drawList->AddPolyline(&centers[0], centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 12) : 64), 0, 2.0f);
+        drawList->AddPolyline(centers.data(), centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 36) : 64), 0, 2.0f);
     }
 
     for (int cellIndex = 0; cellIndex < group.cells.size(); ++cellIndex) {
@@ -796,21 +803,16 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGui::SetTooltip("Position: %dx%d\n"
-                              "Name: %s\n"
-                              "Index: %d\n"
-                              "Count: %zu",
-                              cellPosition.x, cellPosition.y,
-                              group.name.c_str(),
-                              cellIndex,
-                              group.cells.size());
+            ImGuiWidgets::SetTooltipStacked("Position: %dx%d\n"
+                                            "Name: %s\n"
+                                            "Index: %d\n"
+                                            "Count: %zu",
+                                            cellPosition.x, cellPosition.y,
+                                            group.name.c_str(),
+                                            cellIndex,
+                                            group.cells.size());
 
             imgui.highlightCellGroudIndex = groupIndex;
-        }
-
-        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
-        {
-            imgui.highlightCellGroudIndex = std::nullopt;
         }
 
         drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(color.r, color.g, color.b, fullAlpha ? color.a : 64));
@@ -841,20 +843,20 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 
             drawList->AddRect(animationBox.Min, animationBox.Max, IM_COL32(255, 228, 0, 192));
 
-            ImGui::SetTooltip("Name: %s\n"
-                              "Index: %u\n"
-                              "Position: %dx%d\n"
-                              "Size: %dx%d\n"
-                              "Frames: %zu\n"
-                              "Delay: %u\n"
-                              "Params: %u %u",
-                              animation.description.name.c_str(),
-                              animation.description.number,
-                              animation.description.position.x, animation.description.position.y,
-                              animation.textures.front()->w, animation.textures.front()->h,
-                              animation.textures.size(),
-                              animation.delay,
-                              animation.description.param1, animation.description.param2);
+            ImGuiWidgets::SetTooltipStacked("Name: %s\n"
+                                            "Index: %u\n"
+                                            "Position: %dx%d\n"
+                                            "Size: %dx%d\n"
+                                            "Frames: %zu\n"
+                                            "Delay: %u\n"
+                                            "Params: %u %u",
+                                            animation.description.name.c_str(),
+                                            animation.description.number,
+                                            animation.description.position.x, animation.description.position.y,
+                                            animation.textures.front()->w, animation.textures.front()->h,
+                                            animation.textures.size(),
+                                            animation.delay,
+                                            animation.description.param1, animation.description.param2);
         }
     }
 }
