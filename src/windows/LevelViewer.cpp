@@ -709,7 +709,7 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     drawList->Flags = ImDrawListFlags_None;
 
     for (int groupIndex = 0; groupIndex < level.data().sefData.cellGroups.size(); ++groupIndex) {
-        const SEF_CellGroup& group = level.data().sefData.cellGroups[groupIndex];
+        const CellGroup& group = level.data().sefData.cellGroups[groupIndex];
         if (group.cells.empty()) break;
 
         bool fullAlpha = true;
@@ -746,7 +746,7 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
                                   "Name: cell_%02d\n"
                                   "Count: %zu",
                                   cellPosition.x, cellPosition.y,
-                                  group.techName.c_str(),
+                                  group.name.c_str(),
                                   cellIndex,
                                   group.cells.size());
 

@@ -181,11 +181,11 @@ void SEF_Parser::parseCellGroupLine(std::string_view rawLine, SEF_Data& data)
     std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
 
     if (key == "name:") {
-        SEF_CellGroup newGroup;
-        newGroup.techName = StringUtils::extractQuotedValue(value);
+        CellGroup newGroup;
+        newGroup.name = StringUtils::extractQuotedValue(value);
         data.cellGroups.push_back(newGroup);
     } else {
-        SEF_CellGroup& currentGroup = data.cellGroups.back();
+        auto& currentGroup = data.cellGroups.back();
         if (key.starts_with("cell")) {
             TilePosition position;
             StringUtils::parsePosition(value, position.x, position.y);

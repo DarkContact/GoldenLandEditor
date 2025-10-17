@@ -56,11 +56,6 @@ struct SEF_PointEntrance {
     std::string direction; // Direction
 };
 
-struct SEF_CellGroup {
-    std::string techName;
-    std::vector<TilePosition> cells;
-};
-
 struct SEF_Data {
     std::string version;
     std::string pack;
@@ -69,7 +64,7 @@ struct SEF_Data {
     std::optional<int> weather;
     std::vector<SEF_Person> persons;
     std::vector<SEF_PointEntrance> pointsEntrance;
-    std::vector<SEF_CellGroup> cellGroups;
+    std::vector<CellGroup> cellGroups;
 };
 
 class SEF_Parser {

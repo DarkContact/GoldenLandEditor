@@ -41,11 +41,6 @@ struct Weather {
     uint16_t intensity = 0;
 };
 
-struct CellGroup {
-    std::string name;
-    std::vector<TilePosition> cells;
-};
-
 struct Door {
     std::string sefName;
     std::string openAction;
