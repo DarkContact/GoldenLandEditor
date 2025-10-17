@@ -59,6 +59,19 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             ImGui::EndMenu();
         }
 
+        if (level.data().imgui.showCellGroups && ImGui::BeginMenu("Cell group mode")) {
+            if (ImGui::MenuItem("Both", "Shift + 1", level.data().imgui.cellGroupMode == CellGroupMode::Both)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::Both;
+            }
+            if (ImGui::MenuItem("Only SEF", "Shift + 2", level.data().imgui.cellGroupMode == CellGroupMode::OnlySef)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::OnlySef;
+            }
+            if (ImGui::MenuItem("Only LVL", "Shift + 3", level.data().imgui.cellGroupMode == CellGroupMode::OnlyLvl)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::OnlyLvl;
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Open level folder", NULL)) {
                 std::string error;
@@ -111,6 +124,18 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             }
             if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_3, false)) {
                 level.data().imgui.mapTilesMode = MapTilesMode::Mask;
+            }
+        }
+
+        if (level.data().imgui.showCellGroups) {
+            if (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1, false)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::Both;
+            }
+            if (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_2, false)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::OnlySef;
+            }
+            if (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_3, false)) {
+                level.data().imgui.cellGroupMode = CellGroupMode::OnlyLvl;
             }
         }
     }
@@ -708,16 +733,45 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
     auto drawListFlags = drawList->Flags;
     drawList->Flags = ImDrawListFlags_None;
 
-    for (int groupIndex = 0; groupIndex < level.data().sefData.cellGroups.size(); ++groupIndex) {
-        const CellGroup& group = level.data().sefData.cellGroups[groupIndex];
-        if (group.cells.empty()) break;
+    bool drawSef = level.data().imgui.cellGroupMode == CellGroupMode::Both
+                   || level.data().imgui.cellGroupMode == CellGroupMode::OnlySef;
 
-        bool fullAlpha = true;
-        if (level.data().imgui.highlightCellGroudIndex) {
-            fullAlpha = level.data().imgui.highlightCellGroudIndex == groupIndex;
+    bool drawLvl = level.data().imgui.cellGroupMode == CellGroupMode::Both
+                   || level.data().imgui.cellGroupMode == CellGroupMode::OnlyLvl;
+
+    if (drawSef) {
+        for (int groupIndex = 0; groupIndex < level.data().sefData.cellGroups.size(); ++groupIndex) {
+            const CellGroup& group = level.data().sefData.cellGroups[groupIndex];
+            if (group.cells.empty()) continue;
+
+            drawCellGroup(level.data().imgui, drawPosition, group, groupIndex, SDL_Color{51, 255, 204, 192}, true);
         }
+    }
 
+    if (drawLvl) {
+        for (int groupIndex = 0; groupIndex < level.data().lvlData.cellGroups.size(); ++groupIndex) {
+            const CellGroup& group = level.data().lvlData.cellGroups[groupIndex];
+            if (group.cells.empty()) continue;
+
+            drawCellGroup(level.data().imgui, drawPosition, group, level.data().sefData.cellGroups.size() + groupIndex, SDL_Color{40, 200, 200, 192}, false);
+        }
+    }
+
+    drawList->Flags = drawListFlags;
+}
+
+void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    bool fullAlpha = true;
+    if (imgui.highlightCellGroudIndex) {
+        fullAlpha = imgui.highlightCellGroudIndex == groupIndex;
+    }
+
+    if (drawConnectedLine && group.cells.size() >= 2) {
         std::vector<ImVec2> centers;
+        centers.reserve(group.cells.size());
         for (int i = 0; i < group.cells.size(); ++i) {
             const TilePosition& cellPosition = group.cells[i];
 
@@ -726,44 +780,42 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 
             centers.push_back({position.x + Level::tileWidth / 2, position.y + Level::tileHeight / 2});
         }
-        drawList->AddPolyline(&centers[0], centers.size(), IM_COL32(0, 0, 0, fullAlpha ? 180 : 64), 0, 2.0f);
-
-        for (int cellIndex = 0; cellIndex < group.cells.size(); ++cellIndex) {
-            const TilePosition& cellPosition = group.cells[cellIndex];
-
-            ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
-                            drawPosition.y + cellPosition.y * Level::tileHeight);
-
-            ImVec2 mousePos = ImGui::GetMousePos();
-            if (!level.data().imgui.minimapHovered &&
-                ImGui::IsWindowFocused() &&
-                ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-                mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
-                mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
-            {
-                ImGui::SetTooltip("Position: %dx%d\n"
-                                  "Group: %s\n"
-                                  "Name: cell_%02d\n"
-                                  "Count: %zu",
-                                  cellPosition.x, cellPosition.y,
-                                  group.name.c_str(),
-                                  cellIndex,
-                                  group.cells.size());
-
-                level.data().imgui.highlightCellGroudIndex = groupIndex;
-            }
-
-            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
-            {
-                level.data().imgui.highlightCellGroudIndex = std::nullopt;
-            }
-
-            drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(51, 255, 204, fullAlpha ? 192 : 64));
-            drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
-        }
+        drawList->AddPolyline(&centers[0], centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 12) : 64), 0, 2.0f);
     }
 
-    drawList->Flags = drawListFlags;
+    for (int cellIndex = 0; cellIndex < group.cells.size(); ++cellIndex) {
+        const TilePosition& cellPosition = group.cells[cellIndex];
+
+        ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
+                        drawPosition.y + cellPosition.y * Level::tileHeight);
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        if (!imgui.minimapHovered &&
+            ImGui::IsWindowFocused() &&
+            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
+            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+        {
+            ImGui::SetTooltip("Position: %dx%d\n"
+                              "Name: %s\n"
+                              "Index: %d\n"
+                              "Count: %zu",
+                              cellPosition.x, cellPosition.y,
+                              group.name.c_str(),
+                              cellIndex,
+                              group.cells.size());
+
+            imgui.highlightCellGroudIndex = groupIndex;
+        }
+
+        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            imgui.highlightCellGroudIndex = std::nullopt;
+        }
+
+        drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(color.r, color.g, color.b, fullAlpha ? color.a : 64));
+        drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? color.a : 64));
+    }
 }
 
 void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)

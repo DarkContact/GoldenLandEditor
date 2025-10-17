@@ -14,6 +14,12 @@ enum class MapTilesMode {
     Mask
 };
 
+enum class CellGroupMode {
+    Both,
+    OnlySef,
+    OnlyLvl
+};
+
 enum MapDataSound : uint16_t {
     Ground = 0,
     Grass = 1,
@@ -50,6 +56,7 @@ struct LevelImgui {
     bool showEntrancePoints = true;
 
     bool showCellGroups = false;
+    CellGroupMode cellGroupMode = CellGroupMode::Both;
     std::optional<int> highlightCellGroudIndex;
 
     bool showAnimations = true;

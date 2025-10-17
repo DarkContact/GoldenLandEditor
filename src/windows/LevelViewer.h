@@ -22,6 +22,7 @@ private:
     static void drawPersons(Level& level, ImVec2 drawPosition);
     static void drawPointsEntrance(Level& level, ImVec2 drawPosition);
     static void drawCellGroups(Level& level, ImVec2 drawPosition);
+    static void drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine);
     static void drawAnimations(Level& level, ImVec2 drawPosition);
 
     static std::string maskSoundToString(MapDataSound sound);

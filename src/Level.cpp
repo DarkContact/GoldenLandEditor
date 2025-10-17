@@ -66,8 +66,8 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     int minimalSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
     std::span<LVL_Description> animationDescriptionView(levelData.lvlData.animationDescriptions.data(), minimalSize);
 
-    if (animationDescCount > 1) {
-        // Отсортируем описание анимаций
+    // Отсортируем описание анимаций
+    if (animationDescCount >= 2) {
         std::sort(animationDescriptionView.begin(),
                   animationDescriptionView.end(),
                   [] (const LVL_Description& left, const LVL_Description& right) {
