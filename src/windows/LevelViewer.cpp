@@ -236,6 +236,65 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
     return pointInTarget;
 }
 
+bool LevelViewer::leftMouseDownOnLevel(const Level& level) {
+    return !level.data().imgui.minimapHovered &&
+           ImGui::IsWindowFocused() &&
+           ImGui::IsMouseDown(ImGuiMouseButton_Left);
+}
+
+std::string LevelViewer::maskSoundToString(MapDataSound sound) {
+    switch (sound) {
+        case MapDataSound::Ground: return "Ground";
+        case MapDataSound::Grass:  return "Grass";
+        case MapDataSound::Sand:   return "Sand";
+        case MapDataSound::Wood:   return "Wood";
+        case MapDataSound::Stone:  return "Stone";
+        case MapDataSound::Water:  return "Water";
+        case MapDataSound::Snow:   return "Snow";
+    }
+    return {};
+}
+
+std::string LevelViewer::personInfo(const SEF_Person& person) {
+    std::string routeString =
+        person.route.empty() ? std::string{}
+                             : std::format("Route: {}\n", person.route);
+
+    std::string dialogString =
+        person.scriptDialog.empty() ? std::string{}
+                                    : std::format("Dialog: {}\n", person.scriptDialog);
+
+    std::string inventoryString =
+        person.scriptInventory.empty() ? std::string{}
+                                       : std::format("Inventory: {}", person.scriptInventory);
+
+    return std::format("Name: {}\n"
+                       "Position: {}x{}\n"
+                       "Index: {}\n"
+                       "Direction: {}\n"
+                       "RouteType: {}\n"
+                       "{}"
+                       "Radius: {}\n"
+                       "DelayMin: {}\n"
+                       "DelayMax: {}\n"
+                       "Tribe: {}\n"
+                       "{}"
+                       "{}",
+                       person.techName,
+                       person.position.x, person.position.y,
+                       person.literaryNameIndex,
+                       person.direction,
+                       person.routeType,
+                       routeString,
+                       person.radius,
+                       person.delayMin,
+                       person.delayMax,
+                       person.tribe,
+                       dialogString,
+                       inventoryString);
+}
+
+
 void LevelViewer::handleLevelDragScroll(Level& level) {
     Tracy_ZoneScoped;
     ImGuiIO& io = ImGui::GetIO();
@@ -527,23 +586,20 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
     ImGui::SetCursorScreenPos(drawPosition);
 
     const int chunkSize = 2; // 2x2 tiles per chunk
-    const int chunksPerColumn = static_cast<int>(mapTiles.chunkHeight);
-    const int chunksPerRow = static_cast<int>(mapTiles.chunkWidth);
+    const int chunksPerColumn = mapTiles.chunkHeight;
+    const int chunksPerRow = mapTiles.chunkWidth;
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 clipMin = ImGui::GetCurrentWindow()->InnerRect.Min;
     ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetContentRegionAvail().x,
                             clipMin.y + ImGui::GetContentRegionAvail().y);
 
-    const int chunkPixelWidth = chunkSize * Level::tileWidth;
-    const int chunkPixelHeight = chunkSize * Level::tileHeight;
-
     // Вычисляем диапазон видимых чанков
-    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / chunkPixelWidth));
-    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - drawPosition.x) / chunkPixelWidth));
+    int minVisibleCol = std::max(0, static_cast<int>((clipMin.x - drawPosition.x) / Level::chunkWidth));
+    int maxVisibleCol = std::min(chunksPerRow - 1, static_cast<int>((clipMax.x - drawPosition.x) / Level::chunkWidth));
 
-    int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - drawPosition.y) / chunkPixelHeight));
-    int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - drawPosition.y) / chunkPixelHeight));
+    int minVisibleRow = std::max(0, static_cast<int>((clipMin.y - drawPosition.y) / Level::chunkHeight));
+    int maxVisibleRow = std::min(chunksPerColumn - 1, static_cast<int>((clipMax.y - drawPosition.y) / Level::chunkHeight));
 
     for (int col = minVisibleCol; col <= maxVisibleCol; ++col)
     {
@@ -554,8 +610,8 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 
             const MapChunk& chunk = mapTiles.chunks[chunkIndex];
 
-            int correctX = col * chunkPixelWidth;
-            int correctY = row * chunkPixelHeight;
+            int correctX = col * Level::chunkWidth;
+            int correctY = row * Level::chunkHeight;
 
             for (size_t tileIndex = 0; tileIndex < chunk.size(); ++tileIndex) {
                 const MapTile& tile = chunk[tileIndex];
@@ -614,15 +670,14 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
                 drawList->AddRectFilled(p0, p1, color);
 
                 ImVec2 mousePos = ImGui::GetMousePos();
-                if (!level.data().imgui.minimapHovered &&
-                    ImGui::IsWindowFocused() &&
-                    ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+                if (leftMouseDownOnLevel(level) &&
                     mousePos.x >= p0.x && mousePos.x < p1.x &&
                     mousePos.y >= p0.y && mousePos.y < p1.y)
                 {
                     drawList->AddRect(p0, p1, IM_COL32(255, 255, 0, 255));
 
-                    ImGui::SetTooltip("Tile: %dx%d\n"
+                    ImGui::SetTooltip("[MAP TILE]\n"
+                                      "Tile: %dx%d\n"
                                       "Chunk: %dx%d\n"
                                       "\n"
                                       "Relief: %u\n"
@@ -637,12 +692,10 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
             }
 
             ImVec2 chunkMin = ImVec2(drawPosition.x + correctX, drawPosition.y + correctY);
-            ImVec2 chunkMax = ImVec2(chunkMin.x + chunkPixelWidth, chunkMin.y + chunkPixelHeight);
+            ImVec2 chunkMax = ImVec2(chunkMin.x + Level::chunkWidth, chunkMin.y + Level::chunkHeight);
 
             ImVec2 mousePos = ImGui::GetMousePos();
-            if (!level.data().imgui.minimapHovered &&
-                ImGui::IsWindowFocused() &&
-                ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            if (leftMouseDownOnLevel(level) &&
                 mousePos.x >= chunkMin.x && mousePos.x < chunkMax.x &&
                 mousePos.y >= chunkMin.y && mousePos.y < chunkMax.y)
             {
@@ -662,17 +715,12 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 
         bool fullAlpha = true;
         ImVec2 mousePos = ImGui::GetMousePos();
-        if (!level.data().imgui.minimapHovered &&
-            ImGui::IsWindowFocused() &&
-            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        if (leftMouseDownOnLevel(level) &&
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGuiWidgets::SetTooltipStacked("%s", personInfo(person).c_str());
-        } else if (!level.data().imgui.minimapHovered &&
-                   ImGui::IsWindowFocused() &&
-                   ImGui::IsMouseDown(ImGuiMouseButton_Left))
-        {
+            ImGuiWidgets::SetTooltipStacked("[PERSON]\n%s", personInfo(person).c_str());
+        } else if (leftMouseDownOnLevel(level)) {
             fullAlpha = false;
         }
 
@@ -698,22 +746,18 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 
         bool fullAlpha = true;
         ImVec2 mousePos = ImGui::GetMousePos();
-        if (!level.data().imgui.minimapHovered &&
-            ImGui::IsWindowFocused() &&
-            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        if (leftMouseDownOnLevel(level) &&
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGuiWidgets::SetTooltipStacked("Name: %s\n"
+            ImGuiWidgets::SetTooltipStacked("[POINT ENTRANCE]\n"
+                                            "Name: %s\n"
                                             "Position: %dx%d\n"
                                             "Direction: %s",
                                             pointEnt.techName.c_str(),
                                             pointEnt.position.x, pointEnt.position.y,
                                             pointEnt.direction.c_str());
-        } else if (!level.data().imgui.minimapHovered &&
-                   ImGui::IsWindowFocused() &&
-                   ImGui::IsMouseDown(ImGuiMouseButton_Left))
-        {
+        } else if (leftMouseDownOnLevel(level)) {
             fullAlpha = false;
         }
 
@@ -803,12 +847,13 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
             mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
             mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
         {
-            ImGuiWidgets::SetTooltipStacked("Position: %dx%d\n"
+            ImGuiWidgets::SetTooltipStacked("[CELL GROUP]\n"
                                             "Name: %s\n"
+                                            "Position: %dx%d\n"
                                             "Index: %d\n"
                                             "Count: %zu",
-                                            cellPosition.x, cellPosition.y,
                                             group.name.c_str(),
+                                            cellPosition.x, cellPosition.y,
                                             cellIndex,
                                             group.cells.size());
 
@@ -836,81 +881,26 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
         ImGui::Image((ImTextureID)texture.get(), ImVec2(texture->w, texture->h));
 
         ImRect animationBox = {animationPosition, {animationPosition.x + texture->w, animationPosition.y + texture->h}};
-        if (!level.data().imgui.minimapHovered &&
-            ImGui::IsWindowFocused() &&
-            ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        if (leftMouseDownOnLevel(level) &&
             animationBox.Contains(ImGui::GetMousePos())) {
 
             drawList->AddRect(animationBox.Min, animationBox.Max, IM_COL32(255, 228, 0, 192));
 
-            ImGuiWidgets::SetTooltipStacked("Name: %s\n"
-                                            "Index: %u\n"
+            ImGuiWidgets::SetTooltipStacked("[ANIMATION]\n"
+                                            "Name: %s\n"
                                             "Position: %dx%d\n"
+                                            "Index: %u\n"
                                             "Size: %dx%d\n"
                                             "Frames: %zu\n"
                                             "Delay: %u\n"
                                             "Params: %u %u",
                                             animation.description.name.c_str(),
-                                            animation.description.number,
                                             animation.description.position.x, animation.description.position.y,
+                                            animation.description.number,
                                             animation.textures.front()->w, animation.textures.front()->h,
                                             animation.textures.size(),
                                             animation.delay,
                                             animation.description.param1, animation.description.param2);
         }
     }
-}
-
-std::string LevelViewer::maskSoundToString(MapDataSound sound)
-{
-    switch (sound) {
-        case MapDataSound::Ground: return "Ground";
-        case MapDataSound::Grass:  return "Grass";
-        case MapDataSound::Sand:   return "Sand";
-        case MapDataSound::Wood:   return "Wood";
-        case MapDataSound::Stone:  return "Stone";
-        case MapDataSound::Water:  return "Water";
-        case MapDataSound::Snow:   return "Snow";
-    }
-    return {};
-}
-
-std::string LevelViewer::personInfo(const SEF_Person& person)
-{
-    std::string routeString =
-        person.route.empty() ? std::string{}
-                             : std::format("Route: {}\n", person.route);
-
-    std::string dialogString =
-        person.scriptDialog.empty() ? std::string{}
-                                    : std::format("Dialog: {}\n", person.scriptDialog);
-
-    std::string inventoryString =
-        person.scriptInventory.empty() ? std::string{}
-                                       : std::format("Inventory: {}", person.scriptInventory);
-
-    return std::format("Name: {}\n"
-                       "Position: {}x{}\n"
-                       "Index: {}\n"
-                       "Direction: {}\n"
-                       "RouteType: {}\n"
-                       "{}"
-                       "Radius: {}\n"
-                       "DelayMin: {}\n"
-                       "DelayMax: {}\n"
-                       "Tribe: {}\n"
-                       "{}"
-                       "{}",
-                       person.techName,
-                       person.position.x, person.position.y,
-                       person.literaryNameIndex,
-                       person.direction,
-                       person.routeType,
-                       routeString,
-                       person.radius,
-                       person.delayMin,
-                       person.delayMax,
-                       person.tribe,
-                       dialogString,
-                       inventoryString);
 }

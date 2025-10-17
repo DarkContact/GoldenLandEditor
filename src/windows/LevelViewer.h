@@ -14,6 +14,9 @@ private:
     static ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);
     static ImVec2 computeMinimapPosition(const Level& level, ImVec2 minimapSize);
     static ImVec2 transformPoint(const ImVec2& pointInSource, const ImRect& sourceRect, const ImRect& targetRect);
+    static bool leftMouseDownOnLevel(const Level& level);
+    static std::string maskSoundToString(MapDataSound sound);
+    static std::string personInfo(const SEF_Person& person);
 
     static void handleLevelDragScroll(Level& level);
     static void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
@@ -24,8 +27,4 @@ private:
     static void drawCellGroups(Level& level, ImVec2 drawPosition);
     static void drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine);
     static void drawAnimations(Level& level, ImVec2 drawPosition);
-
-    static std::string maskSoundToString(MapDataSound sound);
-
-    static std::string personInfo(const SEF_Person& person);
 };
