@@ -79,7 +79,7 @@ struct EnvironmentSoundHeader {
 };
 
 struct EnvironmentSounds {
-    EnvironmentSoundHeader header{};
+    EnvironmentSoundHeader header;
     std::string levelTheme;
     std::string dayAmbience;
     std::string nightAmbience;
@@ -108,7 +108,7 @@ struct LVL_Data {
     std::vector<LVL_Description> animationDescriptions;
     std::vector<LVL_Description> triggerDescriptions;
     std::vector<CellGroup> cellGroups;
-    EnvironmentSounds environmentSounds;
+    EnvironmentSounds sounds;
     Weather weather;
     std::vector<Door> doors;
     uint32_t levelFloors = 0;
@@ -119,8 +119,10 @@ public:
     LVL_Parser() = delete;
 
     static bool parse(std::string_view lvlPath, LVL_Data& data, std::string* error);
+    static bool save(std::string_view lvlPath, const LVL_Data& data, std::string* error);
 
 private:
+    // Read
     friend struct ParsersPrivate;
     static consteval auto makeParsers();
 
@@ -138,4 +140,12 @@ private:
     static void parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data);
 
     static void parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data);
+
+    // Save
+    static void appendString(std::vector<uint8_t>& buffer, std::string_view value);
+    static void appendSizeAndString(std::vector<uint8_t>& buffer, std::string_view value);
+    static void appendUint16(std::vector<uint8_t>& buffer, uint16_t value);
+    static void appendUint32(std::vector<uint8_t>& buffer, uint32_t value);
+    static void appendInt32(std::vector<uint8_t>& buffer, int32_t value);
+    static void appendFloat(std::vector<uint8_t>& buffer, float value);
 };

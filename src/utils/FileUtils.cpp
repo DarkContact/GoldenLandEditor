@@ -11,6 +11,7 @@
 
 std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string* error)
 {
+    // SDL_LoadFile не используется чтобы избежать копирования памяти в вектор
     Tracy_ZoneScoped;
     SDL_IOStream* stream = SDL_IOFromFile(filePath.data(), "rb");
     if (!stream) {
@@ -57,6 +58,16 @@ std::vector<uint8_t> FileUtils::loadFile(std::string_view filePath, std::string*
 
     assert(bytesReadTotal == fileSize);
     return result;
+}
+
+bool FileUtils::saveFile(std::string_view filePath, std::span<const uint8_t> fileData, std::string* error)
+{
+    Tracy_ZoneScoped;
+    bool isOk = SDL_SaveFile(filePath.data(), fileData.data(), fileData.size());
+    if (!isOk && error) {
+        *error = SDL_GetError();
+    }
+    return isOk;
 }
 
 std::string normalizePathForWindows(std::string_view inputPath) {
