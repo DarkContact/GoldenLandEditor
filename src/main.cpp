@@ -1,6 +1,5 @@
 #include <atomic>
 #include <future>
-#include <cstdio>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -73,9 +72,8 @@ int main(int, char**)
     auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(rootDirectoryContext));
 
     // Setup SDL
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        printf("Error: SDL_Init(): %s\n", SDL_GetError());
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        LogFmt("SDL_Init error: {}", SDL_GetError());
         return -1;
     }
 
@@ -83,18 +81,17 @@ int main(int, char**)
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
     SDL_Window* window = SDL_CreateWindow("Goldenland Editor", (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
-    if (window == nullptr)
-    {
-        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+    if (window == nullptr) {
+        LogFmt("SDL_CreateWindow error: {}", SDL_GetError());
         return -1;
     }
     SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
-    SDL_SetRenderVSync(renderer, 1);
-    if (renderer == nullptr)
-    {
-        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
+    if (renderer == nullptr) {
+        LogFmt("SDL_CreateRenderer error: {}", SDL_GetError());
         return -1;
     }
+    SDL_SetRenderVSync(renderer, 1);
+
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
@@ -282,10 +279,9 @@ int main(int, char**)
             }
         }
 
-        // Rendering
         {
-            Tracy_ZoneScopedN("Rendering");
-            Tracy_ZoneColor(0x32cd32); // LimeGreen
+            Tracy_ZoneScopedN("Rendering prepare");
+            Tracy_ZoneColor(0xadff2f); // GreenYellow
 
             ImGui::Render();
 
@@ -303,7 +299,12 @@ int main(int, char**)
             Tracy_CaptureImage(renderer);
         }
 
-        SDL_RenderPresent(renderer);
+        {
+            Tracy_ZoneScopedN("Rendering");
+            Tracy_ZoneColor(0x32cd32); // LimeGreen
+
+            SDL_RenderPresent(renderer);
+        }
 
         Tracy_FrameMark;
     }
