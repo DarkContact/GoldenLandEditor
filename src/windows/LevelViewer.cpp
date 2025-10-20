@@ -44,6 +44,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
             if (ImGui::MenuItem("Animations", "A", level.data().imgui.showAnimations)) {
                 level.data().imgui.showAnimations = !level.data().imgui.showAnimations;
             }
+            if (ImGui::MenuItem("Sounds", "S", level.data().imgui.showSounds)) {
+                level.data().imgui.showSounds = !level.data().imgui.showSounds;
+            }
             ImGui::EndMenu();
         }
 
@@ -115,6 +118,9 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_A, false)) {
             level.data().imgui.showAnimations = !level.data().imgui.showAnimations;
         }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_S, false)) {
+            level.data().imgui.showSounds = !level.data().imgui.showSounds;
+        }
 
         if (level.data().imgui.showMapTiles) {
             if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1, false)) {
@@ -165,6 +171,10 @@ bool LevelViewer::update(bool& showWindow, Level& level)
 
     if (level.data().imgui.showCellGroups) {
         drawCellGroups(level, startPos);
+    }
+
+    if (level.data().imgui.showSounds) {
+        drawSounds(level, startPos);
     }
 
     if (level.data().imgui.showMapTiles) {
@@ -534,6 +544,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
     auto infoMessage =
         std::format("Size: {}x{}\n"
                     "Pack: {}\n"
+                    "Weather: {}\n"
                     "Internal location: {}\n"
                     "Exit to global map: {}\n"
                     "\n"
@@ -544,11 +555,13 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     "Statics: {}\n"
                     "Animations: {}\n"
                     "Triggers: {}\n"
+                    "Sounds: {}\n"
                     "Floors: {}\n"
                     "\n"
                     "Mouse on level: {}",
                     level.data().background->w, level.data().background->h,
                     level.data().sefData.pack,
+                    level.data().sefData.weather.value_or(-1),
                     level.data().sefData.internalLocation,
                     level.data().sefData.exitToGlobalMap,
                     level.data().lvlData.mapTiles.chunkWidth * 2, level.data().lvlData.mapTiles.chunkHeight * 2,
@@ -557,6 +570,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
                     level.data().lvlData.staticDescriptions.size(),
                     level.data().lvlData.animationDescriptions.size(), // TODO: LaoSize, FileCount
                     level.data().lvlData.triggerDescriptions.size(),
+                    level.data().lvlData.sounds.otherSounds.size(),
                     level.data().lvlData.levelFloors,
                     mouseOnLevelInfo);
 
@@ -929,5 +943,53 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
                                             animation.delay,
                                             animation.description.param1, animation.description.param2);
         }
+    }
+}
+
+void LevelViewer::drawSounds(Level& level, ImVec2 drawPosition)
+{
+    Tracy_ZoneScoped;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (const ExtraSound& sound : level.data().lvlData.sounds.otherSounds) {
+        ImVec2 position(drawPosition.x + sound.chunkPositionX * Level::chunkWidth,
+                        drawPosition.y + sound.chunkPositionY * Level::chunkHeight);
+
+        bool fullAlpha = true;
+        ImVec2 mousePos = ImGui::GetMousePos();
+        if (leftMouseDownOnLevel(level) &&
+            mousePos.x >= position.x && mousePos.x < (position.x + Level::chunkWidth) &&
+            mousePos.y >= position.y && mousePos.y < (position.y + Level::chunkHeight))
+        {
+            ImGuiWidgets::SetTooltipStacked("[SOUND]\n"
+                                            "Path: %s\n"
+                                            //"Chunk position: %.0fx%.0f\n"
+                                            "Param03: %.2f\n"
+                                            "Param04: %.2f\n"
+                                            "Param05: %.2f\n"
+                                            "Param06: %.2f\n"
+                                            "Param07: %.2f\n"
+                                            "Param08: %.2f\n"
+                                            "Param09: %u\n"
+                                            "Param10: %u\n"
+                                            "Param11: %u\n"
+                                            "Param12: %u\n",
+                                            sound.path.c_str(),
+                                            //sound.chunkPositionX, sound.chunkPositionY,
+                                            sound.param03,
+                                            sound.param04,
+                                            sound.param05,
+                                            sound.param06,
+                                            sound.param07,
+                                            sound.param08,
+                                            sound.param09,
+                                            sound.param10,
+                                            sound.param11,
+                                            sound.param12);
+        } else if (leftMouseDownOnLevel(level)) {
+            fullAlpha = false;
+        }
+
+        drawList->AddRectFilled(position, {position.x + Level::chunkWidth, position.y + Level::chunkHeight}, IM_COL32(255, 255, 255, fullAlpha ? 192 : 64));
+        drawList->AddRect(position, {position.x + Level::chunkWidth, position.y + Level::chunkHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
     }
 }
