@@ -266,18 +266,6 @@ std::string LevelViewer::maskSoundToString(MapDataSound sound) {
 }
 
 std::string LevelViewer::personInfo(const SEF_Person& person) {
-    std::string routeString =
-        person.route.empty() ? std::string{}
-                             : std::format("Route: {}\n", person.route);
-
-    std::string dialogString =
-        person.scriptDialog.empty() ? std::string{}
-                                    : std::format("Dialog: {}\n", person.scriptDialog);
-
-    std::string inventoryString =
-        person.scriptInventory.empty() ? std::string{}
-                                       : std::format("Inventory: {}", person.scriptInventory);
-
     return std::format("Name: {}\n"
                        "Position: {}x{}\n"
                        "Index: {}\n"
@@ -295,13 +283,16 @@ std::string LevelViewer::personInfo(const SEF_Person& person) {
                        person.literaryNameIndex,
                        person.direction,
                        person.routeType,
-                       routeString,
+                       person.route.empty() ? std::string{}
+                                            : std::format("Route: {}\n", person.route),
                        person.radius,
                        person.delayMin,
                        person.delayMax,
                        person.tribe,
-                       dialogString,
-                       inventoryString);
+                       person.scriptDialog.empty() ? std::string{}
+                                                   : std::format("Dialog: {}\n", person.scriptDialog),
+                       person.scriptInventory.empty() ? std::string{}
+                                                      : std::format("Inventory: {}\n", person.scriptInventory));
 }
 
 
