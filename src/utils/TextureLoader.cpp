@@ -146,7 +146,19 @@ bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Rende
     return true;
 }
 
-bool TextureLoader::loadFixedHeightTexturesFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+bool TextureLoader::loadHeightAnimationFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+{
+    Tracy_ZoneScoped;
+    return loadAnimationFromCsxFile(fileName, IntParam::kHeight, height, renderer, outTextures, error);
+}
+
+bool TextureLoader::loadCountAnimationFromCsxFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+{
+    Tracy_ZoneScoped;
+    return loadAnimationFromCsxFile(fileName, IntParam::kCount, count, renderer, outTextures, error);
+}
+
+bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam type, int param, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
 
@@ -158,7 +170,13 @@ bool TextureLoader::loadFixedHeightTexturesFromCsxFile(std::string_view fileName
     if (!csxParser.preParse(error))
         return false;
 
-    assert(csxParser.metaInfo().height % height == 0);
+    int height;
+    assert(csxParser.metaInfo().height % param == 0);
+    if (type == IntParam::kHeight) {
+        height = param;
+    } else if (type == IntParam::kCount) {
+        height = csxParser.metaInfo().height / param;
+    }
 
     SDL_Surface* surface = SDL_CreateSurface(csxParser.metaInfo().width, height, SDL_PIXELFORMAT_INDEX8);
     if (!surface) {

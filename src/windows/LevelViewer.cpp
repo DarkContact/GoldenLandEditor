@@ -902,7 +902,7 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
     Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     uint64_t nowMs = SDL_GetTicks();
-    for (Animation& animation : level.data().animations) {
+    for (LevelAnimation& animation : level.data().animations) {
         animation.update(nowMs);
 
         ImVec2 animationPosition{drawPosition.x + animation.description.position.x,

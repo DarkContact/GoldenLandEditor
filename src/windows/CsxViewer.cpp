@@ -2,15 +2,16 @@
 
 #include <format>
 
-#include "utils/TextureLoader.h"
-#include "Texture.h"
+#include "SDL3/SDL_render.h"
 #include "imgui.h"
 
+#include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
+#include "Texture.h"
 
 void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)
 {
-    Tracy_ZoneScopedN("CsxViewer::update");
+    Tracy_ZoneScoped;
 
     static int selectedIndex = -1;
     static std::vector<Texture> csxTextures;
@@ -104,7 +105,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             }
         }
         ImGui::EndGroup();
-    } else if (selectedIndex > 0) {
+    } else if (selectedIndex >= 0) {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", csxTextureError.c_str());
     }
 

@@ -18,7 +18,7 @@ struct MDF_Params {
 };
 
 struct MDF_Pack {
-    int32_t a01 = 0;
+    int32_t framesCount = 0;
     int32_t a02 = 0;
     int32_t a03 = 0;
     int32_t a04 = 0;
@@ -36,7 +36,7 @@ struct MDF_Entry {
 
 
 struct MDF_Data {
-    int32_t height = 0;
+    int32_t height = 0; // delay ?
     std::vector<MDF_Entry> entries;
 };
 

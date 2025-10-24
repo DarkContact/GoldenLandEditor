@@ -13,6 +13,7 @@ public:
 
     std::vector<std::string> sdbFiles() const;
     std::vector<std::string> csxFiles() const;
+    std::vector<std::string> mdfFiles() const;
 
 private:
     std::vector<std::string> filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const;

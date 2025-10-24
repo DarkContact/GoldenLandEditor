@@ -3,10 +3,12 @@
 #include <optional>
 
 #include "imgui.h"
-#include "Texture.h"
+
 #include "parsers/SEF_Parser.h"
 #include "parsers/LVL_Parser.h"
 #include "parsers/LAO_Parser.h"
+#include "Texture.h"
+#include "Types.h"
 
 enum class MapTilesMode {
     Relief,
@@ -63,46 +65,11 @@ struct LevelImgui {
     bool showSounds = false;
 };
 
-struct Animation {
-    Animation(LVL_Description& description) :
+struct LevelAnimation : public BaseAnimation {
+    LevelAnimation(LVL_Description& description) :
         description(description) {}
 
-    const Texture& currentTexture() const {
-        return textures[currentFrame];
-    }
-
-    void update(uint64_t timeMs) {
-        if (lastUpdate == 0) {
-            lastUpdate = timeMs;
-            return;
-        }
-
-        if (timeMs - lastUpdate >= delay) {
-            nextFrame();
-            lastUpdate = timeMs;
-        }
-    }
-
-    void stop() {
-        currentFrame = 0;
-        lastUpdate = 0;
-    }
-
-    std::vector<Texture> textures;
     LVL_Description& description;  // Из lvlData
-    uint32_t delay = 0;            // Из laoData
-
-
-private:
-    void nextFrame() {
-        ++currentFrame;
-        if (currentFrame == textures.size()) {
-            currentFrame = 0;
-        }
-    }
-
-    uint32_t currentFrame = 0;
-    uint64_t lastUpdate = 0;
 };
 
 struct LevelData {
@@ -112,7 +79,7 @@ struct LevelData {
     SEF_Data sefData;
     LVL_Data lvlData;
     std::optional<LAO_Data> laoData;
-    std::vector<Animation> animations;
+    std::vector<LevelAnimation> animations;
     LevelImgui imgui;
 };
 

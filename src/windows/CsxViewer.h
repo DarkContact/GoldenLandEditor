@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 
-#include "SDL3/SDL_render.h"
+struct SDL_Renderer;
 
 class CsxViewer
 {

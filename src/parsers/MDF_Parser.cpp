@@ -43,7 +43,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
             MDF_Entry entry;
             for (int i = 0; i < packCount; ++i) {
                 MDF_Pack pack;
-                pack.a01 = readInt32(fileData, offset);
+                pack.framesCount = readInt32(fileData, offset);
                 pack.a02 = readInt32(fileData, offset);
                 pack.a03 = readInt32(fileData, offset);
                 pack.a04 = readInt32(fileData, offset);

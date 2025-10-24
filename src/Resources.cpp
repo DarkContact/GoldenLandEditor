@@ -74,13 +74,18 @@ std::vector<std::string> Resources::csxFiles() const
     return filesWithExtensionAsync({Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}, ".csx");
 }
 
+std::vector<std::string> Resources::mdfFiles() const
+{
+    return filesWithExtension({Magic}, ".mdf"); // TODO: fs::directory_iterator
+}
+
 std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {
     std::vector<std::string> files;
     for (int index : indices) {
         auto dir = StringUtils::utf8View(m_mainDirectories[index]);
         if (!fs::is_directory(dir)) continue;
 
-        for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        for (const auto& entry : fs::recursive_directory_iterator(dir)) { // TODO: Добавить версию с fs::directory_iterator
             if (entry.path().extension() == extension) {
                 files.push_back(entry.path().lexically_relative(StringUtils::utf8View(m_rootDirectory)).string());
             }
