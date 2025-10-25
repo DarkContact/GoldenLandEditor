@@ -14,7 +14,7 @@ struct MDF_Params {
     float p07 = 0;
     float p08 = 0;
     float p09 = 0;
-    int32_t p10 = 0;
+    int32_t animationTimeMs = 0;
 };
 
 struct MDF_Animation {
@@ -24,7 +24,7 @@ struct MDF_Animation {
     int32_t a04 = 0;
     int32_t a05 = 0;
     int32_t a06 = 0;
-    int32_t a07 = 0;
+    int32_t maxAnimationTimeMs = 0;
     std::string maskAnimationPath;
     std::string animationPath;
     std::vector<MDF_Params> params;
@@ -36,7 +36,7 @@ struct MDF_Layer {
 
 
 struct MDF_Data {
-    int32_t dataParam = 0;
+    int32_t maxLayerTimeMs = 0;
     std::vector<MDF_Layer> layers;
 };
 

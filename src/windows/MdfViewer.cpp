@@ -20,9 +20,9 @@ struct LayerInfo {
 
 static std::string mdfParamsString(const MDF_Params& params) {
     return std::format("[p01]: {} [p02]: {} [p03]: {} [p04]: {} [p05]: {}\n"
-                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [p10]: {}",
+                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
                        params.p01, params.p02, params.p03, params.p04, params.p05,
-                       params.p06, params.p07, params.p08, params.p09, params.p10);
+                       params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
 }
 
 static std::string mdfAnimationString(const MDF_Animation& anim) {
@@ -39,13 +39,13 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
 
     return std::format("frames: {}\n"
                        "[a02]: {} [a03]: {} [a04]: {}\n"
-                       "[a05]: {} [a06]: {} [a07]: {}\n"
+                       "[a05]: {} [a06]: {} [ms]: {}\n"
                        "{}"
                        "animationPath: {}\n"
                        "{}",
                        anim.framesCount,
                        anim.a02, anim.a03, anim.a04,
-                       anim.a05, anim.a06, anim.a07,
+                       anim.a05, anim.a06, anim.maxAnimationTimeMs,
                        anim.maskAnimationPath.empty() ? std::string{}
                                                       : std::format("maskAnimationPath: {}\n", anim.maskAnimationPath),
                        anim.animationPath,
@@ -53,7 +53,7 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
 }
 
 static std::string mdfInfoString(const MDF_Data& data) {
-    std::string result = std::format("dataParam: {}\n\n", data.dataParam);
+    std::string result = std::format("maxLayerTimeMs: {}\n\n", data.maxLayerTimeMs);
     for (int l = 0; l < data.layers.size(); ++l) {
         const auto& layer = data.layers[l];
         result += std::format("LAYER {}\n", l + 1);
@@ -117,7 +117,9 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
                             auto& animation = animationLayer[animationIndex];
-                            animation.delay = 100;
+                            int startTime = animDesc.params.front().animationTimeMs;
+                            int endTime = animDesc.params.back().animationTimeMs;
+                            animation.delay = (endTime - startTime) / animDesc.framesCount;
 
                             if (animDesc.animationPath.ends_with(".bmp")) {
                                 uiError = ".bmp format unsupported et!";
