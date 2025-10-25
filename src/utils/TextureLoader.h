@@ -7,6 +7,7 @@
 
 class Texture;
 struct SDL_Renderer;
+struct SDL_Color;
 
 class TextureLoader {
 public:
@@ -20,6 +21,7 @@ public:
 
     static bool loadHeightAnimationFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error = nullptr);
     static bool loadCountAnimationFromCsxFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error = nullptr);
+    static bool loadCountAnimationFromBmpFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error = nullptr);
 
 private:
     enum class IntParam {

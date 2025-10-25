@@ -6,7 +6,7 @@
 
 struct MDF_Params {
     int32_t p01 = 0;
-    int32_t p02 = 0;
+    float p02 = 0;
     int32_t p03 = 0;
     int32_t nFrame = 0;
     int32_t p05 = 0;

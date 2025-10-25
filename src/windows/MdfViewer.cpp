@@ -10,6 +10,7 @@
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
+#include "utils/DebugLog.h"
 #include "Types.h"
 
 struct LayerInfo {
@@ -24,7 +25,7 @@ struct MagicAnimation : public BaseAnimation {
 };
 
 static std::string mdfParamsString(const MDF_Params& params) {
-    return std::format("[p01]: {} [p02]: {} [p03]: {} [nFrame]: {} [p05]: {}\n"
+    return std::format("[p01]: {} [p02]: {:.1f} [p03]: {} [nFrame]: {} [p05]: {}\n"
                        "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
                        params.p01, params.p02, params.p03, params.nFrame, params.p05,
                        params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
@@ -127,15 +128,19 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
 
+                            bool isOk = false;
                             if (animDesc.animationPath.ends_with(".bmp")) {
-                                uiError = ".bmp format unsupported et!";
-                                break;
+                                SDL_Color transparentColor = {255, 0, 255, 255};
+                                isOk = TextureLoader::loadCountAnimationFromBmpFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
+                                                                                    animDesc.framesCount, renderer, animation.textures, &transparentColor, &uiError);
+                            } else if (animDesc.animationPath.ends_with(".csx")) {
+                                isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
+                                                                                    animDesc.framesCount, renderer, animation.textures, &uiError);
+                            } else {
+                                uiError = std::format("Unsupported format! {}", animDesc.animationPath);
                             }
 
-                            bool isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
-                                                                                     animDesc.framesCount, renderer, animation.textures, &uiError);
-                            if (!isOk)
-                                break;
+                            if (!isOk) break;
                             ++animationIndex;
                         }
                         ++layerIndex;
@@ -174,17 +179,21 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             for (auto& layer : animationLayers) {
                 auto& layerInfo = layerInfos[layerIndex];
                 layerInfo.count = layer.size();
-                layerInfo.width = layer.front().textures.front()->w;
-                layerInfo.height = layer.front().textures.front()->h;
+
                 for (auto& animation : layer) {
+                    if (animation.textures.empty()) continue;
+
                     animation.update(now);
-                    ImGui::SetCursorScreenPos({startPos.x + animation.xOffset, startPos.y + animation.yOffset});
+                    ImGui::SetCursorScreenPos({startPos.x /*+ animation.xOffset*/, startPos.y /*+ animation.yOffset*/});
                     ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
                                        ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
                                        ImVec2(0, 0), ImVec2(1, 1), bgColor);
 
                     maxTextureW = std::max(animation.currentTexture()->w, maxTextureW);
-                    maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
+                    //maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
+
+                    layerInfo.width = std::max(animation.textures.front()->w, layerInfo.width);
+                    layerInfo.height = std::max(animation.textures.front()->h, layerInfo.height);
                 }
                 ++layerIndex;
             }

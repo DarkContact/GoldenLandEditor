@@ -46,7 +46,7 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
     SDL_Surface* surface = SDL_CreateSurface(m_metaInfo.width, m_metaInfo.height, SDL_PIXELFORMAT_INDEX8);
     if (!surface) {
         if (error)
-            *error = std::string(SDL_GetError());
+            *error = SDL_GetError();
         return nullptr;
     }
 

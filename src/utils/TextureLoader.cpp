@@ -82,6 +82,7 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
     return true;
 }
 
+// TODO: Переписать через preParse
 bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
@@ -113,7 +114,7 @@ bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Rende
             };
             if (!subSurfacePtr) {
                 if (error)
-                    *error = std::string(SDL_GetError());
+                    *error = SDL_GetError();
                 return false;
             }
 
@@ -160,6 +161,81 @@ bool TextureLoader::loadCountAnimationFromCsxFile(std::string_view fileName, int
     return loadAnimationFromCsxFile(fileName, IntParam::kCount, count, renderer, outTextures, error);
 }
 
+bool TextureLoader::loadCountAnimationFromBmpFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error) {
+    Tracy_ZoneScoped;
+
+    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
+        SDL_LoadBMP(fileName.data()),
+        SDL_DestroySurface
+    };
+
+    if (!surfacePtr) {
+        if (error)
+            *error = SDL_GetError();
+        return false;
+    }
+
+    int fullHeight = surfacePtr->h;
+    int frameHeight = fullHeight / count;
+    if (fullHeight % count != 0) {
+        LogFmt("Warning in {}: (bmpHeight % framesCount != 0) [bmpHeight: {}, framesCount: {}, frameHeight: {}]",
+               StringUtils::filename(fileName), fullHeight, count, frameHeight);
+    }
+
+    if (transparentColor) {
+        Uint32 key = SDL_MapRGB(SDL_GetPixelFormatDetails(surfacePtr->format), SDL_GetSurfacePalette(surfacePtr.get()), transparentColor->r, transparentColor->g, transparentColor->b);
+        SDL_SetSurfaceColorKey(surfacePtr.get(), true, key);
+    }
+
+    if (count == 1) {
+        Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
+        if (!texture)
+            return false;
+
+        outTextures.push_back(std::move(texture));
+        return true;
+    }
+
+    int yOffset = 0;
+    for (int i = 0; i < count; ++i) {
+        SDL_Rect srcRect(0, yOffset, surfacePtr->w, frameHeight);
+
+        std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> subSurfacePtr = {
+            SDL_CreateSurface(srcRect.w, srcRect.h, surfacePtr->format),
+            SDL_DestroySurface
+        };
+        if (!subSurfacePtr) {
+            if (error)
+                *error = SDL_GetError();
+            return false;
+        }
+
+        SDL_SetSurfacePalette(subSurfacePtr.get(), SDL_GetSurfacePalette(surfacePtr.get()));
+
+        // Восстановим прозрачность
+        if (SDL_SurfaceHasColorKey(surfacePtr.get())) {
+            Uint32 key = 0;
+            SDL_GetSurfaceColorKey(surfacePtr.get(), &key);
+            SDL_SetSurfaceColorKey(subSurfacePtr.get(), true, key);
+            SDL_FillSurfaceRect(subSurfacePtr.get(), NULL, key);
+        }
+
+        if (!SDL_BlitSurface(surfacePtr.get(), &srcRect, subSurfacePtr.get(), NULL)) {
+            if (error)
+                *error = SDL_GetError();
+            return false;
+        }
+
+        Texture texture = Texture::createFromSurface(renderer, subSurfacePtr.get(), error);
+        if (!texture)
+            return false;
+
+        outTextures.push_back(std::move(texture));
+        yOffset += frameHeight;
+    }
+    return true;
+}
+
 bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam type, int param, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
@@ -187,7 +263,7 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam
     SDL_Surface* surface = SDL_CreateSurface(csxParser.metaInfo().width, height, SDL_PIXELFORMAT_INDEX8);
     if (!surface) {
         if (error)
-            *error = std::string(SDL_GetError());
+            *error = SDL_GetError();
         return false;
     }
 
