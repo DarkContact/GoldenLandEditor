@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "TracyProfiler.h"
+#include "StringUtils.h"
 
 void DebugLog::toOutput(const std::source_location& location, std::string_view msg) {
     Tracy_Message(msg.data(), msg.size());
@@ -22,13 +23,10 @@ void DebugLog::toOutput(const std::source_location& location, std::string_view m
     fputs(msg.data(), stdout);
 
     // Достаём только имя файла
-    std::string_view fullPath = location.file_name();
-    auto pos = fullPath.find_last_of("/\\");
-    std::string_view fileNameOnly = (pos == std::string_view::npos) ? fullPath
-                                                                    : fullPath.substr(pos + 1);
+    std::string_view fileNameOnly = StringUtils::filename(location.file_name());
 
     // Информация о расположении в исходниках: [main.cpp:35]
-    constexpr size_t kBufferInfoSize = 512;
+    constexpr size_t kBufferInfoSize = 280;
     char bufferInfo[kBufferInfoSize];
     auto resultInfo = std::format_to_n(bufferInfo, kBufferInfoSize, " [{}:{}]\n", fileNameOnly, location.line());
     assert(resultInfo.size < kBufferInfoSize);

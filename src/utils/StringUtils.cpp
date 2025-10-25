@@ -106,6 +106,13 @@ std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     return result;
 }
 
+std::string_view StringUtils::filename(std::string_view path) noexcept
+{
+    auto pos = path.find_last_of("/\\");
+    return (pos == std::string_view::npos) ? path
+                                           : path.substr(pos + 1);
+}
+
 std::u8string_view StringUtils::utf8View(std::string_view input) noexcept {
     return {(char8_t*)input.data(), input.size()};
 }

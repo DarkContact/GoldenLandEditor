@@ -4,11 +4,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "Texture.h"
 #include "parsers/CSX_Parser.h"
+#include "Texture.h"
 
-#include "utils/FileUtils.h"
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
+#include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 
 bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
@@ -171,11 +173,15 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam
         return false;
 
     int height;
-    assert(csxParser.metaInfo().height % param == 0);
     if (type == IntParam::kHeight) {
+        assert(csxParser.metaInfo().height % param == 0);
         height = param;
     } else if (type == IntParam::kCount) {
         height = csxParser.metaInfo().height / param;
+        if (csxParser.metaInfo().height % param != 0) {
+            LogFmt("Warning in {}: (csxHeight % framesCount != 0) [csxHeight: {}, framesCount: {}, frameHeight: {}]",
+                   StringUtils::filename(fileName), csxParser.metaInfo().height, param, height);
+        }
     }
 
     SDL_Surface* surface = SDL_CreateSurface(csxParser.metaInfo().width, height, SDL_PIXELFORMAT_INDEX8);

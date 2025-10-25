@@ -11,6 +11,12 @@
 #include "utils/TracyProfiler.h"
 #include "Types.h"
 
+struct AnimationLayer {
+    int width;
+    int height;
+    int count;
+};
+
 void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles)
 {
     Tracy_ZoneScoped;
@@ -94,22 +100,20 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ
 
-            int csxTextureWidth = 0;
-            int csxTextureHeight = 0;
-            std::array<int, 5> entriesPackCount;
+            std::array<AnimationLayer, 5> animationLayers;
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             uint64_t now = SDL_GetTicks();
 
             int entryIndex = 0;
             for (auto& entry : animationEntries) {
-                entriesPackCount[entryIndex] = entry.size();
+                auto& animationLayer = animationLayers[entryIndex];
+                animationLayer.count = entry.size();
+                animationLayer.width = entry.front().textures.front()->w;
+                animationLayer.height = entry.front().textures.front()->h;
                 for (auto& animation : entry) {
                     animation.update(now);
                     ImGui::SetCursorScreenPos(startPos);
                     ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(), ImVec2(animation.currentTexture()->w, animation.currentTexture()->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
-
-                    csxTextureWidth = animation.currentTexture()->w;
-                    csxTextureHeight = animation.currentTexture()->h;
                 }
                 ++entryIndex;
             }
@@ -118,23 +122,22 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
             ImGui::EndChild();
 
-            ImGui::Text("%dx%d", csxTextureWidth, csxTextureHeight);
-
-            ImGui::SameLine(0.0f, 12.0f);
-            std::array<char, 80> entries;
+            // Информация о слоях
             {
+                std::array<char, 80> entries;
                 int offset = 0;
                 for (int i = 0; i < animationEntries.size(); ++i) {
-                    auto result = std::format_to_n(entries.data() + offset, entries.size() - offset, "L{} = {}, ", i + 1, entriesPackCount[i]);
+                    auto result = std::format_to_n(entries.data() + offset, entries.size() - offset, "L{} = {} ({}x{}), ", i + 1,
+                                                   animationLayers[i].count, animationLayers[i].width, animationLayers[i].height);
                     offset += result.size;
                 }
                 entries[offset - 2] = '\0';
-            }
 
-            std::array<char, 128> entriesMessage;
-            auto resultFmt = std::format_to_n(entriesMessage.data(), entriesMessage.size() - 1, "Animations count: [{}]", entries.data());
-            entriesMessage[std::min((size_t)resultFmt.size, entriesMessage.size() - 1)] = '\0';
-            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f) ,"%s", entriesMessage.data());
+                std::array<char, 128> entriesMessage;
+                auto resultFmt = std::format_to_n(entriesMessage.data(), entriesMessage.size() - 1, "Animations count: [{}]", entries.data());
+                entriesMessage[std::min((size_t)resultFmt.size, entriesMessage.size() - 1)] = '\0';
+                ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f) ,"%s", entriesMessage.data());
+            }
 
             if (ImGui::RadioButton("Transparent", activeButtonIndex == 0)) {
                 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
