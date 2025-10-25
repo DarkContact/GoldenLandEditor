@@ -931,7 +931,7 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
                                             animation.description.number,
                                             animation.textures.front()->w, animation.textures.front()->h,
                                             animation.textures.size(),
-                                            animation.delay,
+                                            animation.delayMs,
                                             animation.description.param1, animation.description.param2);
         }
     }

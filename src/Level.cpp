@@ -78,7 +78,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     for (int i = 0; i < minimalSize; ++i) {
         std::string levelAnimationPath = levelAnimation(rootDirectory, levelData.sefData.pack, i);
         LevelAnimation animation(levelData.lvlData.animationDescriptions.at(i));
-        animation.delay = levelData.laoData->infos[i].delay;
+        animation.delayMs = levelData.laoData->infos[i].delay;
         if (!TextureLoader::loadHeightAnimationFromCsxFile(levelAnimationPath, levelData.laoData->infos[i].height, renderer, animation.textures, error)) {
             LogFmt("Loading texture for animation failed. {}", *error);
             return {};

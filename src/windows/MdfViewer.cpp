@@ -18,11 +18,16 @@ struct LayerInfo {
     int height = -1;
 };
 
+struct MagicAnimation : public BaseAnimation {
+    int xOffset;
+    int yOffset;
+};
+
 static std::string mdfParamsString(const MDF_Params& params) {
-    return std::format("[p01]: {} [p02]: {} [p03]: {} [p04]: {} [p05]: {}\n"
-                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
-                       params.p01, params.p02, params.p03, params.p04, params.p05,
-                       params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
+    return std::format("[p01]: {} [p02]: {} [p03]: {} [nFrame]: {} [p05]: {}\n"
+                       "[delay]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
+                       params.p01, params.p02, params.p03, params.nFrame, params.p05,
+                       params.delayMs, params.p07, params.p08, params.p09, params.animationTimeMs);
 }
 
 static std::string mdfAnimationString(const MDF_Animation& anim) {
@@ -38,14 +43,14 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
     }
 
     return std::format("frames: {}\n"
-                       "[a02]: {} [a03]: {} [a04]: {}\n"
-                       "[a05]: {} [a06]: {} [ms]: {}\n"
+                       "[xOff]: {} [yOff]: {} [a04]: {}\n"
+                       "[a05]: {} [startMs]: {} [endMs]: {}\n"
                        "{}"
                        "animationPath: {}\n"
                        "{}",
                        anim.framesCount,
-                       anim.a02, anim.a03, anim.a04,
-                       anim.a05, anim.a06, anim.maxAnimationTimeMs,
+                       anim.xOffset, anim.yOffset, anim.a04,
+                       anim.a05, anim.startTimeMs, anim.endTimeMs,
                        anim.maskAnimationPath.empty() ? std::string{}
                                                       : std::format("maskAnimationPath: {}\n", anim.maskAnimationPath),
                        anim.animationPath,
@@ -53,7 +58,7 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
 }
 
 static std::string mdfInfoString(const MDF_Data& data) {
-    std::string result = std::format("maxLayerTimeMs: {}\n\n", data.maxLayerTimeMs);
+    std::string result = std::format("endTimeMs: {}\n\n", data.endTimeMs);
     for (int l = 0; l < data.layers.size(); ++l) {
         const auto& layer = data.layers[l];
         result += std::format("LAYER {}\n", l + 1);
@@ -74,7 +79,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     Tracy_ZoneScoped;
 
     static int selectedIndex = -1;
-    static std::vector<std::vector<BaseAnimation>> animationLayers;
+    static std::vector<std::vector<MagicAnimation>> animationLayers;
     static std::string mdfDataInfo;
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -117,9 +122,10 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
                             auto& animation = animationLayer[animationIndex];
-                            int startTime = animDesc.params.front().animationTimeMs;
-                            int endTime = animDesc.params.back().animationTimeMs;
-                            animation.delay = (endTime - startTime) / animDesc.framesCount;
+                            // animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
+                            animation.delayMs = animDesc.params.front().delayMs;
+                            animation.xOffset = animDesc.xOffset;
+                            animation.yOffset = animDesc.yOffset;
 
                             if (animDesc.animationPath.ends_with(".bmp")) {
                                 uiError = ".bmp format unsupported et!";
@@ -170,7 +176,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 layerInfo.height = layer.front().textures.front()->h;
                 for (auto& animation : layer) {
                     animation.update(now);
-                    ImGui::SetCursorScreenPos(startPos);
+                    ImGui::SetCursorScreenPos({startPos.x + animation.xOffset, startPos.y + animation.yOffset});
                     ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
                                        ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
                                        ImVec2(0, 0), ImVec2(1, 1), bgColor);

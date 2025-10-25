@@ -35,7 +35,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     size_t offset = 4;
 
     std::optional<MDF_Data> result = MDF_Data();
-    result->maxLayerTimeMs = readInt32(fileData, offset);
+    result->endTimeMs = readInt32(fileData, offset);
 
     for (int i = 0; i < MDF_Parser::kMaxLayers; ++i) {
         int32_t layerCount = readInt32(fileData, offset);
@@ -44,12 +44,12 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
             for (int i = 0; i < layerCount; ++i) {
                 MDF_Animation anim;
                 anim.framesCount = readInt32(fileData, offset);
-                anim.a02 = readInt32(fileData, offset);
-                anim.a03 = readInt32(fileData, offset);
+                anim.xOffset = readInt32(fileData, offset);
+                anim.yOffset = readInt32(fileData, offset);
                 anim.a04 = readInt32(fileData, offset);
                 anim.a05 = readInt32(fileData, offset);
-                anim.a06 = readInt32(fileData, offset);
-                anim.maxAnimationTimeMs = readInt32(fileData, offset);
+                anim.startTimeMs = readInt32(fileData, offset);
+                anim.endTimeMs = readInt32(fileData, offset);
                 anim.maskAnimationPath = StringUtils::readStringWithLength(fileData, offset);
                 anim.animationPath = StringUtils::readStringWithLength(fileData, offset);
 
@@ -59,9 +59,9 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                     params.p01 = readInt32(fileData, offset);
                     params.p02 = readInt32(fileData, offset);
                     params.p03 = readInt32(fileData, offset);
-                    params.p04 = readInt32(fileData, offset);
+                    params.nFrame = readInt32(fileData, offset);
                     params.p05 = readInt32(fileData, offset);
-                    params.p06 = readFloat(fileData, offset);
+                    params.delayMs = readFloat(fileData, offset);
                     params.p07 = readFloat(fileData, offset);
                     params.p08 = readFloat(fileData, offset);
                     params.p09 = readFloat(fileData, offset);

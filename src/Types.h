@@ -18,27 +18,27 @@ struct CellGroup {
 
 struct BaseAnimation {
     std::vector<Texture> textures;
-    uint32_t delay = 0;
+    uint32_t delayMs = 0;
 
     const Texture& currentTexture() const {
         return textures[currentFrame];
     }
 
     void update(uint64_t timeMs = SDL_GetTicks()) {
-        if (lastUpdate == 0) {
-            lastUpdate = timeMs;
+        if (lastUpdateTimeMs == 0) {
+            lastUpdateTimeMs = timeMs;
             return;
         }
 
-        if (timeMs - lastUpdate >= delay) {
+        if (timeMs - lastUpdateTimeMs >= delayMs) {
             nextFrame();
-            lastUpdate = timeMs;
+            lastUpdateTimeMs = timeMs;
         }
     }
 
     void stop() {
         currentFrame = 0;
-        lastUpdate = 0;
+        lastUpdateTimeMs = 0;
     }
 
 private:
@@ -50,5 +50,5 @@ private:
     }
 
     uint32_t currentFrame = 0;
-    uint64_t lastUpdate = 0;
+    uint64_t lastUpdateTimeMs = 0;
 };
