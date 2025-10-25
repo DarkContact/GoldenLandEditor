@@ -11,10 +11,10 @@
 #include "utils/TracyProfiler.h"
 #include "Types.h"
 
-struct AnimationLayer {
+struct LayerInfo {
+    int count;
     int width;
     int height;
-    int count;
 };
 
 void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles)
@@ -22,7 +22,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     Tracy_ZoneScoped;
 
     static int selectedIndex = -1;
-    static std::vector<std::vector<BaseAnimation>> animationEntries;
+    static std::vector<std::vector<BaseAnimation>> animationLayers;
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
@@ -51,30 +51,31 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 if (mdfDataOpt) {
                     auto& mdfData = *mdfDataOpt;
 
-                    animationEntries.clear();
-                    animationEntries.resize(mdfData.entries.size());
+                    animationLayers.clear();
+                    animationLayers.resize(mdfData.layers.size());
 
-                    int entryIndex = 0;
-                    for (const auto& entry : mdfData.entries) {
-                        auto& animationEntry = animationEntries[entryIndex];
-                        animationEntry.resize(entry.packs.size());
+                    int layerIndex = 0;
+                    for (const auto& layerDesc : mdfData.layers) {
+                        auto& animationLayer = animationLayers[layerIndex];
+                        animationLayer.resize(layerDesc.animations.size());
 
-                        int packIndex = 0;
-                        for (const auto& pack : entry.packs) {
-                            auto& animationPack = animationEntry[packIndex];
-                            animationPack.delay = 100;
+                        int animationIndex = 0;
+                        for (const auto& animDesc : layerDesc.animations) {
+                            auto& animation = animationLayer[animationIndex];
+                            animation.delay = 100;
 
-                            if (pack.animationPath.ends_with(".bmp")) {
+                            if (animDesc.animationPath.ends_with(".bmp")) {
                                 uiError = ".bmp format unsupported et!";
                                 break;
                             }
 
-                            bool isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, pack.animationPath), pack.framesCount, renderer, animationPack.textures, &uiError);
+                            bool isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
+                                                                                     animDesc.framesCount, renderer, animation.textures, &uiError);
                             if (!isOk)
                                 break;
-                            ++packIndex;
+                            ++animationIndex;
                         }
-                        ++entryIndex;
+                        ++layerIndex;
                     }
                 }
 
@@ -88,7 +89,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     ImGui::SameLine();
 
     // Right
-    if (!animationEntries.empty() && uiError.empty()) {
+    if (!animationLayers.empty() && uiError.empty()) {
         ImGui::BeginGroup();
         {
             ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
@@ -100,22 +101,24 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ
 
-            std::array<AnimationLayer, 5> animationLayers;
+            std::array<LayerInfo, 5> layerInfos;
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             uint64_t now = SDL_GetTicks();
 
-            int entryIndex = 0;
-            for (auto& entry : animationEntries) {
-                auto& animationLayer = animationLayers[entryIndex];
-                animationLayer.count = entry.size();
-                animationLayer.width = entry.front().textures.front()->w;
-                animationLayer.height = entry.front().textures.front()->h;
-                for (auto& animation : entry) {
+            int layerIndex = 0;
+            for (auto& layer : animationLayers) {
+                auto& layerInfo = layerInfos[layerIndex];
+                layerInfo.count = layer.size();
+                layerInfo.width = layer.front().textures.front()->w;
+                layerInfo.height = layer.front().textures.front()->h;
+                for (auto& animation : layer) {
                     animation.update(now);
                     ImGui::SetCursorScreenPos(startPos);
-                    ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(), ImVec2(animation.currentTexture()->w, animation.currentTexture()->h), ImVec2(0, 0), ImVec2(1, 1), bgColor);
+                    ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
+                                       ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
+                                       ImVec2(0, 0), ImVec2(1, 1), bgColor);
                 }
-                ++entryIndex;
+                ++layerIndex;
             }
 
             ImGui::PopStyleVar();
@@ -124,16 +127,16 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
             // Информация о слоях
             {
-                std::array<char, 80> entries;
+                std::array<char, 256> entries;
                 int offset = 0;
-                for (int i = 0; i < animationEntries.size(); ++i) {
+                for (int i = 0; i < animationLayers.size(); ++i) {
                     auto result = std::format_to_n(entries.data() + offset, entries.size() - offset, "L{} = {} ({}x{}), ", i + 1,
-                                                   animationLayers[i].count, animationLayers[i].width, animationLayers[i].height);
+                                                   layerInfos[i].count, layerInfos[i].width, layerInfos[i].height);
                     offset += result.size;
                 }
                 entries[offset - 2] = '\0';
 
-                std::array<char, 128> entriesMessage;
+                std::array<char, 300> entriesMessage;
                 auto resultFmt = std::format_to_n(entriesMessage.data(), entriesMessage.size() - 1, "Animations count: [{}]", entries.data());
                 entriesMessage[std::min((size_t)resultFmt.size, entriesMessage.size() - 1)] = '\0';
                 ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f) ,"%s", entriesMessage.data());
@@ -176,7 +179,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     if (!showWindow) {
         selectedIndex = -1;
-        animationEntries.clear();
+        animationLayers.clear();
         uiError.clear();
         textFilter.Clear();
     }

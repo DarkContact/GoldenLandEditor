@@ -37,21 +37,21 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     std::optional<MDF_Data> result = MDF_Data();
     result->height = readInt32(fileData, offset);
 
-    for (int i = 0; i < MDF_Parser::kMaxEntries; ++i) {
-        int32_t packCount = readInt32(fileData, offset);
-        if (packCount > 0) {
-            MDF_Entry entry;
-            for (int i = 0; i < packCount; ++i) {
-                MDF_Pack pack;
-                pack.framesCount = readInt32(fileData, offset);
-                pack.a02 = readInt32(fileData, offset);
-                pack.a03 = readInt32(fileData, offset);
-                pack.a04 = readInt32(fileData, offset);
-                pack.a05 = readInt32(fileData, offset);
-                pack.a06 = readInt32(fileData, offset);
-                pack.a07 = readInt32(fileData, offset);
-                pack.maskAnimationPath = StringUtils::readStringWithLength(fileData, offset);
-                pack.animationPath = StringUtils::readStringWithLength(fileData, offset);
+    for (int i = 0; i < MDF_Parser::kMaxLayers; ++i) {
+        int32_t layerCount = readInt32(fileData, offset);
+        if (layerCount > 0) {
+            MDF_Layer layer;
+            for (int i = 0; i < layerCount; ++i) {
+                MDF_Animation anim;
+                anim.framesCount = readInt32(fileData, offset);
+                anim.a02 = readInt32(fileData, offset);
+                anim.a03 = readInt32(fileData, offset);
+                anim.a04 = readInt32(fileData, offset);
+                anim.a05 = readInt32(fileData, offset);
+                anim.a06 = readInt32(fileData, offset);
+                anim.a07 = readInt32(fileData, offset);
+                anim.maskAnimationPath = StringUtils::readStringWithLength(fileData, offset);
+                anim.animationPath = StringUtils::readStringWithLength(fileData, offset);
 
                 int32_t paramsCount = readInt32(fileData, offset);
                 for (int p = 0; p < paramsCount; ++p) {
@@ -66,11 +66,11 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                     params.p08 = readInt32(fileData, offset);
                     params.p09 = readInt32(fileData, offset);
                     params.p10 = readInt32(fileData, offset);
-                    pack.params.push_back(std::move(params));
+                    anim.params.push_back(std::move(params));
                 }
-                entry.packs.push_back(std::move(pack));
+                layer.animations.push_back(std::move(anim));
             }
-            result->entries.push_back(std::move(entry));
+            result->layers.push_back(std::move(layer));
         }
     }
     int32_t eof = readInt32(fileData, offset);

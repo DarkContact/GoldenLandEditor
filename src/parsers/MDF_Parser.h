@@ -17,7 +17,7 @@ struct MDF_Params {
     int32_t p10 = 0;
 };
 
-struct MDF_Pack {
+struct MDF_Animation {
     int32_t framesCount = 0;
     int32_t a02 = 0;
     int32_t a03 = 0;
@@ -30,14 +30,14 @@ struct MDF_Pack {
     std::vector<MDF_Params> params;
 };
 
-struct MDF_Entry {
-    std::vector<MDF_Pack> packs;
+struct MDF_Layer {
+    std::vector<MDF_Animation> animations;
 };
 
 
 struct MDF_Data {
     int32_t height = 0; // delay ?
-    std::vector<MDF_Entry> entries;
+    std::vector<MDF_Layer> layers;
 };
 
 class MDF_Parser
@@ -47,5 +47,5 @@ public:
 
     static std::optional<MDF_Data> parse(std::string_view path, std::string* error);
 
-    static constexpr int kMaxEntries = 5;
+    static constexpr int kMaxLayers = 5;
 };
