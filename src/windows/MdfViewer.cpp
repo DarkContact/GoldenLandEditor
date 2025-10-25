@@ -25,9 +25,9 @@ struct MagicAnimation : public BaseAnimation {
 
 static std::string mdfParamsString(const MDF_Params& params) {
     return std::format("[p01]: {} [p02]: {} [p03]: {} [nFrame]: {} [p05]: {}\n"
-                       "[delay]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
+                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
                        params.p01, params.p02, params.p03, params.nFrame, params.p05,
-                       params.delayMs, params.p07, params.p08, params.p09, params.animationTimeMs);
+                       params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
 }
 
 static std::string mdfAnimationString(const MDF_Animation& anim) {
@@ -84,6 +84,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
+    static bool showInfo = false;
     static ImGuiTextFilter textFilter;
 
     bool needResetScroll = false;
@@ -122,8 +123,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
                             auto& animation = animationLayer[animationIndex];
-                            // animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
-                            animation.delayMs = animDesc.params.front().delayMs;
+                            animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
 
@@ -168,6 +168,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             uint64_t now = SDL_GetTicks();
 
+            int maxTextureW = 0;
+            int maxTextureXOffset = 0;
             int layerIndex = 0;
             for (auto& layer : animationLayers) {
                 auto& layerInfo = layerInfos[layerIndex];
@@ -180,17 +182,21 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
                                        ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
                                        ImVec2(0, 0), ImVec2(1, 1), bgColor);
+
+                    maxTextureW = std::max(animation.currentTexture()->w, maxTextureW);
+                    maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
                 }
                 ++layerIndex;
             }
 
             ImGui::PopStyleVar();
 
-            if (ImGui::IsWindowFocused() &&
-                ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                ImGui::PushFont(NULL, 14.0f);
+            if (showInfo)
+            {
+                ImGui::SetCursorScreenPos({startPos.x + maxTextureW + maxTextureXOffset + 12.0f, startPos.y});
 
-                ImGui::SetTooltip("%s", mdfDataInfo.c_str());
+                ImGui::PushFont(NULL, 14.0f);
+                ImGui::Text("%s", mdfDataInfo.c_str());
                 ImGui::PopFont();
             }
 
@@ -233,13 +239,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 activeButtonIndex = 3;
             }
             ImGui::SameLine();
-            if (ImGui::RadioButton("Custom", activeButtonIndex == 4)) {
-                activeButtonIndex = 4;
-            }
-            ImGui::SameLine();
-            if (activeButtonIndex == 4) {
-                ImGui::ColorEdit4("Color", (float*)&bgColor, ImGuiColorEditFlags_NoInputs);
-            }
+            ImGui::Checkbox("Show Info", &showInfo);
         }
         ImGui::EndGroup();
     } else if (selectedIndex >= 0 && !uiError.empty()) {
