@@ -11,9 +11,9 @@ struct MDF_Params {
     int32_t p04 = 0;
     int32_t p05 = 0;
     float p06 = 0;
-    int32_t p07 = 0;
-    int32_t p08 = 0;
-    int32_t p09 = 0;
+    float p07 = 0;
+    float p08 = 0;
+    float p09 = 0;
     int32_t p10 = 0;
 };
 
@@ -36,7 +36,7 @@ struct MDF_Layer {
 
 
 struct MDF_Data {
-    int32_t height = 0; // delay ?
+    int32_t dataParam = 0;
     std::vector<MDF_Layer> layers;
 };
 

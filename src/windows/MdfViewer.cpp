@@ -9,13 +9,65 @@
 #include "parsers/MDF_Parser.h"
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
 #include "Types.h"
 
 struct LayerInfo {
-    int count;
-    int width;
-    int height;
+    int count = -1;
+    int width = -1;
+    int height = -1;
 };
+
+static std::string mdfParamsString(const MDF_Params& params) {
+    return std::format("[p01]: {} [p02]: {} [p03]: {} [p04]: {} [p05]: {}\n"
+                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [p10]: {}",
+                       params.p01, params.p02, params.p03, params.p04, params.p05,
+                       params.p06, params.p07, params.p08, params.p09, params.p10);
+}
+
+static std::string mdfAnimationString(const MDF_Animation& anim) {
+    std::string params;
+    int paramIndex = 0;
+    for (const auto& param : anim.params) {
+        auto paramInfo = mdfParamsString(param);
+        params += std::format("PARAMS {}\n"
+                              "{}\n",
+                              paramIndex + 1,
+                              paramInfo);
+        ++paramIndex;
+    }
+
+    return std::format("frames: {}\n"
+                       "[a02]: {} [a03]: {} [a04]: {}\n"
+                       "[a05]: {} [a06]: {} [a07]: {}\n"
+                       "{}"
+                       "animationPath: {}\n"
+                       "{}",
+                       anim.framesCount,
+                       anim.a02, anim.a03, anim.a04,
+                       anim.a05, anim.a06, anim.a07,
+                       anim.maskAnimationPath.empty() ? std::string{}
+                                                      : std::format("maskAnimationPath: {}\n", anim.maskAnimationPath),
+                       anim.animationPath,
+                       params);
+}
+
+static std::string mdfInfoString(const MDF_Data& data) {
+    std::string result = std::format("dataParam: {}\n\n", data.dataParam);
+    for (int l = 0; l < data.layers.size(); ++l) {
+        const auto& layer = data.layers[l];
+        result += std::format("LAYER {}\n", l + 1);
+        for (int a = 0; a < layer.animations.size(); ++a) {
+            const auto& animation = layer.animations[a];
+            result += std::format("ANIMATION {}\n", a + 1);
+            result += mdfAnimationString(animation);
+            result += "\n";
+        }
+        result += "\n";
+    }
+    result = StringUtils::trimRight(result);
+    return result;
+}
 
 void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles)
 {
@@ -23,6 +75,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     static int selectedIndex = -1;
     static std::vector<std::vector<BaseAnimation>> animationLayers;
+    static std::string mdfDataInfo;
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
@@ -46,10 +99,12 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 selectedIndex = i;
 
                 uiError.clear();
+                mdfDataInfo.clear();
 
                 auto mdfDataOpt = MDF_Parser::parse(std::format("{}/{}", rootDirectory, mdfFiles[i]), &uiError);
                 if (mdfDataOpt) {
                     auto& mdfData = *mdfDataOpt;
+                    mdfDataInfo = mdfInfoString(mdfData);
 
                     animationLayers.clear();
                     animationLayers.resize(mdfData.layers.size());
@@ -122,6 +177,14 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             }
 
             ImGui::PopStyleVar();
+
+            if (ImGui::IsWindowFocused() &&
+                ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                ImGui::PushFont(NULL, 14.0f);
+
+                ImGui::SetTooltip("%s", mdfDataInfo.c_str());
+                ImGui::PopFont();
+            }
 
             ImGui::EndChild();
 

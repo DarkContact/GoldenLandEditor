@@ -35,7 +35,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     size_t offset = 4;
 
     std::optional<MDF_Data> result = MDF_Data();
-    result->height = readInt32(fileData, offset);
+    result->dataParam = readInt32(fileData, offset);
 
     for (int i = 0; i < MDF_Parser::kMaxLayers; ++i) {
         int32_t layerCount = readInt32(fileData, offset);
@@ -62,9 +62,9 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                     params.p04 = readInt32(fileData, offset);
                     params.p05 = readInt32(fileData, offset);
                     params.p06 = readFloat(fileData, offset);
-                    params.p07 = readInt32(fileData, offset);
-                    params.p08 = readInt32(fileData, offset);
-                    params.p09 = readInt32(fileData, offset);
+                    params.p07 = readFloat(fileData, offset);
+                    params.p08 = readFloat(fileData, offset);
+                    params.p09 = readFloat(fileData, offset);
                     params.p10 = readInt32(fileData, offset);
                     anim.params.push_back(std::move(params));
                 }
