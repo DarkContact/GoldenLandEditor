@@ -1,6 +1,7 @@
 #include "MdfViewer.h"
 
 #include <format>
+#include <array>
 
 #include "SDL3/SDL_render.h"
 #include "imgui.h"
@@ -95,9 +96,13 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
             int csxTextureWidth = 0;
             int csxTextureHeight = 0;
+            std::array<int, 5> entriesPackCount;
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             uint64_t now = SDL_GetTicks();
+
+            int entryIndex = 0;
             for (auto& entry : animationEntries) {
+                entriesPackCount[entryIndex] = entry.size();
                 for (auto& animation : entry) {
                     animation.update(now);
                     ImGui::SetCursorScreenPos(startPos);
@@ -106,6 +111,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     csxTextureWidth = animation.currentTexture()->w;
                     csxTextureHeight = animation.currentTexture()->h;
                 }
+                ++entryIndex;
             }
 
             ImGui::PopStyleVar();
@@ -113,6 +119,22 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::EndChild();
 
             ImGui::Text("%dx%d", csxTextureWidth, csxTextureHeight);
+
+            ImGui::SameLine(0.0f, 12.0f);
+            std::array<char, 80> entries;
+            {
+                int offset = 0;
+                for (int i = 0; i < animationEntries.size(); ++i) {
+                    auto result = std::format_to_n(entries.data() + offset, entries.size() - offset, "L{} = {}, ", i + 1, entriesPackCount[i]);
+                    offset += result.size;
+                }
+                entries[offset - 2] = '\0';
+            }
+
+            std::array<char, 128> entriesMessage;
+            auto resultFmt = std::format_to_n(entriesMessage.data(), entriesMessage.size() - 1, "Animations count: [{}]", entries.data());
+            entriesMessage[std::min((size_t)resultFmt.size, entriesMessage.size() - 1)] = '\0';
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f) ,"%s", entriesMessage.data());
 
             if (ImGui::RadioButton("Transparent", activeButtonIndex == 0)) {
                 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
