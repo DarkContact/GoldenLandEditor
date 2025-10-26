@@ -13,10 +13,16 @@
 #include "utils/DebugLog.h"
 #include "Types.h"
 
-struct LayerInfo {
-    int count = -1;
+struct AnimationInfo {
     int width = -1;
     int height = -1;
+};
+
+struct LayerInfo {
+    int count = -1;
+    int maxWidth = -1;
+    int maxHeight = -1;
+    std::vector<AnimationInfo> animationInfo;
 };
 
 struct MagicAnimation : public BaseAnimation {
@@ -59,14 +65,19 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
                        params);
 }
 
-static std::string mdfInfoString(const MDF_Data& data) {
+static std::string mdfInfoString(const MDF_Data& data, const std::vector<LayerInfo>& layerInfos) {
+    assert(data.layers.size() == layerInfos.size());
+
     std::string result = std::format("endTimeMs: {}\n\n", data.endTimeMs);
     for (int l = 0; l < data.layers.size(); ++l) {
         const auto& layer = data.layers[l];
+        const auto& layerInfo = layerInfos[l];
+        assert(layer.animations.size() == layerInfo.animationInfo.size());
         result += std::format("LAYER {}\n", l + 1);
         for (int a = 0; a < layer.animations.size(); ++a) {
             const auto& animation = layer.animations[a];
-            result += std::format("ANIMATION {}\n", a + 1);
+            const auto& animationInfo = layerInfo.animationInfo[a];
+            result += std::format("ANIMATION {} ({}x{})\n", a + 1, animationInfo.width, animationInfo.height);
             result += mdfAnimationString(animation);
             result += "\n";
         }
@@ -82,6 +93,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     static int selectedIndex = -1;
     static std::vector<std::vector<MagicAnimation>> animationLayers;
+    static std::vector<LayerInfo> layerInfos;
     static std::string mdfDataInfo;
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
@@ -108,19 +120,25 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                 uiError.clear();
                 mdfDataInfo.clear();
+                animationLayers.clear();
+                layerInfos.clear();
 
                 auto mdfDataOpt = MDF_Parser::parse(std::format("{}/{}", rootDirectory, mdfFiles[i]), &uiError);
                 if (mdfDataOpt) {
                     auto& mdfData = *mdfDataOpt;
-                    mdfDataInfo = mdfInfoString(mdfData);
 
-                    animationLayers.clear();
                     animationLayers.resize(mdfData.layers.size());
+                    layerInfos.resize(mdfData.layers.size());
 
                     int layerIndex = 0;
                     for (const auto& layerDesc : mdfData.layers) {
                         auto& animationLayer = animationLayers[layerIndex];
                         animationLayer.resize(layerDesc.animations.size());
+
+                        auto& layerInfo = layerInfos[layerIndex];
+                        layerInfo.count = layerDesc.animations.size();
+
+                        layerInfo.animationInfo.resize(layerInfo.count);
 
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
@@ -142,11 +160,18 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                                 uiError = std::format("Unsupported format! {}", animDesc.animationPath);
                             }
 
+                            layerInfo.animationInfo[animationIndex].width = animation.textures.front()->w;
+                            layerInfo.animationInfo[animationIndex].height = animation.textures.front()->h;
+                            layerInfo.maxWidth = std::max(animation.textures.front()->w, layerInfo.maxWidth);
+                            layerInfo.maxHeight = std::max(animation.textures.front()->h, layerInfo.maxHeight);
+
                             if (!isOk) break;
                             ++animationIndex;
                         }
                         ++layerIndex;
                     }
+
+                     mdfDataInfo = mdfInfoString(mdfData, layerInfos);
                 }
 
                 needResetScroll = true;
@@ -171,7 +196,6 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ
 
-            std::array<LayerInfo, 5> layerInfos;
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             uint64_t now = SDL_GetTicks();
 
@@ -179,9 +203,6 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             int maxTextureXOffset = 0;
             int layerIndex = 0;
             for (auto& layer : animationLayers) {
-                auto& layerInfo = layerInfos[layerIndex];
-                layerInfo.count = layer.size();
-
                 for (auto& animation : layer) {
                     if (animation.textures.empty()) continue;
 
@@ -195,9 +216,6 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                     maxTextureW = std::max(animation.currentTexture()->w, maxTextureW);
                     //maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
-
-                    layerInfo.width = std::max(animation.textures.front()->w, layerInfo.width);
-                    layerInfo.height = std::max(animation.textures.front()->h, layerInfo.height);
                 }
                 ++layerIndex;
             }
@@ -221,7 +239,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 int offset = 0;
                 for (int i = 0; i < animationLayers.size(); ++i) {
                     auto result = std::format_to_n(entries.data() + offset, entries.size() - offset, "L{} = {} ({}x{}), ", i + 1,
-                                                   layerInfos[i].count, layerInfos[i].width, layerInfos[i].height);
+                                                   layerInfos[i].count, layerInfos[i].maxWidth, layerInfos[i].maxHeight);
                     offset += result.size;
                 }
                 entries[offset - 2] = '\0';
@@ -264,6 +282,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     if (!showWindow) {
         selectedIndex = -1;
         animationLayers.clear();
+        layerInfos.clear();
         uiError.clear();
         textFilter.Clear();
     }
