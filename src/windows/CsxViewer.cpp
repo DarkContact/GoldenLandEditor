@@ -60,7 +60,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             }
 
             ImVec2 originalSpacing = ImGui::GetStyle().ItemSpacing;
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(originalSpacing.x, 0)); // убрать вертикальный отступ (когда отображаем >= 2 текстуры подряд)
 
             int csxTextureWidth = 0;
             int csxTextureHeight = 0;
