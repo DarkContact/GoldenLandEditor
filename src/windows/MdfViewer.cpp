@@ -208,7 +208,18 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             int centerW = maxTextureW / 2;
             int centerH = maxTextureH / 2;
 
-            int layerIndex = 0;
+            // Коррекция отображения чтобы те текстуры которые ушли за {0,0} можно было показать полностью
+            int minX = 0;
+            int minY = 0;
+            for (auto& layer : animationLayers) {
+                for (auto& animation : layer) {
+                    int animPosX = centerW - (animation.currentTexture()->w / 2) + animation.xOffset;
+                    int animPosY = centerH - (animation.currentTexture()->h / 2) + animation.yOffset;
+                    minX = std::min(animPosX, minX);
+                    minY = std::min(animPosY, minY);
+                }
+            }
+
             for (auto& layer : animationLayers) {
                 for (auto& animation : layer) {
                     assert(!animation.textures.empty());
@@ -216,7 +227,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     animation.update(now);
                     int animPosX = centerW - (animation.currentTexture()->w / 2);
                     int animPosY = centerH - (animation.currentTexture()->h / 2);
-                    const ImVec2 animationPos{startPos.x + animPosX + animation.xOffset, startPos.y + animPosY + animation.yOffset};
+                    const ImVec2 animationPos{startPos.x + animPosX + animation.xOffset - minX, startPos.y + animPosY + animation.yOffset - minY};
                     ImGui::SetCursorScreenPos(animationPos);
 
                     SDL_SetTextureBlendMode(animation.currentTexture().get(), animation.isBlendModeAdd ? SDL_BLENDMODE_ADD : SDL_BLENDMODE_BLEND);
@@ -225,12 +236,11 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                                        ImVec2(0, 0), ImVec2(1, 1), bgColor);
                     maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
                 }
-                ++layerIndex;
             }
 
             if (showCenter) {
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
-                drawList->AddCircleFilled({startPos.x + centerW, startPos.y + centerH}, 2.0f, IM_COL32(255, 0, 0, 255));
+                drawList->AddCircleFilled({startPos.x + centerW - minX, startPos.y + centerH - minY}, 2.0f, IM_COL32(255, 0, 0, 255));
             }
 
             if (showInfo) {
