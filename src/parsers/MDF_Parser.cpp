@@ -38,10 +38,11 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     result->endTimeMs = readInt32(fileData, offset);
 
     for (int i = 0; i < MDF_Parser::kMaxLayers; ++i) {
-        int32_t layerCount = readInt32(fileData, offset);
-        if (layerCount > 0) {
+        int32_t animationCount = readInt32(fileData, offset);
+        if (animationCount > 0) {
             MDF_Layer layer;
-            for (int i = 0; i < layerCount; ++i) {
+            layer.animations.reserve(animationCount);
+            for (int i = 0; i < animationCount; ++i) {
                 MDF_Animation anim;
                 anim.framesCount = readInt32(fileData, offset);
                 anim.xOffset = readInt32(fileData, offset);
@@ -54,6 +55,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                 anim.animationPath = StringUtils::readStringWithLength(fileData, offset);
 
                 int32_t paramsCount = readInt32(fileData, offset);
+                anim.params.reserve(paramsCount);
                 for (int p = 0; p < paramsCount; ++p) {
                     MDF_Params params;
                     params.p01 = readInt32(fileData, offset);
