@@ -41,7 +41,7 @@ struct BaseAnimation {
         lastUpdateTimeMs = 0;
     }
 
-private:
+protected:
     void nextFrame() {
         ++currentFrame;
         if (currentFrame == textures.size()) {

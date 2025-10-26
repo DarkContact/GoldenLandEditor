@@ -35,7 +35,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     size_t offset = 4;
 
     std::optional<MDF_Data> result = MDF_Data();
-    result->endTimeMs = readInt32(fileData, offset);
+    result->totalDurationMs = readInt32(fileData, offset);
 
     for (int i = 0; i < MDF_Parser::kMaxLayers; ++i) {
         int32_t animationCount = readInt32(fileData, offset);

@@ -36,7 +36,7 @@ struct MDF_Layer {
 
 
 struct MDF_Data {
-    int32_t endTimeMs = 0;
+    int32_t totalDurationMs = 0;
     std::vector<MDF_Layer> layers;
 };
 

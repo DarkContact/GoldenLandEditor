@@ -25,7 +25,37 @@ struct LayerInfo {
     std::vector<AnimationInfo> animationInfo;
 };
 
-struct MagicAnimation : public BaseAnimation {
+struct TimedAnimation : public BaseAnimation {
+    uint64_t startTimeMs = 0;
+    uint64_t endTimeMs = 0;
+    uint64_t totalDurationMs = 0;
+
+    bool isActive() const { return active; }
+
+    void updateWithTiming(uint64_t timeMs = SDL_GetTicks()) {
+        uint64_t cycleTime = timeMs % totalDurationMs;
+        bool shouldBeActive = (cycleTime >= startTimeMs && cycleTime <= endTimeMs);
+
+        if (shouldBeActive) {
+            if (!active) {
+                lastUpdateTimeMs = timeMs; // сброс таймера
+                active = true;
+            }
+             BaseAnimation::update(timeMs);
+        } else {
+            if (active) {
+                stop();
+                active = false;
+            }
+        }
+    }
+
+private:
+    bool active = false;
+};
+
+
+struct MagicAnimation : public TimedAnimation {
     int xOffset;
     int yOffset;
     int32_t flags;
@@ -86,7 +116,7 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
 static std::string mdfInfoString(const MDF_Data& data, const std::vector<LayerInfo>& layerInfos) {
     assert(data.layers.size() == layerInfos.size());
 
-    std::string result = std::format("endTimeMs: {}\n\n", data.endTimeMs);
+    std::string result = std::format("totalDurationMs: {}\n\n", data.totalDurationMs);
     for (int l = 0; l < data.layers.size(); ++l) {
         const auto& layer = data.layers[l];
         const auto& layerInfo = layerInfos[l];
@@ -162,6 +192,10 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
                             auto& animation = animationLayer[animationIndex];
+                            animation.totalDurationMs = mdfData.totalDurationMs;
+                            animation.startTimeMs = animDesc.startTimeMs;
+                            animation.endTimeMs = animDesc.endTimeMs;
+
                             animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
@@ -242,7 +276,9 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 for (auto& animation : layer) {
                     assert(!animation.textures.empty());
 
-                    animation.update(now);
+                    animation.updateWithTiming(now);
+                    if (!animation.isActive()) continue;
+
                     int animPosX = centerW - (animation.currentTexture()->w / 2);
                     int animPosY = centerH - (animation.currentTexture()->h / 2);
                     const ImVec2 animationPos{startPos.x + animPosX + animation.xOffset - minX, startPos.y + animPosY + animation.yOffset - minY};
