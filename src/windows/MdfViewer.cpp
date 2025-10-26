@@ -26,7 +26,7 @@ struct MagicAnimation : public BaseAnimation {
 };
 
 static std::string mdfParamsString(const MDF_Params& params) {
-    return std::format("[p01]: {} [p02]: {:.1f} [flags]: {} [nFrame]: {} [p05]: {}\n"
+    return std::format("[p01]: {} [p02]: {} [flags]: {} [nFrame]: {} [p05]: {}\n"
                        "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
                        params.p01, params.p02, params.flags, params.nFrame, params.p05,
                        params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
@@ -252,7 +252,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 activeButtonIndex = 3;
             }
             ImGui::SameLine();
-            ImGui::Checkbox("Show Info", &showInfo);
+            ImGui::Checkbox("Info", &showInfo);
         }
         ImGui::EndGroup();
     } else if (selectedIndex >= 0 && !uiError.empty()) {

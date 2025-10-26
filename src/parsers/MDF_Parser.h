@@ -5,8 +5,8 @@
 #include <vector>
 
 struct MDF_Params {
-    int32_t p01 = 0;
-    float p02 = 0;
+    int32_t p01 = 0; // Во всех файлах 00 00 00 01
+    int32_t p02 = 0; // Во всех файлах 00 00 00 01, кроме shad_shadowwarrior (Там есть значение CC CC CC CC)
     int32_t flags = 0;
     int32_t nFrame = 0;
     int32_t p05 = 0;

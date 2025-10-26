@@ -56,8 +56,8 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                 int32_t paramsCount = readInt32(fileData, offset);
                 for (int p = 0; p < paramsCount; ++p) {
                     MDF_Params params;
-                    params.p01 = readInt32(fileData, offset); // Вероятнее всего тоже float
-                    params.p02 = readFloat(fileData, offset);
+                    params.p01 = readInt32(fileData, offset);
+                    params.p02 = readInt32(fileData, offset);
                     params.flags = readInt32(fileData, offset);
                     params.nFrame = readInt32(fileData, offset);
                     params.p05 = readInt32(fileData, offset);
