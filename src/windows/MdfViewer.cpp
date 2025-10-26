@@ -28,7 +28,25 @@ struct LayerInfo {
 struct MagicAnimation : public BaseAnimation {
     int xOffset;
     int yOffset;
-    bool isBlendModeAdd;
+    int32_t flags;
+
+    /*SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA,
+                                              SDL_BLENDFACTOR_ONE,
+                                              SDL_BLENDOPERATION_ADD,
+                                              SDL_BLENDFACTOR_ZERO,
+                                              SDL_BLENDFACTOR_ONE,
+                                              SDL_BLENDOPERATION_ADD)*/
+    Uint32 blendMode() {
+        if (flags == 128) return SDL_BLENDMODE_ADD;
+        if (flags == 64) return SDL_BLENDMODE_ADD;
+        return SDL_BLENDMODE_BLEND;
+    }
+
+    Uint8 alpha() {
+        if (flags == 128) return 255;
+        if (flags == 64) return 64;
+        return 255;
+    }
 };
 
 static std::string mdfParamsString(const MDF_Params& params) {
@@ -147,7 +165,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
-                            animation.isBlendModeAdd = animDesc.params.front().flags == 128;
+                            animation.flags = animDesc.params.front().flags;
 
                             bool isOk = false;
                             if (animDesc.animationPath.ends_with(".bmp")) {
@@ -230,10 +248,11 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     const ImVec2 animationPos{startPos.x + animPosX + animation.xOffset - minX, startPos.y + animPosY + animation.yOffset - minY};
                     ImGui::SetCursorScreenPos(animationPos);
 
-                    SDL_SetTextureBlendMode(animation.currentTexture().get(), animation.isBlendModeAdd ? SDL_BLENDMODE_ADD : SDL_BLENDMODE_BLEND);
+                    SDL_SetTextureBlendMode(animation.currentTexture().get(), animation.blendMode());
+                    ImVec4 tintColor{1, 1, 1, animation.alpha() / 255.0f};
                     ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
                                        ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
-                                       ImVec2(0, 0), ImVec2(1, 1), bgColor);
+                                       ImVec2(0, 0), ImVec2(1, 1), bgColor, tintColor);
                     maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
                 }
             }
