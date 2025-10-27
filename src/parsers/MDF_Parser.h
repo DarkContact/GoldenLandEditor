@@ -10,7 +10,7 @@ struct MDF_Params {
     int32_t flags = 0;
     int32_t nFrame = 0;
     int32_t p05 = 0;
-    float p06 = 0;
+    float delayMs = 0;
     float p07 = 0;
     float p08 = 0;
     float p09 = 0;

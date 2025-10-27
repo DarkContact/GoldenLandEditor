@@ -83,6 +83,7 @@ struct MagicAnimation : public TimedAnimation {
         if (flags == 256) return SDL_BLENDMODE_ADD;
         if (flags == 128) return SDL_BLENDMODE_ADD;
         if (flags == 64) return SDL_BLENDMODE_ADD;
+        if (flags == 16) return SDL_BLENDMODE_BLEND;
         return SDL_BLENDMODE_BLEND;
     }
 
@@ -90,15 +91,16 @@ struct MagicAnimation : public TimedAnimation {
         if (flags == 256) return 255;
         if (flags == 128) return 255;
         if (flags == 64) return 64;
+        if (flags == 16) return 128;
         return 255;
     }
 };
 
 static std::string mdfParamsString(const MDF_Params& params) {
     return std::format("[p01]: {} [p02]: {} [flags]: {} [nFrame]: {} [p05]: {}\n"
-                       "[p06]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
+                       "[delay]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
                        params.p01, params.p02, params.flags, params.nFrame, params.p05,
-                       params.p06, params.p07, params.p08, params.p09, params.animationTimeMs);
+                       params.delayMs, params.p07, params.p08, params.p09, params.animationTimeMs);
 }
 
 static std::string mdfAnimationString(const MDF_Animation& anim) {
@@ -211,7 +213,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.startTimeMs = animDesc.startTimeMs;
                             animation.endTimeMs = animDesc.endTimeMs;
 
-                            animation.delayMs = (animDesc.endTimeMs - animDesc.startTimeMs) / animDesc.framesCount;
+                            animation.delayMs = animDesc.params.front().delayMs;
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
                             animation.flags = animDesc.params.front().flags;
