@@ -25,45 +25,49 @@ struct LayerInfo {
     std::vector<AnimationInfo> animationInfo;
 };
 
-struct TimedAnimation : public BaseAnimation {
+struct TimedAnimation {
+
+    const Texture& currentTexture() const {
+        assert(currentTimeMs >= 0 && currentTimeMs <= totalDurationMs);
+        int correctedTime = currentTimeMs - startTimeMs;
+        int currentFrame = correctedTime / delayMs;
+
+        if (currentFrame >= textures.size()) {
+            currentFrame = textures.size() - 1;
+        }
+        return textures[currentFrame];
+    }
+
+    bool isActive() const { return active; }
+
+    void update(uint64_t currentTimeMs) {
+        assert(totalDurationMs > 0);
+
+        this->currentTimeMs = currentTimeMs;
+        active = (currentTimeMs >= startTimeMs && currentTimeMs <= endTimeMs);
+    }
+
+    void setTimes(float delayMs, uint64_t startTimeMs, uint64_t endTimeMs, uint64_t totalDurationMs) {
+        this->delayMs = delayMs;
+        this->startTimeMs = startTimeMs;
+        this->endTimeMs = endTimeMs;
+        this->totalDurationMs = totalDurationMs;
+    }
+
+    uint64_t getTotalDurationMs() const {
+        return totalDurationMs;
+    }
+
+public:
+    std::vector<Texture> textures;
+
+private:
+    float delayMs = 0;
     uint64_t startTimeMs = 0;
     uint64_t endTimeMs = 0;
     uint64_t totalDurationMs = 0;
 
-    bool isActive() const { return active; }
-
-    void update(uint64_t timeMs = SDL_GetTicks()) {
-        assert(totalDurationMs > 0);
-
-        if (animationStartTimeMs == 0) {
-            animationStartTimeMs = timeMs;
-        }
-
-        uint64_t elapsed = (timeMs - animationStartTimeMs) % totalDurationMs;
-        bool shouldBeActive = (elapsed >= startTimeMs && elapsed <= endTimeMs);
-
-        if (shouldBeActive) {
-            if (!active) {
-                lastUpdateTimeMs = timeMs; // сброс таймера
-                active = true;
-            }
-            BaseAnimation::update(timeMs);
-        } else {
-            if (active) {
-                BaseAnimation::stop();
-                active = false;
-            }
-        }
-    }
-
-    void stop() {
-        animationStartTimeMs = 0;
-        BaseAnimation::stop();
-        active = false;
-    }
-
-private:
-    uint64_t animationStartTimeMs = 0;
+    uint64_t currentTimeMs = 0;
     bool active = false;
 };
 
@@ -165,6 +169,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static int activeButtonIndex = 0;
     static bool showInfo = false;
     static bool showCenter = false;
+    static bool playAnimation = true;
+    static int animationCurrentTime = 0;
     static ImGuiTextFilter textFilter;
 
     bool needResetScroll = false;
@@ -184,6 +190,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             {
                 selectedIndex = i;
 
+                animationCurrentTime = 0;
                 uiError.clear();
                 mdfDataInfo.clear();
                 animationLayers.clear();
@@ -209,11 +216,11 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         int animationIndex = 0;
                         for (const auto& animDesc : layerDesc.animations) {
                             auto& animation = animationLayer[animationIndex];
-                            animation.totalDurationMs = mdfData.totalDurationMs;
-                            animation.startTimeMs = animDesc.startTimeMs;
-                            animation.endTimeMs = animDesc.endTimeMs;
+                            animation.setTimes(animDesc.params.front().delayMs,
+                                               animDesc.startTimeMs,
+                                               animDesc.endTimeMs,
+                                               mdfData.totalDurationMs);
 
-                            animation.delayMs = animDesc.params.front().delayMs;
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
                             animation.flags = animDesc.params.front().flags;
@@ -256,17 +263,15 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     ImGui::SameLine();
 
     // Right
+    int animationMaxTime = 0;
     if (!animationLayers.empty() && uiError.empty()) {
         ImGui::BeginGroup();
         {
-            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 3), 0, ImGuiWindowFlags_HorizontalScrollbar);
             if (needResetScroll) {
                 ImGui::SetScrollX(0.0f);
                 ImGui::SetScrollY(0.0f);
             }
-
-            ImVec2 startPos = ImGui::GetCursorScreenPos();
-            uint64_t now = SDL_GetTicks();
 
             int maxTextureW = 0;
             int maxTextureH = 0;
@@ -291,11 +296,13 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 }
             }
 
+            ImVec2 startPos = ImGui::GetCursorScreenPos();
             for (auto& layer : animationLayers) {
                 for (auto& animation : layer) {
                     assert(!animation.textures.empty());
+                    animationMaxTime = animation.getTotalDurationMs();
 
-                    animation.update(now);
+                    animation.update(animationCurrentTime);
                     if (animation.isActive()) {
                         int animPosX = centerW - (animation.currentTexture()->w / 2);
                         int animPosY = centerH - (animation.currentTexture()->h / 2);
@@ -326,6 +333,14 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             }
 
             ImGui::EndChild();
+
+            ImGui::Checkbox("Play", &playAnimation);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(400);
+
+            ImGui::BeginDisabled(playAnimation);
+            ImGui::SliderInt("Time", &animationCurrentTime, 0, animationMaxTime);
+            ImGui::EndDisabled();
 
             // Информация о слоях
             {
@@ -375,8 +390,16 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     ImGui::End();
 
+    if (playAnimation) {
+        animationCurrentTime += ImGui::GetIO().DeltaTime * 1000;
+        if (animationCurrentTime > animationMaxTime) {
+            animationCurrentTime -= animationMaxTime;
+        }
+    }
+
     if (!showWindow) {
         selectedIndex = -1;
+        animationCurrentTime = 0;
         animationLayers.clear();
         layerInfos.clear();
         uiError.clear();
