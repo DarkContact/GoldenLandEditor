@@ -77,14 +77,36 @@ struct MagicAnimation : public TimedAnimation {
     int yOffset;
     int32_t flags;
 
-    /*SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA,
-                                              SDL_BLENDFACTOR_ONE,
-                                              SDL_BLENDOPERATION_ADD,
-                                              SDL_BLENDFACTOR_ZERO,
-                                              SDL_BLENDFACTOR_ONE,
-                                              SDL_BLENDOPERATION_ADD)*/
     Uint32 blendMode() {
-        if (flags == 256) return SDL_BLENDMODE_ADD;
+        // SDL_BlendMode defaultAdd = SDL_ComposeCustomBlendMode(
+        //     SDL_BLENDFACTOR_SRC_ALPHA,  // srcRGB * srcA
+        //     SDL_BLENDFACTOR_ONE,        // + dstRGB
+        //     SDL_BLENDOPERATION_ADD,     // сложение
+        //     SDL_BLENDFACTOR_ZERO,       // srcA не добавляется
+        //     SDL_BLENDFACTOR_ONE,        // dstA остаётся
+        //     SDL_BLENDOPERATION_ADD      // dstA + 0 = dstA
+        //     );
+        // assert(defaultAdd == SDL_BLENDMODE_ADD);
+
+        SDL_BlendMode invertBlend = SDL_ComposeCustomBlendMode(
+            SDL_BLENDFACTOR_SRC_ALPHA,
+            SDL_BLENDFACTOR_ONE,
+            SDL_BLENDOPERATION_REV_SUBTRACT,
+            SDL_BLENDFACTOR_ZERO,
+            SDL_BLENDFACTOR_ONE,
+            SDL_BLENDOPERATION_ADD);
+
+        if (flags == 256) {
+            // elem_stoneheadshot
+            // gods_earth_shaking
+            // gods_roy_insect
+            // gods_tucha_moshki
+            // shad_shadowcower
+            // shad_tenewoerasseyanie
+            // shad_tenewoerasseyanie2
+            // vis_dark
+            return invertBlend;
+        }
         if (flags == 128) return SDL_BLENDMODE_ADD;
         if (flags == 64) return SDL_BLENDMODE_ADD;
         if (flags == 16) return SDL_BLENDMODE_BLEND;
@@ -394,6 +416,10 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         animationCurrentTime += ImGui::GetIO().DeltaTime * 1000;
         if (animationCurrentTime > animationMaxTime) {
             animationCurrentTime -= animationMaxTime;
+
+            if (animationCurrentTime < 0 || animationCurrentTime > animationMaxTime) {
+                animationCurrentTime = 0;
+            }
         }
     }
 
