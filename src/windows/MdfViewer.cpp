@@ -32,25 +32,38 @@ struct TimedAnimation : public BaseAnimation {
 
     bool isActive() const { return active; }
 
-    void updateWithTiming(uint64_t timeMs = SDL_GetTicks()) {
-        uint64_t cycleTime = timeMs % totalDurationMs;
-        bool shouldBeActive = (cycleTime >= startTimeMs && cycleTime <= endTimeMs);
+    void update(uint64_t timeMs = SDL_GetTicks()) {
+        assert(totalDurationMs > 0);
+
+        if (animationStartTimeMs == 0) {
+            animationStartTimeMs = timeMs;
+        }
+
+        uint64_t elapsed = (timeMs - animationStartTimeMs) % totalDurationMs;
+        bool shouldBeActive = (elapsed >= startTimeMs && elapsed <= endTimeMs);
 
         if (shouldBeActive) {
             if (!active) {
                 lastUpdateTimeMs = timeMs; // сброс таймера
                 active = true;
             }
-             BaseAnimation::update(timeMs);
+            BaseAnimation::update(timeMs);
         } else {
             if (active) {
-                stop();
+                BaseAnimation::stop();
                 active = false;
             }
         }
     }
 
+    void stop() {
+        animationStartTimeMs = 0;
+        BaseAnimation::stop();
+        active = false;
+    }
+
 private:
+    uint64_t animationStartTimeMs = 0;
     bool active = false;
 };
 
@@ -207,7 +220,9 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             if (animDesc.animationPath.ends_with(".bmp")) {
                                 SDL_Color transparentColor = {255, 0, 255, 255};
                                 isOk = TextureLoader::loadCountAnimationFromBmpFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
-                                                                                    animDesc.framesCount, renderer, animation.textures, &transparentColor, &uiError);
+                                                                                    animDesc.framesCount, renderer, animation.textures,
+                                                                                    (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
+                                                                                    &uiError);
                             } else if (animDesc.animationPath.ends_with(".csx")) {
                                 isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
                                                                                     animDesc.framesCount, renderer, animation.textures, &uiError);
@@ -278,7 +293,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 for (auto& animation : layer) {
                     assert(!animation.textures.empty());
 
-                    animation.updateWithTiming(now);
+                    animation.update(now);
                     if (animation.isActive()) {
                         int animPosX = centerW - (animation.currentTexture()->w / 2);
                         int animPosY = centerH - (animation.currentTexture()->h / 2);
