@@ -149,6 +149,33 @@ bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Rende
     return true;
 }
 
+bool TextureLoader::saveCsxAsBmpFile(std::string_view fileNameCsx, std::string_view fileNameBmp, SDL_Renderer* renderer, std::string* error)
+{
+    Tracy_ZoneScoped;
+
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileNameCsx, error);
+    if (fileData.empty())
+        return false;
+
+    CSX_Parser csxParser(fileData);
+    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
+        csxParser.parse(false, error),
+        SDL_DestroySurface
+    };
+
+    if (!surfacePtr)
+        return false;
+
+    bool isOk = SDL_SaveBMP(surfacePtr.get(), fileNameBmp.data());
+    if (!isOk) {
+        if (error)
+            *error = SDL_GetError();
+        return false;
+    }
+
+    return true;
+}
+
 bool TextureLoader::loadHeightAnimationFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;

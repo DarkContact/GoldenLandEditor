@@ -2,12 +2,20 @@
 
 #include <format>
 
+#include "SDL3/SDL_dialog.h"
 #include "SDL3/SDL_render.h"
 #include "imgui.h"
 
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
+#include "utils/DebugLog.h"
 #include "Texture.h"
+
+struct SaveDialogData {
+    std::string csxPath;
+    SDL_Renderer* renderer;
+};
 
 void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& csxFiles)
 {
@@ -19,6 +27,9 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     static int activeButtonIndex = 0;
     static ImGuiTextFilter textFilter;
+    static SaveDialogData saveDialogData;
+
+    saveDialogData.renderer = renderer;
 
     bool needResetScroll = false;
 
@@ -38,7 +49,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     selectedIndex = i;
 
                     csxTextures.clear();
-                    TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]).c_str(), renderer, csxTextures, &csxTextureError);
+                    TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]), renderer, csxTextures, &csxTextureError);
 
                     needResetScroll = true;
                 }
@@ -75,6 +86,34 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::EndChild();
 
             ImGui::Text("%dx%d", csxTextureWidth, csxTextureHeight);
+            ImGui::SameLine();
+
+            if (ImGui::Button("Save as BMP")) {
+                std::string_view filename = StringUtils::filename(csxFiles[selectedIndex]);
+                filename.remove_suffix(4);
+                std::string savePath = std::format("{}/{}.bmp", rootDirectory, filename);
+
+                saveDialogData.csxPath = std::format("{}/{}", rootDirectory, csxFiles[selectedIndex]);
+                SDL_ShowSaveFileDialog([] (void* userdata, const char* const* filelist, int filter) {
+                    if (!filelist) {
+                        LogFmt("Folder dialog error: {}", SDL_GetError());
+                        return;
+                    } else if (!*filelist) {
+                        Log("Dialog was canceled");
+                        // Dialog was canceled.
+                        return;
+                    } else if ((*filelist)[0] == '\0') {
+                        Log("Filelist empty");
+                        return;
+                    }
+
+                    std::string_view bmpPath(*filelist);
+                    std::string error;
+                    if (!TextureLoader::saveCsxAsBmpFile(saveDialogData.csxPath, bmpPath, saveDialogData.renderer, &error)) {
+                        LogFmt("TextureLoader::saveCsxAsBmpFile error: {}", error);
+                    }
+                }, nullptr, SDL_GetRenderWindow(renderer), NULL, 0, savePath.c_str());
+            }
 
             if (ImGui::RadioButton("Transparent", activeButtonIndex == 0)) {
                 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);

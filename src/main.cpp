@@ -197,13 +197,15 @@ int main(int, char**)
                     // TODO: Сделать модальное окно с отображением текущей директории
                     SDL_ShowOpenFolderDialog([] (void* userdata, const char* const* filelist, int filter) {
                         if (!filelist) {
-                            SDL_Log("Folder dialog error: %s", SDL_GetError());
+                            LogFmt("Folder dialog error: {}", SDL_GetError());
                             return;
                         } else if (!*filelist) {
+                            Log("Dialog was canceled");
                             // Dialog was canceled.
                             return;
                         } else if ((*filelist)[0] == '\0') {
                             // Выбрана всякая чушь из панели управления
+                            Log("Filelist empty");
                             return;
                         }
 
