@@ -48,7 +48,7 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                 anim.xOffset = readInt32(fileData, offset);
                 anim.yOffset = readInt32(fileData, offset);
                 anim.a04 = readInt32(fileData, offset);
-                anim.a05 = readInt32(fileData, offset);
+                anim.isReverse = readInt32(fileData, offset);
                 anim.startTimeMs = readInt32(fileData, offset);
                 anim.endTimeMs = readInt32(fileData, offset);
                 anim.maskAnimationPath = StringUtils::readStringWithLength(fileData, offset);

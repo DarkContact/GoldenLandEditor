@@ -22,7 +22,7 @@ struct MDF_Animation {
     int32_t xOffset = 0;
     int32_t yOffset = 0;
     int32_t a04 = 0;
-    int32_t a05 = 0;
+    int32_t isReverse = 0;
     int32_t startTimeMs = 0;
     int32_t endTimeMs = 0;
     std::string maskAnimationPath;

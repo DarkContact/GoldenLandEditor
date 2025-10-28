@@ -35,6 +35,18 @@ struct TimedAnimation {
         if (currentFrame >= textures.size()) {
             currentFrame = textures.size() - 1;
         }
+
+        // dark_boiling_blood
+        // dark_sendlife
+        // elem_oledinenie
+        if (isReverse) {
+            currentFrame = textures.size() - 1 - currentFrame;
+
+            if (currentFrame < 0) {
+                currentFrame = 0;
+            }
+        }
+
         return textures[currentFrame];
     }
 
@@ -47,11 +59,12 @@ struct TimedAnimation {
         active = (currentTimeMs >= startTimeMs && currentTimeMs < endTimeMs);
     }
 
-    void setTimes(float delayMs, uint64_t startTimeMs, uint64_t endTimeMs, uint64_t totalDurationMs) {
+    void setTimes(float delayMs, uint64_t startTimeMs, uint64_t endTimeMs, uint64_t totalDurationMs, bool isReverse) {
         this->delayMs = delayMs;
         this->startTimeMs = startTimeMs;
         this->endTimeMs = endTimeMs;
         this->totalDurationMs = totalDurationMs;
+        this->isReverse = isReverse;
     }
 
     uint64_t getTotalDurationMs() const {
@@ -66,6 +79,7 @@ private:
     uint64_t startTimeMs = 0;
     uint64_t endTimeMs = 0;
     uint64_t totalDurationMs = 0;
+    bool isReverse = false;
 
     uint64_t currentTimeMs = 0;
     bool active = false;
@@ -143,13 +157,13 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
 
     return std::format("frames: {}\n"
                        "[xOff]: {} [yOff]: {} [a04]: {}\n"
-                       "[a05]: {} [startMs]: {} [endMs]: {}\n"
+                       "[reverse]: {} [startMs]: {} [endMs]: {}\n"
                        "{}"
                        "animationPath: {}\n"
                        "{}",
                        anim.framesCount,
                        anim.xOffset, anim.yOffset, anim.a04,
-                       anim.a05, anim.startTimeMs, anim.endTimeMs,
+                       anim.isReverse, anim.startTimeMs, anim.endTimeMs,
                        anim.maskAnimationPath.empty() ? std::string{}
                                                       : std::format("maskAnimationPath: {}\n", anim.maskAnimationPath),
                        anim.animationPath,
@@ -241,7 +255,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.setTimes(animDesc.params.front().delayMs,
                                                animDesc.startTimeMs,
                                                animDesc.endTimeMs,
-                                               mdfData.totalDurationMs);
+                                               mdfData.totalDurationMs,
+                                               animDesc.isReverse == 1);
 
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
@@ -272,7 +287,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         ++layerIndex;
                     }
 
-                     mdfDataInfo = mdfInfoString(mdfData, layerInfos);
+                    mdfDataInfo = mdfInfoString(mdfData, layerInfos);
                 }
 
                 needResetScroll = true;
