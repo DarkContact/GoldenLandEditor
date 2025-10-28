@@ -28,7 +28,7 @@ struct LayerInfo {
 struct TimedAnimation {
 
     const Texture& currentTexture() const {
-        assert(currentTimeMs >= 0 && currentTimeMs <= totalDurationMs);
+        assert(currentTimeMs >= 0 && currentTimeMs < totalDurationMs);
         int correctedTime = currentTimeMs - startTimeMs;
         int currentFrame = correctedTime / delayMs;
 
@@ -44,7 +44,7 @@ struct TimedAnimation {
         assert(totalDurationMs > 0);
 
         this->currentTimeMs = currentTimeMs;
-        active = (currentTimeMs >= startTimeMs && currentTimeMs <= endTimeMs);
+        active = (currentTimeMs >= startTimeMs && currentTimeMs < endTimeMs);
     }
 
     void setTimes(float delayMs, uint64_t startTimeMs, uint64_t endTimeMs, uint64_t totalDurationMs) {
@@ -362,7 +362,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::SetNextItemWidth(400);
 
             ImGui::BeginDisabled(playAnimation);
-            ImGui::SliderInt("Time", &animationCurrentTime, 0, animationMaxTime, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderInt("Time", &animationCurrentTime, 0, animationMaxTime - 1, "%d ms", ImGuiSliderFlags_AlwaysClamp);
             ImGui::EndDisabled();
 
             // Информация о слоях
@@ -415,10 +415,10 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     if (playAnimation) {
         animationCurrentTime += ImGui::GetIO().DeltaTime * 1000;
-        if (animationCurrentTime > animationMaxTime) {
+        if (animationCurrentTime >= animationMaxTime) {
             animationCurrentTime -= animationMaxTime;
 
-            if (animationCurrentTime < 0 || animationCurrentTime > animationMaxTime) {
+            if (animationCurrentTime < 0 || animationCurrentTime >= animationMaxTime) {
                 animationCurrentTime = 0;
             }
         }
