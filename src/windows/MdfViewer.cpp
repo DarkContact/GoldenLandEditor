@@ -311,8 +311,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             int minY = 0;
             for (auto& layer : animationLayers) {
                 for (auto& animation : layer) {
-                    int animPosX = centerW - (animation.currentTexture()->w / 2) + animation.xOffset;
-                    int animPosY = centerH - (animation.currentTexture()->h / 2) + animation.yOffset;
+                    int animPosX = centerW - (animation.textures.front()->w / 2) + animation.xOffset;
+                    int animPosY = centerH - (animation.textures.front()->h / 2) + animation.yOffset;
                     minX = std::min(animPosX, minX);
                     minY = std::min(animPosY, minY);
                 }
@@ -326,15 +326,16 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                     animation.update(animationCurrentTime);
                     if (animation.isActive()) {
-                        int animPosX = centerW - (animation.currentTexture()->w / 2);
-                        int animPosY = centerH - (animation.currentTexture()->h / 2);
+                        const Texture& currentTexture = animation.currentTexture();
+                        int animPosX = centerW - (currentTexture->w / 2);
+                        int animPosY = centerH - (currentTexture->h / 2);
                         const ImVec2 animationPos{startPos.x + animPosX + animation.xOffset - minX, startPos.y + animPosY + animation.yOffset - minY};
                         ImGui::SetCursorScreenPos(animationPos);
 
-                        SDL_SetTextureBlendMode(animation.currentTexture().get(), animation.blendMode());
+                        SDL_SetTextureBlendMode(currentTexture.get(), animation.blendMode());
                         ImVec4 tintColor{1, 1, 1, animation.alpha() / 255.0f};
-                        ImGui::ImageWithBg((ImTextureID)animation.currentTexture().get(),
-                                           ImVec2(animation.currentTexture()->w, animation.currentTexture()->h),
+                        ImGui::ImageWithBg((ImTextureID)currentTexture.get(),
+                                           ImVec2(currentTexture->w, currentTexture->h),
                                            ImVec2(0, 0), ImVec2(1, 1), bgColor, tintColor);
                     }
                     maxTextureXOffset = std::max(animation.xOffset, maxTextureXOffset);
@@ -361,7 +362,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::SetNextItemWidth(400);
 
             ImGui::BeginDisabled(playAnimation);
-            ImGui::SliderInt("Time", &animationCurrentTime, 0, animationMaxTime);
+            ImGui::SliderInt("Time", &animationCurrentTime, 0, animationMaxTime, "%d ms", ImGuiSliderFlags_AlwaysClamp);
             ImGui::EndDisabled();
 
             // Информация о слоях
