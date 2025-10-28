@@ -119,19 +119,21 @@ struct MagicAnimation : public TimedAnimation {
             // shad_tenewoerasseyanie
             // shad_tenewoerasseyanie2
             // vis_dark
-            return invertBlend;
+            return invertBlend; // ++
         }
         if (flags == 128) return SDL_BLENDMODE_ADD;
         if (flags == 64) return SDL_BLENDMODE_ADD;
         if (flags == 16) return SDL_BLENDMODE_BLEND;
+        if (flags == 8) return SDL_BLENDMODE_BLEND; // ++
         return SDL_BLENDMODE_BLEND;
     }
 
     Uint8 alpha() {
-        if (flags == 256) return 255;
+        if (flags == 256) return 255; // ++
         if (flags == 128) return 255;
         if (flags == 64) return 64;
         if (flags == 16) return 128;
+        if (flags == 8) return 255;   // ++
         return 255;
     }
 };
@@ -155,14 +157,12 @@ static std::string mdfAnimationString(const MDF_Animation& anim) {
         ++paramIndex;
     }
 
-    return std::format("frames: {}\n"
-                       "[xOff]: {} [yOff]: {} [a04]: {}\n"
+    return std::format("[frames]: {} [xOff]: {} [yOff]: {} [a04]: {}\n"
                        "[reverse]: {} [startMs]: {} [endMs]: {}\n"
                        "{}"
                        "animationPath: {}\n"
                        "{}",
-                       anim.framesCount,
-                       anim.xOffset, anim.yOffset, anim.a04,
+                       anim.framesCount, anim.xOffset, anim.yOffset, anim.a04,
                        anim.isReverse, anim.startTimeMs, anim.endTimeMs,
                        anim.maskAnimationPath.empty() ? std::string{}
                                                       : std::format("maskAnimationPath: {}\n", anim.maskAnimationPath),
