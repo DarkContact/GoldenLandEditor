@@ -72,7 +72,7 @@ struct TimedAnimation {
     }
 
 public:
-    std::vector<Texture> textures;
+    std::vector<Texture> textures; // TODO: Хранение текстур убрать из файла анимаций (Чтобы не дублировать одинаковые текстуры в памяти)
 
 private:
     float delayMs = 0;
@@ -90,6 +90,7 @@ struct MagicAnimation : public TimedAnimation {
     int xOffset;
     int yOffset;
     int32_t flags;
+    Uint8 alphaValue;
 
     Uint32 blendMode() {
         // SDL_BlendMode defaultAdd = SDL_ComposeCustomBlendMode(
@@ -132,7 +133,8 @@ struct MagicAnimation : public TimedAnimation {
         if (flags == 256) return 255; // ++
         if (flags == 128) return 255;
         if (flags == 64) return 64;
-        if (flags == 16) return 128;
+        // TODO: Флаг 32 вероятно обозначает наличие маски (lght_sanctity)
+        if (flags == 16) return alphaValue;  // ++
         if (flags == 8) return 255;   // ++
         return 255;
     }
@@ -140,9 +142,9 @@ struct MagicAnimation : public TimedAnimation {
 
 static std::string mdfParamsString(const MDF_Params& params) {
     return std::format("[p01]: {} [p02]: {} [flags]: {} [nFrame]: {} [p05]: {}\n"
-                       "[delay]: {:.1f} [p07]: {:.1f} [p08]: {:.1f} [p09]: {:.1f} [ms]: {}",
+                       "[delay]: {:.2f} [alpha]: {:.2f} [p08]: {:.2f} [p09]: {:.2f} [ms]: {}",
                        params.p01, params.p02, params.flags, params.nFrame, params.p05,
-                       params.delayMs, params.p07, params.p08, params.p09, params.animationTimeMs);
+                       params.delayMs, params.alpha, params.p08, params.p09, params.animationTimeMs);
 }
 
 static std::string mdfAnimationString(const MDF_Animation& anim) {
@@ -261,6 +263,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.xOffset = animDesc.xOffset;
                             animation.yOffset = animDesc.yOffset;
                             animation.flags = animDesc.params.front().flags;
+                            animation.alphaValue = animDesc.params.front().alpha * 255.0f;
 
                             bool isOk = false;
                             if (animDesc.animationPath.ends_with(".bmp")) {
