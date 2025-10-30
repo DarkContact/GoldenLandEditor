@@ -53,6 +53,7 @@ add_executable(GoldenLandEditor WIN32
     src/parsers/MDF_Parser.cpp
     src/windows/MdfViewer.h
     src/windows/MdfViewer.cpp
+    src/files/BgMdfFile.h
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)

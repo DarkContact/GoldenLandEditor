@@ -6,6 +6,7 @@
 #include "SDL3/SDL_render.h"
 #include "imgui.h"
 
+#include "files/BgMdfFile.h"
 #include "parsers/MDF_Parser.h"
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
@@ -93,15 +94,6 @@ struct MagicAnimation : public TimedAnimation {
     Uint8 alphaValue;
 
     Uint32 blendMode() {
-        // SDL_BlendMode additiveBlend = SDL_ComposeCustomBlendMode(
-        //     SDL_BLENDFACTOR_SRC_ALPHA,
-        //     SDL_BLENDFACTOR_ONE,
-        //     SDL_BLENDOPERATION_ADD,
-        //     SDL_BLENDFACTOR_ZERO,
-        //     SDL_BLENDFACTOR_ONE,
-        //     SDL_BLENDOPERATION_ADD);
-        // assert(additiveBlend == SDL_BLENDMODE_ADD);
-
         if (flags == 256) {
             // elem_stoneheadshot
             // gods_earth_shaking gods_roy_insect gods_tucha_moshki
@@ -117,7 +109,7 @@ struct MagicAnimation : public TimedAnimation {
             return invertAdditiveBlend; // +
         }
         if (flags == 128) return SDL_BLENDMODE_ADD; // +
-        if (flags == 64) return SDL_BLENDMODE_ADD; // Похоже на overlay или мягкий свет, но не оно (GoldArrowRain, ManyashiyOgonek, Firestorm)
+        if (flags == 64) return SDL_BLENDMODE_ADD; // Похоже на эффект overlay но не оно (GoldArrowRain, ManyashiiOgonek, Firestorm)
         if (flags == 32) return SDL_BLENDMODE_BLEND; // +
         if (flags == 16) return SDL_BLENDMODE_BLEND; // +
         if (flags == 8) return SDL_BLENDMODE_BLEND; // +
@@ -127,7 +119,7 @@ struct MagicAnimation : public TimedAnimation {
     Uint8 alpha() {
         if (flags == 256) return 255; // +
         if (flags == 128) return 255; // +
-        if (flags == 64) return 64; // Уточнить: нужна ли тут полупрозрачность?
+        if (flags == 64) return 64; // До конца непонятно что за режим, потому эмулируем его через полупрозрачность
         if (flags == 32) return 255; // Вероятно обозначает наличие маски (lght_sanctity)
         if (flags == 16) return alphaValue;  // +
         if (flags == 8) return 255;   // +
@@ -199,14 +191,75 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     static std::string mdfDataInfo;
     static std::string uiError;
     static ImVec4 bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
+    static Texture bgTexture;
+    static bool showBgTexture = false;
     static int activeButtonIndex = 0;
     static bool showInfo = false;
     static bool showCenter = false;
     static bool playAnimation = true;
     static int animationCurrentTime = 0;
     static ImGuiTextFilter textFilter;
+    static bool onceWhenOpen = false;
 
     bool needResetScroll = false;
+
+    if (!onceWhenOpen) {
+        std::string error;
+        if (!TextureLoader::loadTextureFromMemory({bg_mdf, bg_mdf_size}, renderer, bgTexture, &error))
+            LogFmt("Load bgTexture error: {}", error);
+        onceWhenOpen = true;
+    }
+
+    // ImGui::Begin("Blend");
+    // std::vector<std::string> blendFactors = {
+    //     "SDL_BLENDFACTOR_ZERO",
+    //     "SDL_BLENDFACTOR_ONE",
+    //     "SDL_BLENDFACTOR_SRC_COLOR",
+    //     "SDL_BLENDFACTOR_ONE_MINUS_SRC_COLOR",
+    //     "SDL_BLENDFACTOR_SRC_ALPHA",
+    //     "SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA",
+    //     "SDL_BLENDFACTOR_DST_COLOR",
+    //     "SDL_BLENDFACTOR_ONE_MINUS_DST_COLOR",
+    //     "SDL_BLENDFACTOR_DST_ALPHA",
+    //     "SDL_BLENDFACTOR_ONE_MINUS_DST_ALPHA"
+    // };
+    // std::vector<std::string> blendOperation = {
+    //     "SDL_BLENDOPERATION_ADD",
+    //     "SDL_BLENDOPERATION_SUBTRACT",
+    //     "SDL_BLENDOPERATION_REV_SUBTRACT",
+    //     "SDL_BLENDOPERATION_MINIMUM",
+    //     "SDL_BLENDOPERATION_MAXIMUM"
+    // };
+    // static int selectedSrcColorFactor = 0;
+    // static int selectedDstColorFactor = 0;
+    // static int selectedColorOperation = 0;
+    // static int selectedSrcAlphaFactor = 0;
+    // static int selectedDstAlphaFactor = 0;
+    // static int selectedAlphaOperation = 0;
+    // static int red = 0;
+    // static int green = 0;
+    // static int blue = 0;
+    // static int alpha = 0;
+    // ImGuiWidgets::ComboBoxWithIndex("srcColorFactor", blendFactors, selectedSrcColorFactor);
+    // ImGuiWidgets::ComboBoxWithIndex("dstColorFactor", blendFactors, selectedDstColorFactor);
+    // ImGuiWidgets::ComboBoxWithIndex("colorOperation", blendOperation, selectedColorOperation);
+    // ImGuiWidgets::ComboBoxWithIndex("srcAlphaFactor", blendFactors, selectedSrcAlphaFactor);
+    // ImGuiWidgets::ComboBoxWithIndex("dstAlphaFactor", blendFactors, selectedDstAlphaFactor);
+    // ImGuiWidgets::ComboBoxWithIndex("alphaOperation", blendOperation, selectedAlphaOperation);
+    // ImGui::SliderInt("Red", &red, 0, 255);
+    // ImGui::SliderInt("Green", &green, 0, 255);
+    // ImGui::SliderInt("Blue", &blue, 0, 255);
+    // ImGui::SliderInt("Alpha", &alpha, 0, 255);
+
+    // static SDL_BlendMode blendMode = SDL_BLENDMODE_BLEND;
+    // blendMode = SDL_ComposeCustomBlendMode(
+    //     (SDL_BlendFactor)(selectedSrcColorFactor + 1),
+    //     (SDL_BlendFactor)(selectedDstColorFactor + 1),
+    //     (SDL_BlendOperation)(selectedColorOperation + 1),
+    //     (SDL_BlendFactor)(selectedSrcAlphaFactor + 1),
+    //     (SDL_BlendFactor)(selectedDstAlphaFactor + 1),
+    //     (SDL_BlendOperation)(selectedAlphaOperation + 1));
+    // ImGui::End();
 
     ImGui::Begin("MDF Viewer", &showWindow);
 
@@ -306,6 +359,12 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             if (needResetScroll) {
                 ImGui::SetScrollX(0.0f);
                 ImGui::SetScrollY(0.0f);
+            }
+
+            if (showBgTexture) {
+                ImVec2 startPos = ImGui::GetCursorScreenPos();
+                ImGui::Image((ImTextureID)bgTexture.get(), ImVec2(bgTexture->w, bgTexture->h));
+                ImGui::SetCursorScreenPos(startPos);
             }
 
             int maxTextureW = 0;
@@ -418,6 +477,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::Checkbox("Info", &showInfo);
             ImGui::SameLine();
             ImGui::Checkbox("Center", &showCenter);
+            ImGui::SameLine();
+            ImGui::Checkbox("Background", &showBgTexture);
         }
         ImGui::EndGroup();
     } else if (selectedIndex >= 0 && !uiError.empty()) {
@@ -444,5 +505,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         layerInfos.clear();
         uiError.clear();
         textFilter.Clear();
+        bgTexture = {};
+        onceWhenOpen = false;
     }
 }
