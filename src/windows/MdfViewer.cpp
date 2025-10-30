@@ -93,49 +93,44 @@ struct MagicAnimation : public TimedAnimation {
     Uint8 alphaValue;
 
     Uint32 blendMode() {
-        // SDL_BlendMode defaultAdd = SDL_ComposeCustomBlendMode(
-        //     SDL_BLENDFACTOR_SRC_ALPHA,  // srcRGB * srcA
-        //     SDL_BLENDFACTOR_ONE,        // + dstRGB
-        //     SDL_BLENDOPERATION_ADD,     // сложение
-        //     SDL_BLENDFACTOR_ZERO,       // srcA не добавляется
-        //     SDL_BLENDFACTOR_ONE,        // dstA остаётся
-        //     SDL_BLENDOPERATION_ADD      // dstA + 0 = dstA
-        //     );
-        // assert(defaultAdd == SDL_BLENDMODE_ADD);
-
-        SDL_BlendMode invertBlend = SDL_ComposeCustomBlendMode(
-            SDL_BLENDFACTOR_SRC_ALPHA,
-            SDL_BLENDFACTOR_ONE,
-            SDL_BLENDOPERATION_REV_SUBTRACT,
-            SDL_BLENDFACTOR_ZERO,
-            SDL_BLENDFACTOR_ONE,
-            SDL_BLENDOPERATION_ADD);
+        // SDL_BlendMode additiveBlend = SDL_ComposeCustomBlendMode(
+        //     SDL_BLENDFACTOR_SRC_ALPHA,
+        //     SDL_BLENDFACTOR_ONE,
+        //     SDL_BLENDOPERATION_ADD,
+        //     SDL_BLENDFACTOR_ZERO,
+        //     SDL_BLENDFACTOR_ONE,
+        //     SDL_BLENDOPERATION_ADD);
+        // assert(additiveBlend == SDL_BLENDMODE_ADD);
 
         if (flags == 256) {
             // elem_stoneheadshot
-            // gods_earth_shaking
-            // gods_roy_insect
-            // gods_tucha_moshki
-            // shad_shadowcower
-            // shad_tenewoerasseyanie
-            // shad_tenewoerasseyanie2
+            // gods_earth_shaking gods_roy_insect gods_tucha_moshki
+            // shad_shadowcower shad_tenewoerasseyanie shad_tenewoerasseyanie2
             // vis_dark
-            return invertBlend; // ++
+            SDL_BlendMode invertAdditiveBlend = SDL_ComposeCustomBlendMode(
+                SDL_BLENDFACTOR_SRC_ALPHA,
+                SDL_BLENDFACTOR_ONE,
+                SDL_BLENDOPERATION_REV_SUBTRACT,
+                SDL_BLENDFACTOR_ZERO,
+                SDL_BLENDFACTOR_ONE,
+                SDL_BLENDOPERATION_ADD);
+            return invertAdditiveBlend; // +
         }
-        if (flags == 128) return SDL_BLENDMODE_ADD;
-        if (flags == 64) return SDL_BLENDMODE_ADD;
-        if (flags == 16) return SDL_BLENDMODE_BLEND;
-        if (flags == 8) return SDL_BLENDMODE_BLEND; // ++
+        if (flags == 128) return SDL_BLENDMODE_ADD; // +
+        if (flags == 64) return SDL_BLENDMODE_ADD; // Похоже на overlay или мягкий свет, но не оно (GoldArrowRain, ManyashiyOgonek, Firestorm)
+        if (flags == 32) return SDL_BLENDMODE_BLEND; // +
+        if (flags == 16) return SDL_BLENDMODE_BLEND; // +
+        if (flags == 8) return SDL_BLENDMODE_BLEND; // +
         return SDL_BLENDMODE_BLEND;
     }
 
     Uint8 alpha() {
-        if (flags == 256) return 255; // ++
-        if (flags == 128) return 255;
-        if (flags == 64) return 64;
-        // TODO: Флаг 32 вероятно обозначает наличие маски (lght_sanctity)
-        if (flags == 16) return alphaValue;  // ++
-        if (flags == 8) return 255;   // ++
+        if (flags == 256) return 255; // +
+        if (flags == 128) return 255; // +
+        if (flags == 64) return 64; // Уточнить: нужна ли тут полупрозрачность?
+        if (flags == 32) return 255; // Вероятно обозначает наличие маски (lght_sanctity)
+        if (flags == 16) return alphaValue;  // +
+        if (flags == 8) return 255;   // +
         return 255;
     }
 };
