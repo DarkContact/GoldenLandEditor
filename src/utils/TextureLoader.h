@@ -29,5 +29,10 @@ private:
         kHeight,
         kCount
     };
-    static bool loadAnimationFromCsxFile(std::string_view fileName, IntParam type, int param, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error);
+    static bool loadAnimationFromCsxFile(std::string_view fileName,
+                                         IntParam type, int param,
+                                         bool keepPartialFrame,
+                                         SDL_Renderer* renderer,
+                                         std::vector<Texture>& outTextures,
+                                         std::string* error);
 };

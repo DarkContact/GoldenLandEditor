@@ -82,71 +82,13 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
     return true;
 }
 
-// TODO: Переписать через preParse
+
 bool TextureLoader::loadTexturesFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
-    if (fileData.empty())
-        return false;
-
-    CSX_Parser csxParser(fileData);
-    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
-        csxParser.parse(true, error),
-        SDL_DestroySurface
-    };
-
-    if (!surfacePtr)
-        return false;
-
     SDL_PropertiesID props = SDL_GetRendererProperties(renderer);
     int maxTextureSize = SDL_GetNumberProperty(props, SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER, 0);
-
-    if (surfacePtr->h > maxTextureSize) {
-        int fullHeight = surfacePtr->h;
-        int yOffset = 0;
-        while (fullHeight > 0) {
-            SDL_Rect srcRect(0, yOffset, surfacePtr->w, std::min(maxTextureSize, fullHeight));
-
-            std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> subSurfacePtr = {
-                SDL_CreateSurface(srcRect.w, srcRect.h, SDL_PIXELFORMAT_INDEX8),
-                SDL_DestroySurface
-            };
-            if (!subSurfacePtr) {
-                if (error)
-                    *error = SDL_GetError();
-                return false;
-            }
-
-            SDL_SetSurfacePalette(subSurfacePtr.get(), SDL_GetSurfacePalette(surfacePtr.get()));
-
-            // Восстановим прозрачность
-            if (SDL_SurfaceHasColorKey(surfacePtr.get())) {
-                Uint32 key = 0;
-                SDL_GetSurfaceColorKey(surfacePtr.get(), &key);
-                SDL_SetSurfaceColorKey(subSurfacePtr.get(), true, key);
-                SDL_FillSurfaceRect(subSurfacePtr.get(), NULL, key);
-            }
-
-            SDL_BlitSurface(surfacePtr.get(), &srcRect, subSurfacePtr.get(), NULL);
-
-            Texture texture = Texture::createFromSurface(renderer, subSurfacePtr.get(), error);
-            if (!texture)
-                return false;
-
-            outTextures.push_back(std::move(texture));
-            fullHeight -= srcRect.h;
-            yOffset += srcRect.h;
-        }
-    } else {
-        Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
-        if (!texture)
-            return false;
-
-        outTextures.push_back(std::move(texture));
-    }
-
-    return true;
+    return loadAnimationFromCsxFile(fileName, IntParam::kHeight, maxTextureSize, true, renderer, outTextures, error);
 }
 
 bool TextureLoader::saveCsxAsBmpFile(std::string_view fileNameCsx, std::string_view fileNameBmp, SDL_Renderer* renderer, std::string* error)
@@ -179,13 +121,13 @@ bool TextureLoader::saveCsxAsBmpFile(std::string_view fileNameCsx, std::string_v
 bool TextureLoader::loadHeightAnimationFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
-    return loadAnimationFromCsxFile(fileName, IntParam::kHeight, height, renderer, outTextures, error);
+    return loadAnimationFromCsxFile(fileName, IntParam::kHeight, height, false, renderer, outTextures, error);
 }
 
 bool TextureLoader::loadCountAnimationFromCsxFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;
-    return loadAnimationFromCsxFile(fileName, IntParam::kCount, count, renderer, outTextures, error);
+    return loadAnimationFromCsxFile(fileName, IntParam::kCount, count, false, renderer, outTextures, error);
 }
 
 bool TextureLoader::loadCountAnimationFromBmpFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error) {
@@ -263,9 +205,19 @@ bool TextureLoader::loadCountAnimationFromBmpFile(std::string_view fileName, int
     return true;
 }
 
-bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam type, int param, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
+bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName,
+                                             IntParam type, int param,
+                                             bool keepPartialFrame,
+                                             SDL_Renderer* renderer,
+                                             std::vector<Texture>& outTextures,
+                                             std::string* error)
 {
     Tracy_ZoneScoped;
+    if (param <= 0) {
+        if (error)
+            *error = "Invalid param: must be > 0";
+        return false;
+    }
 
     std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
     if (fileData.empty())
@@ -275,38 +227,77 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName, IntParam
     if (!csxParser.preParse(error))
         return false;
 
-    int height;
+    int frameHeight;
+    bool havePartialFrame = false;
     if (type == IntParam::kHeight) {
-        assert(csxParser.metaInfo().height % param == 0);
-        height = param;
-    } else if (type == IntParam::kCount) {
-        height = csxParser.metaInfo().height / param;
+        frameHeight = param;
         if (csxParser.metaInfo().height % param != 0) {
-            LogFmt("Warning in {}: (csxHeight % framesCount != 0) [csxHeight: {}, framesCount: {}, frameHeight: {}]",
-                   StringUtils::filename(fileName), csxParser.metaInfo().height, param, height);
+            if (!keepPartialFrame) {
+                LogFmt("Warning in {}: (csxHeight % frameHeight != 0) [csxHeight: {}, framesCount: {}, frameHeight: {}]",
+                       StringUtils::filename(fileName), csxParser.metaInfo().height, csxParser.metaInfo().height / param, frameHeight);
+            }
+            havePartialFrame = true;
+        }
+    } else if (type == IntParam::kCount) {
+        frameHeight = csxParser.metaInfo().height / param;
+        if (csxParser.metaInfo().height % param != 0) {
+            if (!keepPartialFrame) {
+                LogFmt("Warning in {}: (csxHeight % framesCount != 0) [csxHeight: {}, framesCount: {}, frameHeight: {}]",
+                       StringUtils::filename(fileName), csxParser.metaInfo().height, param, frameHeight);
+            }
+            havePartialFrame = true;
         }
     }
 
-    SDL_Surface* surface = SDL_CreateSurface(csxParser.metaInfo().width, height, SDL_PIXELFORMAT_INDEX8);
-    if (!surface) {
-        if (error)
-            *error = SDL_GetError();
-        return false;
+    // Кадры одинаковой высоты
+    int countTextures = csxParser.metaInfo().height / frameHeight;
+    if (countTextures > 0) {
+        std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr{
+            SDL_CreateSurface(csxParser.metaInfo().width, frameHeight, SDL_PIXELFORMAT_INDEX8),
+            SDL_DestroySurface
+        };
+
+        if (!surfacePtr) {
+            if (error)
+                *error = SDL_GetError();
+            return false;
+        }
+
+        for (int i = 0; i < countTextures; ++i) {
+            Tracy_ZoneScopedN("Create texture");
+            Tracy_ZoneTextF("%d", i);
+            int lineIndexStart = i * frameHeight;
+            csxParser.parseLinesToSurface(surfacePtr.get(), true, lineIndexStart, frameHeight, true, error);
+            Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
+            if (!texture) {
+                return false;
+            }
+            outTextures.push_back(std::move(texture));
+        }
     }
 
-    int countTextures = csxParser.metaInfo().height / height;
-    for (int i = 0; i < countTextures; ++i) {
-        Tracy_ZoneScopedN("Create texture");
-        Tracy_ZoneTextF("%d", i);
-        int lineIndexStart = i * height;
-        csxParser.parseLinesToSurface(surface, true, lineIndexStart, height, true, error);
-        Texture texture = Texture::createFromSurface(renderer, surface, error);
+    // Если высота не делится нацело добавим ещё один кадр с остатком этой высоты
+    if (keepPartialFrame && havePartialFrame) {
+        int lineIndexStart = countTextures * frameHeight;
+        int partialHeight = csxParser.metaInfo().height - lineIndexStart;
+
+        std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> partSurfacePtr = {
+            SDL_CreateSurface(csxParser.metaInfo().width, partialHeight, SDL_PIXELFORMAT_INDEX8),
+            SDL_DestroySurface
+        };
+
+        if (!partSurfacePtr) {
+            if (error)
+                *error = SDL_GetError();
+            return false;
+        }
+
+        csxParser.parseLinesToSurface(partSurfacePtr.get(), true, lineIndexStart, partialHeight, true, error);
+        Texture texture = Texture::createFromSurface(renderer, partSurfacePtr.get(), error);
         if (!texture) {
-            SDL_DestroySurface(surface);
             return false;
         }
         outTextures.push_back(std::move(texture));
     }
-    SDL_DestroySurface(surface);
     return true;
 }
