@@ -28,7 +28,7 @@ Texture Texture::create(SDL_Renderer* renderer, SDL_PixelFormat format, SDL_Text
     Texture texture;
     texture.m_texture = SDL_CreateTexture(renderer, format, access, width, height);
     if (!texture.isValid() && error) {
-        *error = std::string(SDL_GetError());
+        *error = SDL_GetError();
     }
     return texture;
 }
@@ -38,7 +38,7 @@ Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface,
     Texture texture;
     texture.m_texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture.isValid() && error) {
-        *error = std::string(SDL_GetError());
+        *error = SDL_GetError();
     }
     return texture;
 }
@@ -81,7 +81,7 @@ bool Texture::updatePixels(const void* pixels, const SDL_Rect* rect, std::string
     }
 
     if (!isOk && error) {
-        *error = std::string(SDL_GetError());
+        *error = SDL_GetError();
     }
     return isOk;
 }
