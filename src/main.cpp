@@ -76,6 +76,12 @@ int main(int, char**)
     };
     auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(rootDirectoryContext));
 
+    LogFmt("[INFO] SDL Version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    if (SDL_VERSION != SDL_GetVersion()) {
+        LogFmt("SDL Linked version: {}", SDL_GetVersion());
+        return -1;
+    }
+
     // Setup SDL
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         LogFmt("SDL_Init error: {}", SDL_GetError());
@@ -100,6 +106,13 @@ int main(int, char**)
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
+#ifdef IMGUI_HAS_DOCK
+    const char* imguiBranch = "docking";
+#else
+    const char* imguiBranch = "master";
+#endif
+
+    LogFmt("[INFO] ImGui Version: {} (branch: {})", IMGUI_VERSION, imguiBranch);
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
