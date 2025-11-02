@@ -34,6 +34,12 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         return {};
     }
 
+    std::string sdbPath = levelSdb(rootDirectory, level, levelType);
+    if (!SDB_Parser::parse(sdbPath, levelData.sdbData, error)) {
+        LogFmt("Loading .sdb failed. {}", *error);
+        // Допустимо, если не загрузилось, но нужно уведомить пользователя
+    }
+
     std::string bgPath = levelBackground(rootDirectory, levelData.sefData.pack);
     TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, levelData.background);
 
@@ -92,6 +98,11 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 std::string Level::levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType)
 {
     return std::format("{0}/levels/{1}/{2}/{2}.sef", rootDirectory, levelType, level);
+}
+
+std::string Level::levelSdb(std::string_view rootDirectory, std::string_view level, std::string_view levelType)
+{
+    return std::format("{0}/levels/{1}/{2}/{2}.sdb", rootDirectory, levelType, level);
 }
 
 std::string Level::levelLvl(std::string_view rootDirectory, std::string_view levelPack)

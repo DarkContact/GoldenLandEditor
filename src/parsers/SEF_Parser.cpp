@@ -112,7 +112,6 @@ void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {
         auto commentPos = line.find("//");
         if (commentPos != std::string::npos) {
             std::string_view comment = StringUtils::trim(line.substr(commentPos + 2));
-            // TODO: Брать имя из sdb
             currentPerson.literaryName = StringUtils::decodeWin1251ToUtf8(comment);
             line = StringUtils::trim(line.substr(0, commentPos));
             if (line.empty()) return;

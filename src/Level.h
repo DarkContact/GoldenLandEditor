@@ -5,6 +5,7 @@
 #include "imgui.h"
 
 #include "parsers/SEF_Parser.h"
+#include "parsers/SDB_Parser.h"
 #include "parsers/LVL_Parser.h"
 #include "parsers/LAO_Parser.h"
 #include "Texture.h"
@@ -78,6 +79,7 @@ struct LevelData {
     Texture minimap;
     SEF_Data sefData;
     LVL_Data lvlData;
+    SDB_Data sdbData;
     std::optional<LAO_Data> laoData;
     std::vector<LevelAnimation> animations;
     LevelImgui imgui;
@@ -112,6 +114,7 @@ private:
     Level() noexcept = default;
 
     static std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType);
+    static std::string levelSdb(std::string_view rootDirectory, std::string_view level, std::string_view levelType);
     static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack);

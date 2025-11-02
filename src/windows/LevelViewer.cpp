@@ -759,12 +759,15 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
         drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
         drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
 
+        std::string_view personName = level.data().sdbData.strings.empty() ? person.literaryName
+                                                                           : level.data().sdbData.strings[person.literaryNameIndex];
+
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
-        const ImVec2 textSize = ImGui::CalcTextSize(person.literaryName.c_str());
+        const ImVec2 textSize = ImGui::CalcTextSize(personName.data());
         drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
 
         ImGui::SetCursorScreenPos(textPos);
-        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", person.literaryName.c_str());
+        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", personName.data());
     }
 }
 
