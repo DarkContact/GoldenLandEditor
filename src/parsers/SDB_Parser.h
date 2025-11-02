@@ -9,11 +9,7 @@ struct SDB_Data {
 class SDB_Parser
 {
 public:
-    SDB_Parser(std::string_view sdbPath);
+    SDB_Parser() = delete;
 
-    SDB_Data& parse();
-
-private:
-    std::string m_filePath;
-    SDB_Data m_data;
+    static bool parse(std::string_view sdbPath, SDB_Data& data, std::string* error = nullptr);
 };

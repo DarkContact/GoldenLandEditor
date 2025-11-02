@@ -1,66 +1,40 @@
 #include "SDB_Parser.h"
 
-#include <cstring>
-#include <stdexcept>
-
+#include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
-SDB_Parser::SDB_Parser(std::string_view sdbPath) :
-    m_filePath(sdbPath)
+bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* error)
 {
-
-}
-
-SDB_Data& SDB_Parser::parse()
-{
-    Tracy_ZoneScopedN("SDB_Parser::parse");
-    auto buffer = FileUtils::loadFile(m_filePath); // Загружаем весь файл в буфер
-    if (buffer.size() < 4) {
-        throw std::runtime_error("File too small.");
+    Tracy_ZoneScoped;
+    auto fileData = FileUtils::loadFile(sdbPath, error);
+    if (fileData.empty()) {
+        return false;
     }
 
-    size_t offset = 0;
-    bool xorRequired = true;
-
-    // Проверка заголовка "SDB "
-    if (std::memcmp(buffer.data(), "SDB ", 4) == 0) {
-        xorRequired = false;
-        offset = 4; // Пропускаем заголовок
+    bool xorRequired = false;
+    size_t offset = 4;
+    if (std::memcmp(fileData.data(), "SDB ", 4) != 0) {
+        xorRequired = true;
+        offset = 0;
     }
 
-    while (offset + 8 <= buffer.size()) {
-        // Чтение ID
-        int32_t id;
-        std::memcpy(&id, &buffer[offset], sizeof(int32_t));
-        offset += 4;
+    while (offset < fileData.size()) {
+        int32_t id = IoUtils::readInt32(fileData, offset);
 
-        // Чтение длины текста
-        int32_t textLength;
-        std::memcpy(&textLength, &buffer[offset], sizeof(int32_t));
-        offset += 4;
-
-        if (textLength < 0 || offset + textLength > buffer.size()) {
-            throw std::runtime_error("Invalid text length or corrupted file.");
-        }
-
-        // Чтение текста
-        std::vector<char> textData(buffer.begin() + offset, buffer.begin() + offset + textLength);
-        offset += textLength;
-
-        // Применение XOR-дешифровки, если нужно
+        auto textSv = StringUtils::readStringWithLength(fileData, offset);
+        std::string text = std::string(textSv);
         if (xorRequired) {
-            for (auto& byte : textData) {
+            for (auto& byte : text) {
                 byte ^= 0xAA;
             }
         }
 
-        std::string text(textData.begin(), textData.end());
         text = StringUtils::decodeWin1251ToUtf8(text);
-        text = StringUtils::trim(text);
-        m_data.strings[id] = text;
+        data.strings[id] = text;
     }
 
-    return m_data;
+    assert(fileData.size() == offset);
+    return true;
 }

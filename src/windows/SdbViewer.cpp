@@ -3,9 +3,10 @@
 #include <format>
 
 #include "imgui.h"
-#include "parsers/SDB_Parser.h"
 
+#include "parsers/SDB_Parser.h"
 #include "utils/TracyProfiler.h"
+#include "utils/DebugLog.h"
 
 void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files)
 {
@@ -33,8 +34,12 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                 {
                     selectedIndex = i;
 
-                    SDB_Parser parser(std::format("{}/{}", rootDirectory, files[i]));
-                    sdbRecords = parser.parse();
+                    sdbRecords.strings.clear();
+
+                    std::string error;
+                    if (!SDB_Parser::parse(std::format("{}/{}", rootDirectory, files[i]), sdbRecords, &error)) {
+                        LogFmt("SdbViewer error: {}", error);
+                    }
 
                     needResetScroll = true;
                 }

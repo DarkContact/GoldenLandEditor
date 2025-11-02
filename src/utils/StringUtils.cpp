@@ -83,11 +83,12 @@ std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept
 
 std::string_view StringUtils::readStringWithLength(std::span<const uint8_t> block, size_t& offset) noexcept {
     assert(offset + 4 <= block.size());
-
-    uint32_t length = *reinterpret_cast<const uint32_t*>(&block[offset]);
-    offset += sizeof(uint32_t);
+    int32_t length = *reinterpret_cast<const int32_t*>(&block[offset]);
+    offset += sizeof(int32_t);
+    assert(length >= 0);
 
     assert(offset + length <= block.size());
+    if (length == 0) { return {}; }
 
     std::string_view sv(reinterpret_cast<const char*>(&block[offset]), length);
     offset += length;
