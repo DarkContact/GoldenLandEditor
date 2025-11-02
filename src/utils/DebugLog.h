@@ -8,7 +8,7 @@ class DebugLog {
 public:
     DebugLog() = delete;
 
-    static void print(std::string_view msg, const std::source_location& location = std::source_location::current()) {
+    static void print(const std::source_location& location, std::string_view msg) {
         toOutput(location, msg);
     }
 
@@ -40,6 +40,6 @@ private:
   #define Log(msg)
   #define LogFmt(fmt, ...)
 #else
-  #define Log(msg)         DebugLog::print(msg)
+  #define Log(msg)         DebugLog::print(std::source_location::current(), msg)
   #define LogFmt(fmt, ...) DebugLog::printFmt(std::source_location::current(), fmt, ##__VA_ARGS__)
 #endif
