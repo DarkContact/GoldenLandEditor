@@ -31,8 +31,9 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
         int32_t animationCount = readInt32(fileData, offset);
         if (animationCount > 0) {
             MDF_Layer layer;
+            layer.layerNumber = i + 1;
             layer.animations.reserve(animationCount);
-            for (int i = 0; i < animationCount; ++i) {
+            for (int a = 0; a < animationCount; ++a) {
                 MDF_Animation anim;
                 anim.framesCount = readInt32(fileData, offset);
                 anim.xOffset = readInt32(fileData, offset);

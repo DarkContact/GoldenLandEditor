@@ -31,6 +31,7 @@ struct MDF_Animation {
 };
 
 struct MDF_Layer {
+    int32_t layerNumber;
     std::vector<MDF_Animation> animations;
 };
 

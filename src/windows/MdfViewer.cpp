@@ -167,7 +167,7 @@ static std::string mdfInfoString(const MDF_Data& data, const std::vector<LayerIn
         const auto& layer = data.layers[l];
         const auto& layerInfo = layerInfos[l];
         assert(layer.animations.size() == layerInfo.animationInfo.size());
-        result += std::format("LAYER {}\n", l + 1);
+        result += std::format("LAYER {} [num: {}]\n", l + 1, layer.layerNumber);
         for (int a = 0; a < layer.animations.size(); ++a) {
             const auto& animation = layer.animations[a];
             const auto& animationInfo = layerInfo.animationInfo[a];
