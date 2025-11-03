@@ -8,6 +8,7 @@
 
 #include "files/BgMdfFile.h"
 #include "parsers/MDF_Parser.h"
+#include "utils/AnimationCachedLoader.h"
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
@@ -27,6 +28,14 @@ struct LayerInfo {
 };
 
 struct TimedAnimation {
+
+    int width() const { return this->textures.front()->w; }
+    int height() const { return this->textures.front()->h; }
+
+    void setTextures(std::span<const Texture> textures) {
+        this->textures = textures;
+        assert(!this->textures.empty());
+    }
 
     const Texture& currentTexture() const {
         assert(currentTimeMs >= 0 && currentTimeMs < totalDurationMs);
@@ -72,10 +81,8 @@ struct TimedAnimation {
         return totalDurationMs;
     }
 
-public:
-    std::vector<Texture> textures; // TODO: Хранение текстур убрать из файла анимаций (Чтобы не дублировать одинаковые текстуры в памяти)
-
 private:
+    std::span<const Texture> textures;
     float delayMs = 0;
     uint64_t startTimeMs = 0;
     uint64_t endTimeMs = 0;
@@ -186,6 +193,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
     Tracy_ZoneScoped;
 
     static int selectedIndex = -1;
+    static AnimationCachedLoader animationLoader;
     static std::vector<std::vector<MagicAnimation>> animationLayers;
     static std::vector<LayerInfo> layerInfos;
     static std::string mdfDataInfo;
@@ -277,6 +285,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 selectedIndex = i;
 
                 animationCurrentTime = 0;
+                animationLoader.clear();
                 uiError.clear();
                 mdfDataInfo.clear();
                 animationLayers.clear();
@@ -313,26 +322,21 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             animation.flags = animDesc.params.front().flags;
                             animation.alphaValue = animDesc.params.front().alpha * 255.0f;
 
-                            bool isOk = false;
-                            if (animDesc.animationPath.ends_with(".bmp")) {
-                                SDL_Color transparentColor = {255, 0, 255, 255};
-                                isOk = TextureLoader::loadCountAnimationFromBmpFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
-                                                                                    animDesc.framesCount, renderer, animation.textures,
-                                                                                    (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
-                                                                                    &uiError);
-                            } else if (animDesc.animationPath.ends_with(".csx")) {
-                                isOk = TextureLoader::loadCountAnimationFromCsxFile(std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath),
-                                                                                    animDesc.framesCount, renderer, animation.textures, &uiError);
-                            } else {
-                                uiError = std::format("Unsupported format! {}", animDesc.animationPath);
-                            }
+                            std::string animationPath = std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath);
+                            SDL_Color transparentColor = {255, 0, 255, 255};
+                            auto textures = animationLoader.loadAnimationCount(animationPath,
+                                                                               animDesc.framesCount,
+                                                                               renderer,
+                                                                               (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
+                                                                               &uiError);
+                            animation.setTextures(textures);
 
-                            layerInfo.animationInfo[animationIndex].width = animation.textures.front()->w;
-                            layerInfo.animationInfo[animationIndex].height = animation.textures.front()->h;
-                            layerInfo.maxWidth = std::max(animation.textures.front()->w, layerInfo.maxWidth);
-                            layerInfo.maxHeight = std::max(animation.textures.front()->h, layerInfo.maxHeight);
+                            layerInfo.animationInfo[animationIndex].width = animation.width();
+                            layerInfo.animationInfo[animationIndex].height = animation.height();
+                            layerInfo.maxWidth = std::max(animation.width(), layerInfo.maxWidth);
+                            layerInfo.maxHeight = std::max(animation.height(), layerInfo.maxHeight);
 
-                            if (!isOk) break;
+                            if (textures.empty()) break;
                             ++animationIndex;
                         }
                         ++layerIndex;
@@ -383,8 +387,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             int minY = 0;
             for (auto& layer : animationLayers) {
                 for (auto& animation : layer) {
-                    int animPosX = centerW - (animation.textures.front()->w / 2) + animation.xOffset;
-                    int animPosY = centerH - (animation.textures.front()->h / 2) + animation.yOffset;
+                    int animPosX = centerW - (animation.width() / 2) + animation.xOffset;
+                    int animPosY = centerH - (animation.height() / 2) + animation.yOffset;
                     minX = std::min(animPosX, minX);
                     minY = std::min(animPosY, minY);
                 }
@@ -393,7 +397,6 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImVec2 startPos = ImGui::GetCursorScreenPos();
             for (auto& layer : animationLayers) {
                 for (auto& animation : layer) {
-                    assert(!animation.textures.empty());
                     animationMaxTime = animation.getTotalDurationMs();
 
                     animation.update(animationCurrentTime);
@@ -500,6 +503,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     if (!showWindow) {
         selectedIndex = -1;
+        animationLoader.clear();
         animationCurrentTime = 0;
         animationLayers.clear();
         layerInfos.clear();

@@ -56,6 +56,8 @@ add_executable(GoldenLandEditor WIN32
     src/files/BgMdfFile.h
     src/utils/IoUtils.h
     src/utils/IoUtils.cpp
+    src/utils/AnimationCachedLoader.h
+    src/utils/AnimationCachedLoader.cpp
 )
 
 option(USE_TRACY "Enable Tracy profiler" OFF)
