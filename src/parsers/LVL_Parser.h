@@ -135,12 +135,4 @@ private:
     static void parseLevelFloors(std::span<const uint8_t> block, LVL_Data& data);
 
     static void parseStructuredBlock(std::span<const uint8_t> block, std::vector<LVL_Description>& data);
-
-    // Save
-    static void appendString(std::vector<uint8_t>& buffer, std::string_view value);
-    static void appendSizeAndString(std::vector<uint8_t>& buffer, std::string_view value);
-    static void appendUint16(std::vector<uint8_t>& buffer, uint16_t value);
-    static void appendUint32(std::vector<uint8_t>& buffer, uint32_t value);
-    static void appendInt32(std::vector<uint8_t>& buffer, int32_t value);
-    static void appendFloat(std::vector<uint8_t>& buffer, float value);
 };

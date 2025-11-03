@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 
+#include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
@@ -73,57 +74,59 @@ bool LVL_Parser::parse(std::string_view lvlPath, LVL_Data& data, std::string* er
 bool LVL_Parser::save(std::string_view lvlPath, const LVL_Data& data, std::string* error)
 {
     Tracy_ZoneScoped;
+    using namespace IoUtils;
+
     std::vector<uint8_t> saveData;
     saveData.reserve(32768); // 32KB
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_LVER].name);
-    appendUint32(saveData, 4);
-    appendUint16(saveData, data.version.minor);
-    appendUint16(saveData, data.version.major);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_LVER].name);
+    writeUInt32(saveData, 4);
+    writeUInt16(saveData, data.version.minor);
+    writeUInt16(saveData, data.version.major);
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_MPSZ].name);
-    appendUint32(saveData, 8);
-    appendUint32(saveData, data.mapSize.pixelWidth);
-    appendUint32(saveData, data.mapSize.pixelHeight);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_MPSZ].name);
+    writeUInt32(saveData, 8);
+    writeUInt32(saveData, data.mapSize.pixelWidth);
+    writeUInt32(saveData, data.mapSize.pixelHeight);
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_MHDR].name);
-    appendUint32(saveData, 8 + (data.mapTiles.chunks.size() * 4 * 6));
-    appendUint32(saveData, data.mapTiles.chunkWidth);
-    appendUint32(saveData, data.mapTiles.chunkHeight);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_MHDR].name);
+    writeUInt32(saveData, 8 + (data.mapTiles.chunks.size() * 4 * 6));
+    writeUInt32(saveData, data.mapTiles.chunkWidth);
+    writeUInt32(saveData, data.mapTiles.chunkHeight);
     for (const auto& chunk : data.mapTiles.chunks) {
         for (const auto& tile : chunk) {
-            appendUint16(saveData, tile.relief);
-            appendUint16(saveData, tile.sound);
-            appendUint16(saveData, tile.mask);
+            writeUInt16(saveData, tile.relief);
+            writeUInt16(saveData, tile.sound);
+            writeUInt16(saveData, tile.mask);
         }
     }
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_MDSC].name);
-    appendUint32(saveData, 4 + (data.maskDescriptions.size() * 16));
-    appendUint32(saveData, data.maskDescriptions.size());
+    writeString(saveData, ParsersPrivate::kParsers[BLK_MDSC].name);
+    writeUInt32(saveData, 4 + (data.maskDescriptions.size() * 16));
+    writeUInt32(saveData, data.maskDescriptions.size());
     for (const auto& mask : data.maskDescriptions) {
-        appendUint32(saveData, 0);
-        appendUint32(saveData, mask.number);
-        appendUint32(saveData, mask.x);
-        appendUint32(saveData, mask.y);
+        writeUInt32(saveData, 0);
+        writeUInt32(saveData, mask.number);
+        writeUInt32(saveData, mask.x);
+        writeUInt32(saveData, mask.y);
     }
 
 
     auto writeStructuredBlock = [&saveData] (int index, const std::vector<LVL_Description>& descriptions) {
-        appendString(saveData, ParsersPrivate::kParsers[index].name);
+        writeString(saveData, ParsersPrivate::kParsers[index].name);
         uint32_t stringSizes = 0;
         for (const auto& desc : descriptions) {
             stringSizes += 4 + desc.name.size();
         }
-        appendUint32(saveData, 4 + (descriptions.size() * 16) + stringSizes);
-        appendUint32(saveData, descriptions.size());
+        writeUInt32(saveData, 4 + (descriptions.size() * 16) + stringSizes);
+        writeUInt32(saveData, descriptions.size());
         for (const auto& desc : descriptions) {
-            appendUint16(saveData, desc.param1);
-            appendUint16(saveData, desc.param2);
-            appendUint32(saveData, desc.number);
-            appendInt32(saveData, desc.position.x);
-            appendInt32(saveData, desc.position.y);
-            appendSizeAndString(saveData, desc.name);
+            writeUInt16(saveData, desc.param1);
+            writeUInt16(saveData, desc.param2);
+            writeUInt32(saveData, desc.number);
+            writeInt32(saveData, desc.position.x);
+            writeInt32(saveData, desc.position.y);
+            writeSizeAndString(saveData, desc.name);
         }
     };
 
@@ -131,62 +134,62 @@ bool LVL_Parser::save(std::string_view lvlPath, const LVL_Data& data, std::strin
     writeStructuredBlock(BLK_ADSC, data.animationDescriptions);
     writeStructuredBlock(BLK_TDSC, data.triggerDescriptions);
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_CGRP].name);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_CGRP].name);
     uint32_t cellsSizes = 0;
     for (const auto& cellGroup : data.cellGroups) {
         cellsSizes += 4 + cellGroup.name.size() + 4 + (cellGroup.cells.size() * 4);
     }
-    appendUint32(saveData, 4 + cellsSizes);
-    appendUint32(saveData, data.cellGroups.size());
+    writeUInt32(saveData, 4 + cellsSizes);
+    writeUInt32(saveData, data.cellGroups.size());
     for (const auto& cellGroup : data.cellGroups) {
-        appendSizeAndString(saveData, cellGroup.name);
-        appendUint32(saveData, cellGroup.cells.size());
+        writeSizeAndString(saveData, cellGroup.name);
+        writeUInt32(saveData, cellGroup.cells.size());
         for (const auto& cell : cellGroup.cells) {
-            appendUint16(saveData, cell.x);
-            appendUint16(saveData, cell.y);
+            writeUInt16(saveData, cell.x);
+            writeUInt16(saveData, cell.y);
         }
     }
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_SENV].name);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_SENV].name);
     uint32_t soundPathSizes = 0;
     for (const auto& sound : data.sounds.otherSounds) {
         soundPathSizes += 4 + sound.path.size();
     }
-    appendUint32(saveData, 20 + 12 + data.sounds.levelTheme.size() + data.sounds.dayAmbience.size() + data.sounds.nightAmbience.size()
+    writeUInt32(saveData, 20 + 12 + data.sounds.levelTheme.size() + data.sounds.dayAmbience.size() + data.sounds.nightAmbience.size()
                            + soundPathSizes + (data.sounds.otherSounds.size() * 48));
-    appendInt32(saveData, data.sounds.header.param1);
-    appendFloat(saveData, data.sounds.header.param2);
-    appendFloat(saveData, data.sounds.header.param3);
-    appendFloat(saveData, data.sounds.header.param4);
+    writeInt32(saveData, data.sounds.header.param1);
+    writeFloat(saveData, data.sounds.header.param2);
+    writeFloat(saveData, data.sounds.header.param3);
+    writeFloat(saveData, data.sounds.header.param4);
 
-    appendUint32(saveData, data.sounds.otherSounds.size());
+    writeUInt32(saveData, data.sounds.otherSounds.size());
 
-    appendSizeAndString(saveData, data.sounds.levelTheme);
-    appendSizeAndString(saveData, data.sounds.dayAmbience);
-    appendSizeAndString(saveData, data.sounds.nightAmbience);
+    writeSizeAndString(saveData, data.sounds.levelTheme);
+    writeSizeAndString(saveData, data.sounds.dayAmbience);
+    writeSizeAndString(saveData, data.sounds.nightAmbience);
 
     for (const auto& sound : data.sounds.otherSounds) {
-        appendSizeAndString(saveData, sound.path);
-        appendFloat(saveData, sound.chunkPositionX);
-        appendFloat(saveData, sound.chunkPositionY);
-        appendFloat(saveData, sound.param03);
-        appendFloat(saveData, sound.param04);
-        appendFloat(saveData, sound.param05);
-        appendFloat(saveData, sound.param06);
-        appendFloat(saveData, sound.param07);
-        appendFloat(saveData, sound.param08);
-        appendUint32(saveData, sound.param09);
-        appendUint32(saveData, sound.param10);
-        appendUint32(saveData, sound.param11);
-        appendUint32(saveData, sound.param12);
+        writeSizeAndString(saveData, sound.path);
+        writeFloat(saveData, sound.chunkPositionX);
+        writeFloat(saveData, sound.chunkPositionY);
+        writeFloat(saveData, sound.param03);
+        writeFloat(saveData, sound.param04);
+        writeFloat(saveData, sound.param05);
+        writeFloat(saveData, sound.param06);
+        writeFloat(saveData, sound.param07);
+        writeFloat(saveData, sound.param08);
+        writeUInt32(saveData, sound.param09);
+        writeUInt32(saveData, sound.param10);
+        writeUInt32(saveData, sound.param11);
+        writeUInt32(saveData, sound.param12);
     }
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_WTHR].name);
-    appendUint32(saveData, 4);
-    appendUint16(saveData, data.weather.type);
-    appendUint16(saveData, data.weather.intensity);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_WTHR].name);
+    writeUInt32(saveData, 4);
+    writeUInt16(saveData, data.weather.type);
+    writeUInt16(saveData, data.weather.intensity);
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_DOOR].name);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_DOOR].name);
     uint32_t doorsSizes = 0;
     for (const auto& door : data.doors) {
         doorsSizes += 4 + door.sefName.size();
@@ -196,20 +199,20 @@ bool LVL_Parser::save(std::string_view lvlPath, const LVL_Data& data, std::strin
         doorsSizes += 4 + door.param1.size();
         doorsSizes += 4 + door.staticName.size();
     }
-    appendUint32(saveData, 4 + doorsSizes);
-    appendUint32(saveData, data.doors.size());
+    writeUInt32(saveData, 4 + doorsSizes);
+    writeUInt32(saveData, data.doors.size());
     for (const auto& door : data.doors) {
-        appendSizeAndString(saveData, door.sefName);
-        appendSizeAndString(saveData, door.openAction);
-        appendSizeAndString(saveData, door.closeAction);
-        appendSizeAndString(saveData, door.cellGroup);
-        appendSizeAndString(saveData, door.param1);
-        appendSizeAndString(saveData, door.staticName);
+        writeSizeAndString(saveData, door.sefName);
+        writeSizeAndString(saveData, door.openAction);
+        writeSizeAndString(saveData, door.closeAction);
+        writeSizeAndString(saveData, door.cellGroup);
+        writeSizeAndString(saveData, door.param1);
+        writeSizeAndString(saveData, door.staticName);
     }
 
-    appendString(saveData, ParsersPrivate::kParsers[BLK_LFLS].name);
-    appendUint32(saveData, 4);
-    appendUint32(saveData, data.levelFloors);
+    writeString(saveData, ParsersPrivate::kParsers[BLK_LFLS].name);
+    writeUInt32(saveData, 4);
+    writeUInt32(saveData, data.levelFloors);
 
     return FileUtils::saveFile(lvlPath, saveData, error);
 }
@@ -391,39 +394,4 @@ void LVL_Parser::parseStructuredBlock(std::span<const uint8_t> block, std::vecto
         data.push_back(std::move(desc));
     }
     assert(block.size() == offset);
-}
-
-// TODO: Вынести методы в отедельный класс
-void LVL_Parser::appendString(std::vector<uint8_t>& buffer, std::string_view value) {
-    buffer.insert(buffer.end(), value.begin(), value.end());
-}
-
-void LVL_Parser::appendSizeAndString(std::vector<uint8_t>& buffer, std::string_view value) {
-    appendUint32(buffer, value.size());
-    appendString(buffer, value);
-}
-
-void LVL_Parser::appendUint16(std::vector<uint8_t>& buffer, uint16_t value) {
-    uint8_t bytes[2];
-    std::memcpy(bytes, &value, sizeof(uint16_t));
-    buffer.insert(buffer.end(), bytes, bytes + 2);
-}
-
-void LVL_Parser::appendUint32(std::vector<uint8_t>& buffer, uint32_t value) {
-    uint8_t bytes[4];
-    std::memcpy(bytes, &value, sizeof(uint32_t));
-    buffer.insert(buffer.end(), bytes, bytes + 4);
-}
-
-void LVL_Parser::appendInt32(std::vector<uint8_t>& buffer, int32_t value)
-{
-    uint8_t bytes[4];
-    std::memcpy(bytes, &value, sizeof(int32_t));
-    buffer.insert(buffer.end(), bytes, bytes + 4);
-}
-
-void LVL_Parser::appendFloat(std::vector<uint8_t>& buffer, float value) {
-    uint8_t bytes[4];
-    std::memcpy(bytes, &value, sizeof(float));
-    buffer.insert(buffer.end(), bytes, bytes + 4);
 }
