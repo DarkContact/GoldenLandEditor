@@ -6,7 +6,6 @@
 
 #include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
-#include "utils/StringUtils.h"
 
 std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* error)
 {
@@ -42,8 +41,8 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
                 anim.isReverse = readInt32(fileData, offset);
                 anim.startTimeMs = readInt32(fileData, offset);
                 anim.endTimeMs = readInt32(fileData, offset);
-                anim.maskAnimationPath = StringUtils::readStringWithLength(fileData, offset);
-                anim.animationPath = StringUtils::readStringWithLength(fileData, offset);
+                anim.maskAnimationPath = readStringWithSize(fileData, offset);
+                anim.animationPath = readStringWithSize(fileData, offset);
 
                 int32_t paramsCount = readInt32(fileData, offset);
                 anim.params.reserve(paramsCount);

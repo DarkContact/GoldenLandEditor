@@ -1,6 +1,5 @@
 #include "StringUtils.h"
 
-#include <algorithm>
 #include <charconv>
 #include <cassert>
 
@@ -18,13 +17,6 @@ static constexpr const char* win1251_to_utf8[] = {
     "а", "б", "в", "г", "д", "е", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п",  // 0xE0 - 0xEF
     "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я",  // 0xF0 - 0xFF
 };
-
-std::string StringUtils::toLower(std::string_view input) {
-    std::string result(input);
-    std::transform(result.begin(), result.end(), result.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-    return result;
-}
 
 std::string_view StringUtils::trimLeft(std::string_view input) noexcept {
     while (!input.empty() && isSpace(input.front())) {
@@ -79,20 +71,6 @@ std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept
     }
 
     return {};
-}
-
-std::string_view StringUtils::readStringWithLength(std::span<const uint8_t> block, size_t& offset) noexcept {
-    assert(offset + 4 <= block.size());
-    int32_t length = *reinterpret_cast<const int32_t*>(&block[offset]);
-    offset += sizeof(int32_t);
-    assert(length >= 0);
-
-    assert(offset + length <= block.size());
-    if (length == 0) { return {}; }
-
-    std::string_view sv(reinterpret_cast<const char*>(&block[offset]), length);
-    offset += length;
-    return sv;
 }
 
 std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {

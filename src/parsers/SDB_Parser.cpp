@@ -5,6 +5,8 @@
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
+using namespace IoUtils;
+
 bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* error)
 {
     Tracy_ZoneScoped;
@@ -21,9 +23,9 @@ bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* er
     }
 
     while (offset < fileData.size()) {
-        int32_t id = IoUtils::readInt32(fileData, offset);
+        int32_t id = readInt32(fileData, offset);
 
-        auto textSv = StringUtils::readStringWithLength(fileData, offset);
+        auto textSv = readStringWithSize(fileData, offset);
         std::string text = std::string(textSv);
         if (xorRequired) {
             for (auto& byte : text) {
