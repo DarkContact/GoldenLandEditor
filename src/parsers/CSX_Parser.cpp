@@ -7,6 +7,9 @@
 #include "SDL3/SDL_surface.h"
 
 #include "utils/TracyProfiler.h"
+#include "utils/IoUtils.h"
+
+using namespace IoUtils;
 
 union ColorData {
     uint32_t u32;
@@ -30,10 +33,12 @@ CSX_Parser::~CSX_Parser()
         SDL_DestroyPalette(m_metaInfo.pallete);
 }
 
-std::span<const uint32_t> reinterpret_as_u32(std::span<const uint8_t> bytes) {
+std::span<const uint32_t> reinterpretAsU32(std::span<const uint8_t> bytes) {
     assert(reinterpret_cast<uintptr_t>(bytes.data()) % alignof(uint32_t) == 0);
     assert(bytes.size_bytes() % sizeof(uint32_t) == 0);
-    return std::span<const uint32_t>(reinterpret_cast<const uint32_t*>(bytes.data()), bytes.size_bytes() / sizeof(uint32_t));
+
+    return std::span<const uint32_t>(reinterpret_cast<const uint32_t*>(bytes.data()),
+                                     bytes.size_bytes() / sizeof(uint32_t));
 }
 
 SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error) {
@@ -62,19 +67,19 @@ SDL_Surface* CSX_Parser::parse(bool isBackgroundTransparent, std::string* error)
 bool CSX_Parser::preParse(std::string* error)
 {
     assert(!m_metaInfo.pallete);
-    assert(m_offset == 0);
 
-    m_metaInfo.colorCount = readUInt32(); // Читаем количество цветов в палитре
+    size_t offset = 0;
+    m_metaInfo.colorCount = readUInt32(m_buffer, offset); // Читаем количество цветов в палитре
     assert(m_metaInfo.colorCount > 0);
 
     ColorData fillColor;
-    fillColor.u32 = readUInt32();
+    fillColor.u32 = readUInt32(m_buffer, offset);
 
     // Читаем палитру цветов
     std::array<SDL_Color, CsxMetaInfo::kMaxColors> palleteColors;
     for (int i = 0; i < m_metaInfo.colorCount; i++) {
         ColorData color;
-        color.u32 = readUInt32();
+        color.u32 = readUInt32(m_buffer, offset);
         if (fillColor.u32 == color.u32) {
             m_metaInfo.fillColorIndex = i;
         }
@@ -86,16 +91,16 @@ bool CSX_Parser::preParse(std::string* error)
     }
 
     // Читаем размеры изображения
-    m_metaInfo.width = readUInt32();
-    m_metaInfo.height = readUInt32();
+    m_metaInfo.width = readUInt32(m_buffer, offset);
+    m_metaInfo.height = readUInt32(m_buffer, offset);
 
     // read relative line offsets
     uint32_t lineOffsetSize = (m_metaInfo.height + 1) * sizeof(uint32_t);
-    m_metaInfo.lineOffsets = reinterpret_as_u32(m_buffer.subspan(m_offset, lineOffsetSize));
-    m_offset += lineOffsetSize;
+    m_metaInfo.lineOffsets = reinterpretAsU32(m_buffer.subspan(offset, lineOffsetSize));
+    offset += lineOffsetSize;
 
     // Читаем данные пикселей
-    m_metaInfo.bytes = m_buffer.subspan(m_offset, m_metaInfo.lineOffsets[m_metaInfo.height]);
+    m_metaInfo.bytes = m_buffer.subspan(offset, m_metaInfo.lineOffsets[m_metaInfo.height]);
 
     // Добавляем заполняющий цвет в палитру
     if (m_metaInfo.fillColorIndex == -1) {
@@ -203,10 +208,11 @@ void CSX_Parser::decodeLine(std::span<const uint8_t> bytes, size_t byteIndex, st
                 pixelIndex += runLength;
                 break;
             }
-            default: // Обычный цвет
+            default: { // Обычный цвет
                 pixels[pixelIndex] = x;
                 pixelIndex++;
                 break;
+            }
         }
     }
 }
