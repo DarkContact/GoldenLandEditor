@@ -78,7 +78,15 @@ int main(int, char**)
 
     LogFmt("[INFO] SDL Version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
     if (SDL_VERSION != SDL_GetVersion()) {
-        LogFmt("SDL Linked version: {}", SDL_GetVersion());
+        LogFmt("[INFO] Linked SDL Version: {}.{}.{}",
+               SDL_VERSIONNUM_MAJOR(SDL_GetVersion()),
+               SDL_VERSIONNUM_MINOR(SDL_GetVersion()),
+               SDL_VERSIONNUM_MICRO(SDL_GetVersion()));
+    }
+
+    // Линкуемая версия должна быть не ниже компилируемой
+    if (SDL_VERSION > SDL_GetVersion()) {
+        Log("Error. Compiled SDL version less when linked SDL version!");
         return -1;
     }
 
