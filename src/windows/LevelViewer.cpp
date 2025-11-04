@@ -13,12 +13,13 @@
 
 bool LevelViewer::update(bool& showWindow, Level& level)
 {
-    Tracy_ZoneScopedN("LevelViewer::update");
-    Tracy_ZoneText(level.data().name.c_str(), level.data().name.size());
-    ImGuiIO& io = ImGui::GetIO();
+    Tracy_ZoneScoped;
+    auto levelWindowName = Level::levelWindowName(level.data().name, level.data().type);
+    Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
+    ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin(level.data().name.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::PopStyleVar();
 
     if (ImGui::BeginMenuBar()) {

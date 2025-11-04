@@ -26,7 +26,8 @@
 // TODO: Изменение данных уровня с поддержкой undo/redo
 
 struct RootDirectoryContext {
-    std::vector<std::string> levelNames;
+    std::vector<std::string> singleLevelNames;
+    std::vector<std::string> multiplayerLevelNames;
     std::vector<std::string> csxFiles;
     std::vector<std::string> sdbFiles;
     std::vector<std::string> mdfFiles;
@@ -68,7 +69,8 @@ int main(int, char**)
     auto backgroundTask = [] (RootDirectoryContext& rootDirectoryContext) {
         backgroundWork = true;
         Resources resources(rootDirectoryContext.rootDirectory());
-        rootDirectoryContext.levelNames = resources.levelNames();
+        rootDirectoryContext.singleLevelNames = resources.levelNames(LevelType::kSingle);
+        rootDirectoryContext.multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
         rootDirectoryContext.csxFiles = resources.csxFiles();
         rootDirectoryContext.sdbFiles = resources.sdbFiles();
         rootDirectoryContext.mdfFiles = resources.mdfFiles();
@@ -199,7 +201,7 @@ int main(int, char**)
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("Levels")) {
-                    showLevelsWindow = !rootDirectoryContext.levelNames.empty();
+                    showLevelsWindow = !rootDirectoryContext.singleLevelNames.empty();
                 }
                 if (ImGui::MenuItem("CSX Viewer")) {
                     rootDirectoryContext.showCsxWindow = !rootDirectoryContext.csxFiles.empty();
@@ -239,7 +241,8 @@ int main(int, char**)
                             rootDirectoryContext->setRootDirectory(*filelist);
                             auto backgroundTask = [] (RootDirectoryContext* rootDirectoryContext) {
                                 Resources resources(rootDirectoryContext->rootDirectory());
-                                rootDirectoryContext->levelNames = resources.levelNames();
+                                rootDirectoryContext->singleLevelNames = resources.levelNames(LevelType::kSingle);
+                                rootDirectoryContext->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
                                 rootDirectoryContext->csxFiles = resources.csxFiles();
                                 rootDirectoryContext->sdbFiles = resources.sdbFiles();
                                 rootDirectoryContext->mdfFiles = resources.mdfFiles();
@@ -271,24 +274,25 @@ int main(int, char**)
             MdfViewer::update(rootDirectoryContext.showMdfWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.mdfFiles);
         }
 
-        std::string_view loadedLevelName;
-        if (showLevelsWindow && !rootDirectoryContext.levelNames.empty()) {
-            if (LevelPicker::update(showLevelsWindow, rootDirectoryContext.levelNames, rootDirectoryContext.selectedLevelIndex)) {
-                loadedLevelName = rootDirectoryContext.levelNames[rootDirectoryContext.selectedLevelIndex];
+        if (showLevelsWindow && !rootDirectoryContext.singleLevelNames.empty()) {
+            if (auto result = LevelPicker::update(showLevelsWindow,
+                                                  rootDirectoryContext.singleLevelNames,
+                                                  rootDirectoryContext.multiplayerLevelNames,
+                                                  rootDirectoryContext.selectedLevelIndex); result.selected) {
                 bool alreadyLoaded = false;
                 for (const auto& level : rootDirectoryContext.levels) {
-                    if (level.data().name == loadedLevelName) {
+                    if (level.data().name == result.loadedLevelName && level.data().type == result.loadedLevelType) {
                         alreadyLoaded = true;
                         break;
                     }
                 }
 
                 if (alreadyLoaded) {
-                    ImGui::SetWindowFocus(loadedLevelName.data());
+                    ImGui::SetWindowFocus(Level::levelWindowName(result.loadedLevelName, result.loadedLevelType).c_str());
                 } else {
                     // Загрузка уровня
                     std::string error;
-                    auto level = Level::loadLevel(renderer, rootDirectoryContext.rootDirectory(), loadedLevelName, "single", &error);
+                    auto level = Level::loadLevel(renderer, rootDirectoryContext.rootDirectory(), result.loadedLevelName, result.loadedLevelType, &error);
                     if (level) {
                         rootDirectoryContext.levels.push_back(std::move(*level));
                     } else {

@@ -75,6 +75,8 @@ struct LevelAnimation : public BaseAnimation {
 
 struct LevelData {
     std::string name;
+    LevelType type;
+
     Texture background;
     Texture minimap;
     SEF_Data sefData;
@@ -90,13 +92,15 @@ class Level
 public:
     ~Level() = default;
 
-    static std::optional<Level> loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType, std::string* error);
-
     Level(const Level&) = delete;
     Level& operator=(const Level&) = delete;
 
     Level(Level&& other) noexcept = default;
     Level& operator=(Level&& other) noexcept = default;
+
+    static std::optional<Level> loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, LevelType levelType, std::string* error);
+
+    static std::string levelWindowName(std::string_view level, LevelType levelType);
 
     const LevelData& data() const;
     LevelData& data();

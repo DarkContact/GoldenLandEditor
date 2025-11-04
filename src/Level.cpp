@@ -10,10 +10,10 @@
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
-std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, std::string_view levelType, std::string* error)
+std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, LevelType levelType, std::string* error)
 {
     Tracy_ZoneScoped;
-    LogFmt("Loading level: {}", level);
+    LogFmt("Loading level: {}", levelWindowName(level, levelType));
     assert(error);
 
     Level levelObj;
@@ -21,8 +21,10 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 
     auto& levelData = levelObj.m_data;
     levelData.name = level;
+    levelData.type = levelType;
+    auto levelTypeString = levelTypeToString(levelType);
 
-    std::string sefPath = levelSef(rootDirectory, level, levelType);
+    std::string sefPath = levelSef(rootDirectory, level, levelTypeString);
     if (!SEF_Parser::parse(sefPath, levelData.sefData, error)) {
         LogFmt("Loading .sef failed. {}", *error);
         return {};
@@ -34,10 +36,10 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         return {};
     }
 
-    std::string sdbPath = levelSdb(rootDirectory, level, levelType);
+    std::string sdbPath = levelSdb(rootDirectory, level, levelTypeString);
     if (!SDB_Parser::parse(sdbPath, levelData.sdbData, error)) {
         LogFmt("Loading .sdb failed. {}", *error);
-        // Допустимо, если не загрузилось, но нужно уведомить пользователя
+        // Допустимо не загрузить. Нужно уведомить пользователя
     }
 
     std::string bgPath = levelBackground(rootDirectory, levelData.sefData.pack);
@@ -95,6 +97,34 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     return std::make_optional(std::move(levelObj));
 }
 
+std::string Level::levelWindowName(std::string_view level, LevelType levelType)
+{
+    if (levelType == LevelType::kSingle) {
+        return std::string(level);
+    } else {
+        return std::format("{} [mp]", level);
+    }
+}
+
+const LevelData& Level::data() const {
+    return m_data;
+}
+
+LevelData& Level::data() {
+    return m_data;
+}
+
+std::string Level::levelDir(std::string_view levelType) const
+{
+    return std::format("{}/levels/{}/{}", m_rootDirectory, levelType, m_data.name);
+}
+
+std::string Level::levelPackDir() const
+{
+    return std::format("{}/levels/pack/{}", m_rootDirectory, m_data.sefData.pack);
+}
+
+
 std::string Level::levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType)
 {
     return std::format("{0}/levels/{1}/{2}/{2}.sef", rootDirectory, levelType, level);
@@ -133,24 +163,4 @@ std::string Level::levelAnimationDir(std::string_view rootDirectory, std::string
 std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index)
 {
     return std::format("{}/levels/pack/{}/bitmaps/animated/anim_{}.csx", rootDirectory, levelPack, index);
-}
-
-const LevelData& Level::data() const
-{
-    return m_data;
-}
-
-LevelData& Level::data()
-{
-    return m_data;
-}
-
-std::string Level::levelDir(std::string_view levelType) const
-{
-    return std::format("{}/levels/{}/{}", m_rootDirectory, levelType, m_data.name);
-}
-
-std::string Level::levelPackDir() const
-{
-    return std::format("{}/levels/pack/{}", m_rootDirectory, m_data.sefData.pack);
 }

@@ -49,17 +49,20 @@ Resources::Resources(std::string_view rootDirectory) :
     m_mainDirectories[Magic_Bitmap] = std::format("{}/magic/bitmap", m_rootDirectory);
 }
 
-std::vector<std::string> Resources::levelNames() const
+std::vector<std::string> Resources::levelNames(LevelType type) const
 {
     Tracy_ZoneScoped;
     std::vector<std::string> results;
     try {
-        auto dir = std::format("{}/levels/single", m_rootDirectory);
+        auto dir = std::format("{}/levels/{}", m_rootDirectory, levelTypeToString(type));
+        if (!fs::exists(StringUtils::utf8View(dir)))
+            return results;
+
         for (const auto& entry : fs::directory_iterator(StringUtils::utf8View(dir))) {
             results.push_back(entry.path().filename().string());
         }
-    } catch (const fs::filesystem_error& e) {
-        LogFmt("Filesystem error: {}", e.what());
+    } catch (const fs::filesystem_error& ex) {
+        LogFmt("Filesystem error: {}", ex.what());
     }
     return results;
 }

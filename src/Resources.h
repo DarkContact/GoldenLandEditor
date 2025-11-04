@@ -4,12 +4,14 @@
 #include <vector>
 #include <array>
 
+#include "Types.h"
+
 class Resources
 {
 public:
     Resources(std::string_view rootDirectory);
 
-    std::vector<std::string> levelNames() const;
+    std::vector<std::string> levelNames(LevelType type) const;
 
     std::vector<std::string> sdbFiles() const;
     std::vector<std::string> csxFiles() const;

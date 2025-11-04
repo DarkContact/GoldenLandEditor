@@ -52,3 +52,19 @@ protected:
     uint32_t currentFrame = 0;
     uint64_t lastUpdateTimeMs = 0;
 };
+
+enum class LevelType {
+    kSingle,
+    kMultiplayer
+};
+
+static std::string_view levelTypeToString(LevelType levelType) {
+    static constexpr auto kLevelTypeSingle = std::string_view("single");
+    static constexpr auto kLevelTypeMulti = std::string_view("multiplayer");
+
+    if (levelType == LevelType::kSingle) {
+        return kLevelTypeSingle;
+    } else {
+        return kLevelTypeMulti;
+    }
+}
