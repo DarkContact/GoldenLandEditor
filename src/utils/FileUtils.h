@@ -12,5 +12,6 @@ public:
 
     static std::vector<uint8_t> loadFile(std::string_view filePath, std::string* error = nullptr);
     static bool saveFile(std::string_view filePath, std::span<const uint8_t> fileData, std::string* error = nullptr);
-    static bool openFolder(std::string_view path, std::string* error = nullptr);
+
+    static bool openFolderAndSelectItems(std::string_view path, std::span<const std::string_view> files, std::string* error = nullptr);
 };

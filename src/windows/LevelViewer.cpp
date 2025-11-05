@@ -80,13 +80,13 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Open level folder", NULL)) {
                 std::string error;
-                if (!FileUtils::openFolder(level.levelDir(levelTypeToString(level.data().type)), &error)) {
+                if (!FileUtils::openFolderAndSelectItems(level.levelDir(levelTypeToString(level.data().type)), {}, &error)) {
                     Log(error);
                 }
             }
             if (ImGui::MenuItem("Open pack folder", NULL)) {
                 std::string error;
-                if (!FileUtils::openFolder(level.levelPackDir(), &error)) {
+                if (!FileUtils::openFolderAndSelectItems(level.levelPackDir(), {}, &error)) {
                     Log(error);
                 }
             }
