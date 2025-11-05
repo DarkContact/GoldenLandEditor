@@ -11,7 +11,7 @@
 #include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
 
-bool LevelViewer::update(bool& showWindow, Level& level)
+bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
 {
     Tracy_ZoneScoped;
     auto levelWindowName = Level::levelWindowName(level.data().name, level.data().type);
@@ -80,13 +80,15 @@ bool LevelViewer::update(bool& showWindow, Level& level)
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Open level folder", NULL)) {
                 std::string error;
-                if (!FileUtils::openFolderAndSelectItems(level.levelDir(levelTypeToString(level.data().type)), {}, &error)) {
+                std::string levelDir = Level::levelDir(rootDirectory, levelTypeToString(level.data().type), level.data().name);
+                if (!FileUtils::openFolderAndSelectItems(levelDir, {}, &error)) {
                     Log(error);
                 }
             }
             if (ImGui::MenuItem("Open pack folder", NULL)) {
                 std::string error;
-                if (!FileUtils::openFolderAndSelectItems(level.levelPackDir(), {}, &error)) {
+                std::string levelPackDir = Level::levelPackDir(rootDirectory, level.data().sefData.pack);
+                if (!FileUtils::openFolderAndSelectItems(levelPackDir, {}, &error)) {
                     Log(error);
                 }
             }

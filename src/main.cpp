@@ -37,7 +37,7 @@ struct RootDirectoryContext {
     bool showSdbWindow = false;
     bool showMdfWindow = false;
 
-    const std::string& rootDirectory() const { return m_rootDirectory; }
+    std::string_view rootDirectory() const { return m_rootDirectory; }
 
     void setRootDirectory(std::string_view rootDirectory) {
         levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
@@ -251,7 +251,7 @@ int main(int, char**)
                             };
                             auto bgTaskFuture = std::async(std::launch::async, backgroundTask, rootDirectoryContext);
                         }
-                    }, &rootDirectoryContext, window, rootDirectoryContext.rootDirectory().c_str(), false);
+                    }, &rootDirectoryContext, window, rootDirectoryContext.rootDirectory().data(), false);
                 }
                 if (ImGui::MenuItem("Fonts")) {
                     showSettingsWindow = true;
@@ -307,7 +307,7 @@ int main(int, char**)
                 bool openLevel = true;
                 Level& level = *it;
                 if (level.data().background) {
-                    LevelViewer::update(openLevel, level);
+                    LevelViewer::update(openLevel, rootDirectoryContext.rootDirectory(), level);
 
                     if (!openLevel) {
                         it = rootDirectoryContext.levels.erase(it);

@@ -8,7 +8,7 @@ class LevelViewer
 public:
     LevelViewer() = delete;
 
-    static bool update(bool& showWindow, Level& level);
+    static bool update(bool& showWindow, std::string_view rootDirectory, Level& level);
 
 private:
     static ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);

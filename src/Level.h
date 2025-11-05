@@ -98,27 +98,26 @@ public:
     Level(Level&& other) noexcept = default;
     Level& operator=(Level&& other) noexcept = default;
 
-    static std::optional<Level> loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view level, LevelType levelType, std::string* error);
+    const LevelData& data() const { return m_data; }
+    LevelData& data() { return m_data; }
 
-    static std::string levelWindowName(std::string_view level, LevelType levelType);
+    static std::optional<Level> loadLevel(SDL_Renderer* renderer, std::string_view rootDirectory, std::string_view levelName, LevelType levelType, std::string* error);
 
-    const LevelData& data() const;
-    LevelData& data();
+    static std::string levelWindowName(std::string_view levelName, LevelType levelType);
 
-    std::string levelDir(std::string_view levelType) const;
-    std::string levelPackDir() const;
+    static std::string levelDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
+    static std::string levelPackDir(std::string_view rootDirectory, std::string_view levelPack);
 
     static const int tileWidth = 12;
     static const int tileHeight = 9;
-
     static const int chunkWidth = tileWidth * 2;
     static const int chunkHeight = tileHeight * 2;
 
 private:
     Level() noexcept = default;
 
-    static std::string levelSef(std::string_view rootDirectory, std::string_view level, std::string_view levelType);
-    static std::string levelSdb(std::string_view rootDirectory, std::string_view level, std::string_view levelType);
+    static std::string levelSef(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
+    static std::string levelSdb(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
     static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack);
@@ -127,5 +126,4 @@ private:
     static std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index);
 
     LevelData m_data;
-    std::string_view m_rootDirectory;
 };
