@@ -94,7 +94,7 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             }
             if (ImGui::MenuItem("Open .lvl", NULL)) {
                 std::string error;
-                std::string levelLvlDir = Level::levelLvlDir(rootDirectory, level.data().sefData.pack);
+                std::string levelLvlDir = Level::levelLvlDir(rootDirectory);
                 std::string levelLvlFile = Level::levelLvl(rootDirectory, level.data().sefData.pack);
                 std::array<std::string_view, 1> files = {levelLvlFile};
                 if (!FileUtils::openFolderAndSelectItems(levelLvlDir, files, &error)) {

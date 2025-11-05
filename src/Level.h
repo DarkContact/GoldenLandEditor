@@ -107,7 +107,7 @@ public:
 
     static std::string levelMainDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
     static std::string levelPackDir(std::string_view rootDirectory, std::string_view levelPack);
-    static std::string levelLvlDir(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelLvlDir(std::string_view rootDirectory);
 
     static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
 

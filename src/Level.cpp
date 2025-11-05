@@ -114,9 +114,9 @@ std::string Level::levelPackDir(std::string_view rootDirectory, std::string_view
     return std::format("{}/levels/pack/{}", rootDirectory, levelPack);
 }
 
-std::string Level::levelLvlDir(std::string_view rootDirectory, std::string_view levelPack)
+std::string Level::levelLvlDir(std::string_view rootDirectory)
 {
-    return std::format("{}/levels/lvl", rootDirectory, levelPack);
+    return std::format("{}/levels/lvl", rootDirectory);
 }
 
 
