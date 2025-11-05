@@ -105,8 +105,11 @@ public:
 
     static std::string levelWindowName(std::string_view levelName, LevelType levelType);
 
-    static std::string levelDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
+    static std::string levelMainDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
     static std::string levelPackDir(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelLvlDir(std::string_view rootDirectory, std::string_view levelPack);
+
+    static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
 
     static const int tileWidth = 12;
     static const int tileHeight = 9;
@@ -118,7 +121,6 @@ private:
 
     static std::string levelSef(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
     static std::string levelSdb(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName);
-    static std::string levelLvl(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelBackground(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelMinimap(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelLao(std::string_view rootDirectory, std::string_view levelPack);

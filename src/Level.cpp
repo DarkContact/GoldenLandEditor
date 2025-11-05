@@ -104,7 +104,7 @@ std::string Level::levelWindowName(std::string_view levelName, LevelType levelTy
     }
 }
 
-std::string Level::levelDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName)
+std::string Level::levelMainDir(std::string_view rootDirectory, std::string_view levelType, std::string_view levelName)
 {
     return std::format("{}/levels/{}/{}", rootDirectory, levelType, levelName);
 }
@@ -112,6 +112,11 @@ std::string Level::levelDir(std::string_view rootDirectory, std::string_view lev
 std::string Level::levelPackDir(std::string_view rootDirectory, std::string_view levelPack)
 {
     return std::format("{}/levels/pack/{}", rootDirectory, levelPack);
+}
+
+std::string Level::levelLvlDir(std::string_view rootDirectory, std::string_view levelPack)
+{
+    return std::format("{}/levels/lvl", rootDirectory, levelPack);
 }
 
 

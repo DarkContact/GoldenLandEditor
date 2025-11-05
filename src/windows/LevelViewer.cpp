@@ -80,8 +80,8 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Open level folder", NULL)) {
                 std::string error;
-                std::string levelDir = Level::levelDir(rootDirectory, levelTypeToString(level.data().type), level.data().name);
-                if (!FileUtils::openFolderAndSelectItems(levelDir, {}, &error)) {
+                std::string levelMainDir = Level::levelMainDir(rootDirectory, levelTypeToString(level.data().type), level.data().name);
+                if (!FileUtils::openFolderAndSelectItems(levelMainDir, {}, &error)) {
                     Log(error);
                 }
             }
@@ -89,6 +89,15 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
                 std::string error;
                 std::string levelPackDir = Level::levelPackDir(rootDirectory, level.data().sefData.pack);
                 if (!FileUtils::openFolderAndSelectItems(levelPackDir, {}, &error)) {
+                    Log(error);
+                }
+            }
+            if (ImGui::MenuItem("Open .lvl", NULL)) {
+                std::string error;
+                std::string levelLvlDir = Level::levelLvlDir(rootDirectory, level.data().sefData.pack);
+                std::string levelLvlFile = Level::levelLvl(rootDirectory, level.data().sefData.pack);
+                std::array<std::string_view, 1> files = {levelLvlFile};
+                if (!FileUtils::openFolderAndSelectItems(levelLvlDir, files, &error)) {
                     Log(error);
                 }
             }
