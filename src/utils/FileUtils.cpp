@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <memory>
 #include <format>
 
 #include "SDL3/SDL_iostream.h"
@@ -12,6 +11,8 @@
 #include "utils/DebugLog.h"
 
 #ifdef _WIN32
+  #define WIN32_LEAN_AND_MEAN
+  #define NOMINMAX
   #include <windows.h>
   #include <shlobj.h>
 #endif
@@ -188,10 +189,23 @@ std::wstring winPath(std::string_view utf8Path) {
     return Utf8ToWString(normalizePathForWindows(utf8Path));
 }
 
-struct CoUninitializer {
-    void operator()(void*) const noexcept {
-        CoUninitialize();
+struct CoInitializer {
+    explicit CoInitializer(DWORD flags) noexcept
+    {
+        m_hr = CoInitializeEx(nullptr, flags);
     }
+
+    ~CoInitializer() noexcept
+    {
+        if (SUCCEEDED(m_hr))
+            CoUninitialize();
+    }
+
+    HRESULT hResult() const noexcept { return m_hr; }
+    explicit operator bool() const noexcept { return SUCCEEDED(m_hr); }
+
+private:
+    HRESULT m_hr = E_FAIL;
 };
 #endif
 
@@ -200,13 +214,10 @@ bool FileUtils::openFolderAndSelectItems(std::string_view path, std::span<const 
 #ifdef _WIN32
     assert(files.size() <= 8);
 
-    std::unique_ptr<void, CoUninitializer> comGuard = {
-        reinterpret_cast<void*>(1) /*dummy non‑null*/,
-        CoUninitializer{}
-    };
-
-    HRESULT hrInit = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-    if (FAILED(hrInit)) {
+    CoInitializer comGuard(COINIT_APARTMENTTHREADED);
+    if (!comGuard) {
+        if (error)
+            *error = std::format("Failed to CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED). {}", HResultToStringUtf8(comGuard.hResult()));
         return false;
     }
 
@@ -220,16 +231,14 @@ bool FileUtils::openFolderAndSelectItems(std::string_view path, std::span<const 
     // При itemsSize == 0, если в path указана только директория (Например "C:\\Windows")
     // откроется проводник в "C:\\" с выделенной директорией "Windows"
     // Поэтому в этом случае добавим в items тот же путь и сделаем itemsSize = 1, тогда проводник откроется в "C:\\Windows"
-    std::array<PIDLIST_ABSOLUTE, 8> items;
-    items.fill(nullptr);
-
-    int itemsSize = max(1, files.size());
+    std::array<PIDLIST_ABSOLUTE, 8> items{};
+    UINT itemsSize = std::max(1u, static_cast<UINT>(files.size()));
     if (files.empty()) {
         items[0] = pidlFolder;
     }
 
     bool createItemsPathsOk = true;
-    for (int i = 0; i < files.size(); ++i) {
+    for (size_t i = 0; i < files.size(); ++i) {
         items[i] = ILCreateFromPathW(winPath(files[i]).c_str());
         if (items[i] == nullptr) {
             if (error)
@@ -240,6 +249,8 @@ bool FileUtils::openFolderAndSelectItems(std::string_view path, std::span<const 
     }
 
     // Чистим память и выходим
+    // При files.empty() items[0] == pidlFolder.
+    // В этом случае освобождаем только pidlFolder, чтобы избежать двойного ILFree.
     if (!createItemsPathsOk) {
         ILFree(pidlFolder);
         if (!files.empty()) {
@@ -249,7 +260,6 @@ bool FileUtils::openFolderAndSelectItems(std::string_view path, std::span<const 
         }
         return false;
     }
-
 
     HRESULT hResult = SHOpenFolderAndSelectItems(pidlFolder, itemsSize, (PCUITEMID_CHILD_ARRAY)items.data(), 0);
 
