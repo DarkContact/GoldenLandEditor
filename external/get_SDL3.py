@@ -4,7 +4,7 @@ import shutil
 import zipfile
 import urllib.request
 
-VERSION = "3.2.22"
+VERSION = "3.2.26"
 
 while True:
     print("Выберите тип библиотеки для установки:")

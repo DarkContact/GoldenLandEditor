@@ -12,7 +12,7 @@ option(GOLDENLAND_ENABLE_OPENMP "Enable OpenMP"         ON)
 #     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 #         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_MinGW/cmake" CACHE PATH "Path to SDL3")
 #     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_VS/cmake" CACHE PATH "Path to SDL3")
+#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_MSVC/cmake" CACHE PATH "Path to SDL3")
 #     endif()
 # endif()
 
