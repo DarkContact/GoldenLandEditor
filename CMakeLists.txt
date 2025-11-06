@@ -7,16 +7,29 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(GOLDENLAND_ENABLE_TRACY  "Enable Tracy profiler" OFF)
 option(GOLDENLAND_ENABLE_OPENMP "Enable OpenMP"         ON)
 
-# Требует большего тестирования. Нужно понимание как подружить это с CMAKE_PREFIX_PATH
-# if(WIN32 AND NOT SDL3_DIR)
-#     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_MinGW/cmake" CACHE PATH "Path to SDL3")
-#     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_MSVC/cmake" CACHE PATH "Path to SDL3")
-#     endif()
-# endif()
+# Попытка найти SDL3 стандартными путями или через CMAKE_PREFIX_PATH / SDL3_DIR
+find_package(SDL3 QUIET CONFIG)
+
+if(WIN32 AND NOT SDL3_FOUND)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(_SDL3_HINT "${CMAKE_SOURCE_DIR}/external/SDL3_MinGW/cmake")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(_SDL3_HINT "${CMAKE_SOURCE_DIR}/external/SDL3_MSVC/cmake")
+    endif()
+
+    if(EXISTS "${_SDL3_HINT}/SDL3Config.cmake")
+        set(SDL3_DIR "${_SDL3_HINT}")
+    else()
+        message(WARNING "SDL3 not found! Fallback path not exist: ${_SDL3_HINT}\n"
+            "You can download SDL3 by running: external/get_SDL3.py\n"
+            "Alternatively, specify SDL3_DIR to the folder containing SDL3Config.cmake, "
+            "or add the SDL3 installation path to CMAKE_PREFIX_PATH.")
+    endif()
+endif()
 
 find_package(SDL3 REQUIRED CONFIG)
+message(STATUS "Found SDL3: ${SDL3_DIR} (version: ${SDL3_VERSION})")
+
 include(external/imgui.cmake)
 
 add_executable(GoldenLandEditor WIN32
