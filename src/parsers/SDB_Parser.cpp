@@ -1,5 +1,7 @@
 #include "SDB_Parser.h"
 
+#include <cassert>
+
 #include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
@@ -16,8 +18,8 @@ bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* er
     }
 
     bool xorRequired = false;
-    size_t offset = 4;
-    if (std::memcmp(fileData.data(), "SDB ", 4) != 0) {
+    size_t offset = 0;
+    if (readString(fileData, 4, offset) != "SDB ") {
         xorRequired = true;
         offset = 0;
     }

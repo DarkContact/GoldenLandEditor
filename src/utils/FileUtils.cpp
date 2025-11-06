@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <format>
+#include <array>
 
 #include "SDL3/SDL_iostream.h"
 #include "SDL3/SDL_timer.h"

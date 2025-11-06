@@ -30,7 +30,3 @@ target_include_directories(imgui
 )
 
 target_link_libraries(imgui PRIVATE SDL3::SDL3)
-
-if (WIN32)
-  target_link_libraries(imgui PRIVATE imm32)
-endif()

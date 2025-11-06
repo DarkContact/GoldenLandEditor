@@ -1,8 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
-project(GoldenLandEditor LANGUAGES CXX)
+project(GoldenLandEditor)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(GOLDENLAND_ENABLE_TRACY  "Enable Tracy profiler" OFF)
+option(GOLDENLAND_ENABLE_OPENMP "Enable OpenMP"         ON)
+
+# Требует большего тестирования. Нужно понимание как подружить это с CMAKE_PREFIX_PATH
+# if(WIN32 AND NOT SDL3_DIR)
+#     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_MinGW/cmake" CACHE PATH "Path to SDL3")
+#     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+#         set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3_VS/cmake" CACHE PATH "Path to SDL3")
+#     endif()
+# endif()
 
 find_package(SDL3 REQUIRED CONFIG)
 include(external/imgui.cmake)
@@ -60,8 +72,16 @@ add_executable(GoldenLandEditor WIN32
     src/utils/AnimationCachedLoader.cpp
 )
 
-option(USE_TRACY "Enable Tracy profiler" OFF)
-if(USE_TRACY)
+target_sources(GoldenLandEditor PRIVATE "${CMAKE_SOURCE_DIR}/README.md")
+set_source_files_properties("${CMAKE_SOURCE_DIR}/README.md" PROPERTIES HEADER_FILE_ONLY TRUE)
+
+target_include_directories(GoldenLandEditor PRIVATE src)
+target_include_directories(GoldenLandEditor PRIVATE external/mINI)
+target_include_directories(GoldenLandEditor PRIVATE external/stb)
+target_include_directories(GoldenLandEditor PRIVATE imgui)
+target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
+
+if(GOLDENLAND_ENABLE_TRACY)
     include(FetchContent)
 
     FetchContent_Declare(
@@ -78,6 +98,7 @@ if(USE_TRACY)
     option(TRACY_ENABLE "" ON)
     option(TRACY_ON_DEMAND "" ON)
     target_link_libraries(GoldenLandEditor PUBLIC Tracy::TracyClient)
+
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-g -fno-omit-frame-pointer -O2)
     endif()
@@ -86,22 +107,13 @@ if(USE_TRACY)
     endif()
 endif()
 
-target_include_directories(GoldenLandEditor PRIVATE src)
-target_include_directories(GoldenLandEditor PRIVATE external/mINI)
-target_include_directories(GoldenLandEditor PRIVATE external/stb)
-target_include_directories(GoldenLandEditor PRIVATE imgui)
-target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
+if(GOLDENLAND_ENABLE_OPENMP)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(GoldenLandEditor PRIVATE -fopenmp)
+        target_link_libraries(GoldenLandEditor PRIVATE libgomp)
+    endif()
 
-# OpenMP
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(GoldenLandEditor PRIVATE -fopenmp)
-    target_link_libraries(GoldenLandEditor PRIVATE libgomp)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(GoldenLandEditor PRIVATE /openmp)
+    endif()
 endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(GoldenLandEditor PRIVATE /openmp)
-endif()
-
-add_custom_target(Docs ALL
-    SOURCES ${CMAKE_SOURCE_DIR}/README.md
-)

@@ -1,6 +1,7 @@
 #include "IoUtils.h"
 
 #include <cassert>
+#include <cstring>
 
 namespace IoUtils
 {

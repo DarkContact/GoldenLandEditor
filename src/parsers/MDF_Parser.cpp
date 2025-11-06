@@ -1,8 +1,6 @@
 #include "MDF_Parser.h"
 
-#include <cstring>
 #include <cassert>
-#include <span>
 
 #include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
@@ -17,12 +15,12 @@ std::optional<MDF_Data> MDF_Parser::parse(std::string_view path, std::string* er
     }
 
     // Проверка заголовка "MDF "
-    if (std::memcmp(fileData.data(), "MDF ", 4) != 0) {
+    size_t offset = 0;
+    if (readString(fileData, 4, offset) != "MDF ") {
         if (error)
             *error = "Incorrect MDF file. Missing 'MDF '";
         return {};
     }
-    size_t offset = 4;
 
     std::optional<MDF_Data> result = MDF_Data();
     result->totalDurationMs = readInt32(fileData, offset);
