@@ -4,9 +4,9 @@ project(GoldenLandEditor)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(GOLDENLAND_ENABLE_TRACY      "Enable Tracy profiler" OFF)
-option(GOLDENLAND_ENABLE_OPENMP     "Enable OpenMP"         ON)
-option(GOLDENLAND_CMAKE_MESSAGES    "Enable CMake messages" ON)
+option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
+option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           ON)
+option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 
 if(WIN32)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -15,9 +15,10 @@ if(WIN32)
         set(SDL3_SEARCH_HINT "${CMAKE_SOURCE_DIR}/external/SDL3_MSVC/cmake")
     endif()
 
-    if(GOLDENLAND_CMAKE_MESSAGES AND NOT EXISTS "${SDL3_SEARCH_HINT}/SDL3Config.cmake")
+    if(GOLDENLAND_ENABLE_DEPENDENCY_HINTS AND NOT EXISTS "${SDL3_SEARCH_HINT}/SDL3Config.cmake")
         message(WARNING "SDL3_SEARCH_HINT path not exist: ${SDL3_SEARCH_HINT}\n"
-                        "You can download SDL3 by running: external/get_SDL3.py")
+                        "You can download SDL3 by running: external/get_SDL3.py\n"
+                        "(Or set GOLDENLAND_ENABLE_DEPENDENCY_HINTS=OFF to suppress this message)")
     endif()
 endif()
 
