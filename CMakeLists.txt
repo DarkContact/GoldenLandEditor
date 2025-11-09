@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
-project(GoldenLandEditor)
+
+file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" FILE_VERSION LIMIT_COUNT 1)
+project(GoldenLandEditor VERSION ${FILE_VERSION})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -80,8 +82,20 @@ add_executable(GoldenLandEditor WIN32
     src/utils/AnimationCachedLoader.cpp
 )
 
-target_sources(GoldenLandEditor PRIVATE "${CMAKE_SOURCE_DIR}/README.md")
-set_source_files_properties("${CMAKE_SOURCE_DIR}/README.md" PROPERTIES HEADER_FILE_ONLY TRUE)
+target_sources(GoldenLandEditor PRIVATE
+    "${CMAKE_SOURCE_DIR}/README.md"
+    "${CMAKE_SOURCE_DIR}/VERSION"
+)
+set_source_files_properties(
+    "${CMAKE_SOURCE_DIR}/README.md"
+    "${CMAKE_SOURCE_DIR}/VERSION"
+    PROPERTIES HEADER_FILE_ONLY TRUE
+)
+set_source_files_properties(
+    src/main.cpp
+    PROPERTIES COMPILE_DEFINITIONS
+    GOLDENLAND_VERSION_STRING="${FILE_VERSION}"
+)
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)

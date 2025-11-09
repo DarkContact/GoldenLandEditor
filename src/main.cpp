@@ -1,5 +1,6 @@
 #include <atomic>
 #include <future>
+#include <format>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -101,7 +102,8 @@ int main(int, char**)
     // Create window with SDL_Renderer graphics context
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    SDL_Window* window = SDL_CreateWindow("Goldenland Editor", (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
+    SDL_Window* window = SDL_CreateWindow(std::format("Goldenland Editor v{}", GOLDENLAND_VERSION_STRING).c_str(),
+                                          (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
     if (window == nullptr) {
         LogFmt("SDL_CreateWindow error: {}", SDL_GetError());
         return -1;
