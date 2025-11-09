@@ -21,8 +21,6 @@ jobs:
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 'latest'
 
       - name: Install SDL3 via vcpkg
         run: vcpkg install sdl3:x64-windows
