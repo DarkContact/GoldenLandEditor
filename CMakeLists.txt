@@ -1,15 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
 
+option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
+option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
+option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
+option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   ON)
+
+if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
+    #TODO: MINGW OR CYGWIN
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" FILE_VERSION LIMIT_COUNT 1)
 project(GoldenLandEditor VERSION ${FILE_VERSION})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
-option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           ON)
-option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
-option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   ON)
 
 if(WIN32)
     if(MINGW OR CYGWIN)
@@ -134,13 +139,5 @@ if(GOLDENLAND_ENABLE_OPENMP)
         target_link_libraries(GoldenLandEditor PRIVATE libgomp)
     elseif(MSVC)
         target_compile_options(GoldenLandEditor PRIVATE /openmp)
-    endif()
-endif()
-
-if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
-    if(MINGW OR CYGWIN)
-        set(CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} -static-libgcc -static-libstdc++")
-    elseif(MSVC)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
 endif()
