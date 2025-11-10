@@ -19,6 +19,12 @@ jobs:
         with:
           arch: x64
 
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}/packages
+          key: vcpkg-packages-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+
       - name: Update built-in vcpkg
         shell: pwsh
         run: |
