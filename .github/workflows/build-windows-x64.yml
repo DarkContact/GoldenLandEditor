@@ -19,6 +19,14 @@ jobs:
         with:
           arch: x64
 
+      - name: Update built-in vcpkg
+        shell: pwsh
+        run: |
+          Write-Host "Updating vcpkg..."
+          cd $env:VCPKG_INSTALLATION_ROOT
+          git pull
+          .\bootstrap-vcpkg.bat
+
       - name: Install SDL3 via built-in vcpkg
         shell: pwsh
         run: |
