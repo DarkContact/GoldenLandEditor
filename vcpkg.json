@@ -1,5 +1,5 @@
 {
-  "name": "GoldenLandEditor",
+  "name": "goldenland-editor",
   "dependencies": [
     {
       "name": "sdl3",
