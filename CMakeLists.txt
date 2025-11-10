@@ -1,20 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
-option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
-option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
-option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
-option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   ON)
-
-if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
-    #TODO: MINGW OR CYGWIN
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
-
 file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" FILE_VERSION LIMIT_COUNT 1)
 project(GoldenLandEditor VERSION ${FILE_VERSION})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
+option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
+option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
+option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 
 if(WIN32)
     if(MINGW OR CYGWIN)
@@ -30,9 +25,11 @@ if(WIN32)
     endif()
 endif()
 
+# SDL3
 find_package(SDL3 REQUIRED CONFIG PATHS ${SDL3_SEARCH_HINT})
 message(STATUS "Found SDL3: ${SDL3_DIR} (version: ${SDL3_VERSION})")
 
+# ImGui
 include(external/imgui.cmake)
 
 add_executable(GoldenLandEditor WIN32
@@ -108,6 +105,21 @@ target_include_directories(GoldenLandEditor PRIVATE external/mINI)
 target_include_directories(GoldenLandEditor PRIVATE external/stb)
 target_include_directories(GoldenLandEditor PRIVATE imgui)
 target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
+
+if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
+    message(STATUS "Building with static runtime enabled")
+
+    if(MINGW OR CYGWIN)
+        set(STATIC_OPTIONS -static-libgcc -static-libstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive,-Bdynamic)
+        target_link_options(GoldenLandEditor PRIVATE ${STATIC_OPTIONS})
+        target_link_options(imgui PRIVATE ${STATIC_OPTIONS})
+    elseif(MSVC)
+        set(STATIC_OPTIONS "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET GoldenLandEditor PROPERTY MSVC_RUNTIME_LIBRARY ${STATIC_OPTIONS})
+        set_property(TARGET imgui PROPERTY MSVC_RUNTIME_LIBRARY ${STATIC_OPTIONS})
+    endif()
+endif()
+
 
 if(GOLDENLAND_ENABLE_TRACY)
     include(FetchContent)

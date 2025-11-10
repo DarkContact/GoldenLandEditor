@@ -40,7 +40,8 @@ jobs:
           cmake -B build -S . `
             -G "Ninja" `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
 
       - name: Build project
         run: cmake --build build --config Release --parallel
