@@ -19,20 +19,12 @@ jobs:
         with:
           arch: x64
 
-      - name: Update built-in vcpkg
-        shell: pwsh
-        run: |
-          Write-Host "Updating vcpkg..."
-          cd $env:VCPKG_INSTALLATION_ROOT
-          git pull
-          .\bootstrap-vcpkg.bat
-
       - name: Install SDL3 via built-in vcpkg
         shell: pwsh
         run: |
           echo "Using built-in vcpkg at $env:VCPKG_INSTALLATION_ROOT"
           $env:VCPKG_BUILD_TYPE = "release"
-          vcpkg install sdl3:x64-windows
+          vcpkg install --triplet x64-windows
 
       - name: Configure CMake
         shell: pwsh
@@ -49,7 +41,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-build
+          name: windows-x64-build
           path: |
             build/*.exe
             build/*.dll
