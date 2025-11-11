@@ -59,6 +59,7 @@ jobs:
     permissions:
       contents: write
 
+    steps:
       - name: Use version from build
         run: |
           echo "Version is ${{ needs.build.outputs.version }}"
