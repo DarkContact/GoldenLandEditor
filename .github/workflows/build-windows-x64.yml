@@ -6,6 +6,9 @@ on:
     paths: ['VERSION']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -57,6 +60,10 @@ jobs:
     needs: build  # Ждём окончания сборки
 
     steps:
+      - run: gh auth status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Use version from build
         run: |
           echo "Version is ${{ needs.build.outputs.version }}"
