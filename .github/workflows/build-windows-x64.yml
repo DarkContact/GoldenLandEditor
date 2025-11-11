@@ -14,22 +14,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install SDL3
+        run: python external/get_SDL3.py msvc
+
       - name: Set up MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
 
-      - name: Download SDL3
-        shell: pwsh
-        run: python external/get_SDL3.py msvc
-
       - name: Configure CMake
-        shell: pwsh
         run: |
-          cmake -B build -S . `
-            -G "Ninja" `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
+          cmake -B build -S . \
+          -G "Ninja" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
 
       - name: Build project
         run: cmake --build build --config Release --parallel

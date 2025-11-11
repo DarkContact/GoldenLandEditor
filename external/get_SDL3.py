@@ -37,10 +37,10 @@ if not COMPILER:
 
 if COMPILER == "mingw":
     ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
-    FINAL_DIR = os.path.join(".", "SDL3_MinGW")
+    FINAL_DIR = os.path.abspath(os.path.join(".", "SDL3_MinGW"))
 else:
     ZIP_NAME = f"SDL3-devel-{VERSION}-VC.zip"
-    FINAL_DIR = os.path.join(".", "SDL3_MSVC")
+    FINAL_DIR = os.path.abspath(os.path.join(".", "SDL3_MSVC"))
 
 URL = f"https://www.libsdl.org/release/{ZIP_NAME}"
 ZIP_PATH = os.path.join(".", ZIP_NAME)
