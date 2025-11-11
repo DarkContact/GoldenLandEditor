@@ -6,24 +6,41 @@ import urllib.request
 
 VERSION = "3.2.26"
 
-while True:
-    print("Выберите тип библиотеки для установки:")
-    print("1 - MinGW")
-    print("2 - MSVC")
-    choice = input("Ваш выбор (1/2): ").strip()
+def get_compiler_from_args():
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].strip().lower()
+        if arg == "mingw":
+            return "mingw"
+        elif arg in ("msvc", "vc"):
+            return "vc"
+        else:
+            print("Неверный аргумент. Используйте 'mingw' или 'msvc'")
+            sys.exit(1)
+    return None
 
-    if choice == "1":
-        COMPILER = "mingw"
-        ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
-        FINAL_DIR = os.path.join(".", "SDL3_MinGW")
-        break
-    elif choice == "2":
-        COMPILER = "VC"
-        ZIP_NAME = f"SDL3-devel-{VERSION}-VC.zip"
-        FINAL_DIR = os.path.join(".", "SDL3_MSVC")
-        break
-    else:
-        print("Неверный выбор. Попробуйте снова.\n")
+COMPILER = get_compiler_from_args()
+
+if not COMPILER:
+    while True:
+        print("Выберите тип библиотеки для установки:")
+        print("1 - MinGW")
+        print("2 - MSVC")
+        choice = input("Ваш выбор (1/2): ").strip()
+        if choice == "1":
+            COMPILER = "mingw"
+            break
+        elif choice == "2":
+            COMPILER = "vc"
+            break
+        else:
+            print("Неверный выбор. Попробуйте снова\n")
+
+if COMPILER == "mingw":
+    ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
+    FINAL_DIR = os.path.join(".", "SDL3_MinGW")
+else:
+    ZIP_NAME = f"SDL3-devel-{VERSION}-VC.zip"
+    FINAL_DIR = os.path.join(".", "SDL3_MSVC")
 
 URL = f"https://www.libsdl.org/release/{ZIP_NAME}"
 ZIP_PATH = os.path.join(".", ZIP_NAME)

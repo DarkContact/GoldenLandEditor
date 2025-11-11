@@ -37,8 +37,7 @@ jobs:
         shell: pwsh
         run: |
           echo "Using built-in vcpkg at $env:VCPKG_INSTALLATION_ROOT"
-          $env:VCPKG_BUILD_TYPE = "release"
-          vcpkg install --triplet x64-windows
+          vcpkg install --triplet x64-windows-release
 
       - name: Configure CMake
         shell: pwsh
