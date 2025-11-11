@@ -4,7 +4,6 @@ on:
   push:
     branches: [ master ]
     paths: ['VERSION']
-  workflow_dispatch:
 
 jobs:
   build:
@@ -76,11 +75,17 @@ jobs:
           cd release-files
           zip -r ../GoldenLandEditor.zip ./*
 
+      - name: Extract changelog for this version
+        run: |
+          VERSION=${{ env.VERSION }}
+          awk "/^\[$VERSION\]/ {flag=1; next} /^\[/ {flag=0} flag" CHANGELOG.md > ReleaseNotes.txt
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: GoldenLandEditor v${{ env.VERSION }}
           files: GoldenLandEditor.zip
+          body_path: ReleaseNotes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

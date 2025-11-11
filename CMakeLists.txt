@@ -87,10 +87,12 @@ add_executable(GoldenLandEditor WIN32
 )
 
 target_sources(GoldenLandEditor PRIVATE
+    "${CMAKE_SOURCE_DIR}/CHANGELOG.md"
     "${CMAKE_SOURCE_DIR}/README.md"
     "${CMAKE_SOURCE_DIR}/VERSION"
 )
 set_source_files_properties(
+    "${CMAKE_SOURCE_DIR}/CHANGELOG.md"
     "${CMAKE_SOURCE_DIR}/README.md"
     "${CMAKE_SOURCE_DIR}/VERSION"
     PROPERTIES HEADER_FILE_ONLY TRUE
