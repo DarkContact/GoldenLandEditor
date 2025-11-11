@@ -16,6 +16,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set version output
+        id: set_version
+        shell: bash
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Install SDL3
         run: python external/get_SDL3.py msvc
 
@@ -37,12 +44,6 @@ jobs:
       - name: Build project
         run: cmake --build build --config Release --parallel
 
-      - name: Set version output
-        id: set_version
-        run: |
-          VERSION=$(cat VERSION)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -56,16 +57,16 @@ jobs:
     needs: build  # Ждём окончания сборки
 
     steps:
+      - name: Use version from build
+        run: |
+          echo "Version is ${{ needs.build.outputs.version }}"
+          echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_ENV
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: windows-x64-build
           path: release-files  # Скачиваем в эту папку
-
-      - name: Use version from build
-        run: |
-          echo "Version is ${{ needs.build.outputs.version }}"
-          echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         id: create_release
