@@ -23,10 +23,11 @@ jobs:
           arch: x64
 
       - name: Configure CMake
+        shell: pwsh
         run: |
-          cmake -B build -S . \
-          -G "Ninja" \
-          -DCMAKE_BUILD_TYPE=Release \
+          cmake -B build -S . `
+          -G "Ninja" `
+          -DCMAKE_BUILD_TYPE=Release `
           -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
 
       - name: Build project

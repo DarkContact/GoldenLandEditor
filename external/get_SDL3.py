@@ -35,16 +35,18 @@ if not COMPILER:
         else:
             print("Invalid choice. Try again.\n")
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 if COMPILER == "mingw":
     ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
-    FINAL_DIR = os.path.abspath(os.path.join(".", "SDL3_MinGW"))
+    FINAL_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "SDL3_MinGW"))
 else:
     ZIP_NAME = f"SDL3-devel-{VERSION}-VC.zip"
-    FINAL_DIR = os.path.abspath(os.path.join(".", "SDL3_MSVC"))
+    FINAL_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "SDL3_MSVC"))
 
 URL = f"https://www.libsdl.org/release/{ZIP_NAME}"
-ZIP_PATH = os.path.join(".", ZIP_NAME)
-EXTRACT_TEMP = os.path.join(".", f"SDL3-{VERSION}")
+ZIP_PATH = os.path.join(SCRIPT_DIR, ZIP_NAME)
+EXTRACT_TEMP = os.path.join(SCRIPT_DIR, f"SDL3-{VERSION}")
 
 print(f"Selected option: {COMPILER.upper()}")
 print(f"SDL3 will be installed into: {FINAL_DIR}\n")
@@ -66,7 +68,7 @@ else:
 print("Extracting archive...")
 try:
     with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-        zip_ref.extractall(".")
+        zip_ref.extractall(SCRIPT_DIR)
 except Exception as ex:
     print(f"Extraction error: {ex}")
     sys.exit(1)
