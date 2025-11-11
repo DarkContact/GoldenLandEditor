@@ -10,6 +10,7 @@ option(GOLDENLAND_ENABLE_TRACY              "Enable Tracy profiler"   OFF)
 option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
 option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
+option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
 
 if(WIN32)
     if(MINGW OR CYGWIN)
@@ -152,4 +153,14 @@ if(GOLDENLAND_ENABLE_OPENMP)
     elseif(MSVC)
         target_compile_options(GoldenLandEditor PRIVATE /openmp)
     endif()
+endif()
+
+if(GOLDENLAND_ENABLE_COPY_DLL AND WIN32)
+    add_custom_command(
+        TARGET GoldenLandEditor POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            $<TARGET_FILE:SDL3::SDL3-shared>
+            $<TARGET_FILE_DIR:GoldenLandEditor>
+        VERBATIM
+    )
 endif()

@@ -28,7 +28,9 @@ jobs:
           cmake -B build -S . `
           -G "Ninja" `
           -DCMAKE_BUILD_TYPE=Release `
-          -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
+          -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON `
+          -DGOLDENLAND_ENABLE_COPY_DLL=ON `
+          -DIMGUI_ENABLE_DEMO=OFF
 
       - name: Build project
         run: cmake --build build --config Release --parallel

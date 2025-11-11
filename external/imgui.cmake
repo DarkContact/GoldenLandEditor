@@ -1,5 +1,7 @@
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 
+option(IMGUI_ENABLE_DEMO "Compile imgui_demo.cpp" ON)
+
 add_library(imgui STATIC)
 
 target_sources(imgui
@@ -11,7 +13,6 @@ target_sources(imgui
     ${IMGUI_DIR}/imstb_textedit.h
     ${IMGUI_DIR}/imstb_truetype.h
 
-    ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
@@ -28,5 +29,9 @@ target_include_directories(imgui
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
 )
+
+if(IMGUI_ENABLE_DEMO)
+    target_sources(imgui PRIVATE ${IMGUI_DIR}/imgui_demo.cpp)
+endif()
 
 target_link_libraries(imgui PRIVATE SDL3::SDL3)
