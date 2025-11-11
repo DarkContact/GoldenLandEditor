@@ -62,7 +62,7 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd release-files
-          zip -r ../GoldenLandEditor.zip *.exe *.dll
+          zip -r ../GoldenLandEditor.zip . -i *.exe *.dll
 
       - name: Extract version
         run: |
