@@ -14,7 +14,7 @@ def get_compiler_from_args():
         elif arg in ("msvc", "vc"):
             return "vc"
         else:
-            print("Неверный аргумент. Используйте 'mingw' или 'msvc'")
+            print("Invalid argument. Use 'mingw' or 'msvc'")
             sys.exit(1)
     return None
 
@@ -22,10 +22,10 @@ COMPILER = get_compiler_from_args()
 
 if not COMPILER:
     while True:
-        print("Выберите тип библиотеки для установки:")
+        print("Select library type to install:")
         print("1 - MinGW")
         print("2 - MSVC")
-        choice = input("Ваш выбор (1/2): ").strip()
+        choice = input("Your choice (1/2): ").strip()
         if choice == "1":
             COMPILER = "mingw"
             break
@@ -33,7 +33,7 @@ if not COMPILER:
             COMPILER = "vc"
             break
         else:
-            print("Неверный выбор. Попробуйте снова\n")
+            print("Invalid choice. Try again.\n")
 
 if COMPILER == "mingw":
     ZIP_NAME = f"SDL3-devel-{VERSION}-mingw.zip"
@@ -46,46 +46,46 @@ URL = f"https://www.libsdl.org/release/{ZIP_NAME}"
 ZIP_PATH = os.path.join(".", ZIP_NAME)
 EXTRACT_TEMP = os.path.join(".", f"SDL3-{VERSION}")
 
-print(f"Выбран вариант: {COMPILER.upper()}")
-print(f"SDL3 будет установлена в: {FINAL_DIR}\n")
+print(f"Selected option: {COMPILER.upper()}")
+print(f"SDL3 will be installed into: {FINAL_DIR}\n")
 
 if os.path.exists(FINAL_DIR):
-    print(f"SDL3 уже существует в {FINAL_DIR}")
+    print(f"SDL3 already exists in {FINAL_DIR}")
     sys.exit(0)
 
 if not os.path.exists(ZIP_PATH):
-    print(f"Скачиваем {URL}...")
+    print(f"Downloading {URL}...")
     try:
         urllib.request.urlretrieve(URL, ZIP_PATH)
     except Exception as ex:
-        print(f"Ошибка скачивания: {ex}")
+        print(f"Download error: {ex}")
         sys.exit(1)
 else:
-    print(f"Архив уже скачан: {ZIP_PATH}")
+    print(f"Archive already exists: {ZIP_PATH}")
 
-print("Распаковываем архив...")
+print("Extracting archive...")
 try:
     with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
         zip_ref.extractall(".")
 except Exception as ex:
-    print(f"Ошибка распаковки: {ex}")
+    print(f"Extraction error: {ex}")
     sys.exit(1)
 
 if os.path.exists(EXTRACT_TEMP):
-    print(f"Переименовываем {EXTRACT_TEMP} в {FINAL_DIR}...")
+    print(f"Renaming {EXTRACT_TEMP} to {FINAL_DIR}...")
     try:
         shutil.move(EXTRACT_TEMP, FINAL_DIR)
     except Exception as ex:
-        print(f"Ошибка переименования: {ex}")
+        print(f"Rename error: {ex}")
         sys.exit(1)
 else:
-    print(f"Ошибка: папка {EXTRACT_TEMP} не найдена после распаковки")
+    print(f"Error: folder {EXTRACT_TEMP} not found after extraction.")
     sys.exit(1)
 
 try:
     os.remove(ZIP_PATH)
-    print(f"Удалён архив {ZIP_PATH}")
+    print(f"Removed archive {ZIP_PATH}")
 except Exception as ex:
-    print(f"Ошибка удаления архива: {ex}")
+    print(f"Archive removal error: {ex}")
 
-print(f"SDL3 ({COMPILER.upper()}) успешно установлена в {FINAL_DIR}")
+print(f"SDL3 ({COMPILER.upper()}) successfully installed into {FINAL_DIR}")
