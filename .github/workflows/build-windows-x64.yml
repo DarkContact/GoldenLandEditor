@@ -8,19 +8,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    outputs:
-      version: ${{ steps.set_version.outputs.version }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set version output
-        id: set_version
-        shell: bash
-        run: |
-          VERSION=$(cat VERSION)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        uses: actions/checkout@v5
 
       - name: Install SDL3
         run: python external/get_SDL3.py msvc
@@ -50,6 +41,8 @@ jobs:
           path: |
             build/*.exe
             build/*.dll
+            CHANGELOG.md
+            VERSION
 
   gh-release:
     runs-on: ubuntu-latest
@@ -59,11 +52,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Use version from build
-        run: |
-          echo "Version is ${{ needs.build.outputs.version }}"
-          echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_ENV
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -73,12 +61,17 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd release-files
-          zip -r ../GoldenLandEditor.zip ./*
+          zip -r ../GoldenLandEditor.zip *.exe *.dll
+
+      - name: Extract version
+        run: |
+          VERSION=$(cat release-files/VERSION)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract changelog for this version
         run: |
           VERSION=${{ env.VERSION }}
-          awk "/^\[$VERSION\]/ {flag=1; next} /^\[/ {flag=0} flag" CHANGELOG.md > ReleaseNotes.txt
+          awk "/^\[$VERSION\]/ {flag=1; next} /^\[/ {flag=0} flag" release-files/CHANGELOG.md > ReleaseNotes.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
