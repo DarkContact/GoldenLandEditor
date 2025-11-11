@@ -19,25 +19,9 @@ jobs:
         with:
           arch: x64
 
-      - name: Cache vcpkg packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.VCPKG_INSTALLATION_ROOT }}/packages
-          key: vcpkg-packages-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-
-      - name: Update built-in vcpkg
+      - name: Download SDL3
         shell: pwsh
-        run: |
-          Write-Host "Updating vcpkg..."
-          cd $env:VCPKG_INSTALLATION_ROOT
-          git pull
-          .\bootstrap-vcpkg.bat
-
-      - name: Install SDL3 via built-in vcpkg
-        shell: pwsh
-        run: |
-          echo "Using built-in vcpkg at $env:VCPKG_INSTALLATION_ROOT"
-          vcpkg install --triplet x64-windows-release
+        run: python external/get_SDL3.py msvc
 
       - name: Configure CMake
         shell: pwsh
@@ -45,7 +29,6 @@ jobs:
           cmake -B build -S . `
             -G "Ninja" `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
             -DGOLDENLAND_ENABLE_STATIC_RUNTIME=ON
 
       - name: Build project
