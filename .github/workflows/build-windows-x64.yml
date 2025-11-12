@@ -62,7 +62,7 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd release-files
-          zip -r ../GoldenLandEditor.zip . -i *.exe *.dll
+          zip -jr ../GoldenLandEditor.zip . -i '*.exe' '*.dll'
 
       - name: Extract version
         run: |
@@ -73,6 +73,8 @@ jobs:
         run: |
           VERSION=${{ env.VERSION }}
           awk "/^\[$VERSION\]/ {flag=1; next} /^\[/ {flag=0} flag" release-files/CHANGELOG.md > ReleaseNotes.txt
+          echo "===== Release notes for $VERSION ====="
+          cat ReleaseNotes.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
