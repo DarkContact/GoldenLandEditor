@@ -33,6 +33,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
     bool needResetScroll = false;
 
+    ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
     ImGui::Begin("CSX Viewer", &showWindow);
 
     // Left

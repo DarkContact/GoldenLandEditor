@@ -218,57 +218,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         onceWhenOpen = true;
     }
 
-    // ImGui::Begin("Blend");
-    // std::vector<std::string> blendFactors = {
-    //     "SDL_BLENDFACTOR_ZERO",
-    //     "SDL_BLENDFACTOR_ONE",
-    //     "SDL_BLENDFACTOR_SRC_COLOR",
-    //     "SDL_BLENDFACTOR_ONE_MINUS_SRC_COLOR",
-    //     "SDL_BLENDFACTOR_SRC_ALPHA",
-    //     "SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA",
-    //     "SDL_BLENDFACTOR_DST_COLOR",
-    //     "SDL_BLENDFACTOR_ONE_MINUS_DST_COLOR",
-    //     "SDL_BLENDFACTOR_DST_ALPHA",
-    //     "SDL_BLENDFACTOR_ONE_MINUS_DST_ALPHA"
-    // };
-    // std::vector<std::string> blendOperation = {
-    //     "SDL_BLENDOPERATION_ADD",
-    //     "SDL_BLENDOPERATION_SUBTRACT",
-    //     "SDL_BLENDOPERATION_REV_SUBTRACT",
-    //     "SDL_BLENDOPERATION_MINIMUM",
-    //     "SDL_BLENDOPERATION_MAXIMUM"
-    // };
-    // static int selectedSrcColorFactor = 0;
-    // static int selectedDstColorFactor = 0;
-    // static int selectedColorOperation = 0;
-    // static int selectedSrcAlphaFactor = 0;
-    // static int selectedDstAlphaFactor = 0;
-    // static int selectedAlphaOperation = 0;
-    // static int red = 0;
-    // static int green = 0;
-    // static int blue = 0;
-    // static int alpha = 0;
-    // ImGuiWidgets::ComboBoxWithIndex("srcColorFactor", blendFactors, selectedSrcColorFactor);
-    // ImGuiWidgets::ComboBoxWithIndex("dstColorFactor", blendFactors, selectedDstColorFactor);
-    // ImGuiWidgets::ComboBoxWithIndex("colorOperation", blendOperation, selectedColorOperation);
-    // ImGuiWidgets::ComboBoxWithIndex("srcAlphaFactor", blendFactors, selectedSrcAlphaFactor);
-    // ImGuiWidgets::ComboBoxWithIndex("dstAlphaFactor", blendFactors, selectedDstAlphaFactor);
-    // ImGuiWidgets::ComboBoxWithIndex("alphaOperation", blendOperation, selectedAlphaOperation);
-    // ImGui::SliderInt("Red", &red, 0, 255);
-    // ImGui::SliderInt("Green", &green, 0, 255);
-    // ImGui::SliderInt("Blue", &blue, 0, 255);
-    // ImGui::SliderInt("Alpha", &alpha, 0, 255);
-
-    // static SDL_BlendMode blendMode = SDL_BLENDMODE_BLEND;
-    // blendMode = SDL_ComposeCustomBlendMode(
-    //     (SDL_BlendFactor)(selectedSrcColorFactor + 1),
-    //     (SDL_BlendFactor)(selectedDstColorFactor + 1),
-    //     (SDL_BlendOperation)(selectedColorOperation + 1),
-    //     (SDL_BlendFactor)(selectedSrcAlphaFactor + 1),
-    //     (SDL_BlendFactor)(selectedDstAlphaFactor + 1),
-    //     (SDL_BlendOperation)(selectedAlphaOperation + 1));
-    // ImGui::End();
-
+    ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
     ImGui::Begin("MDF Viewer", &showWindow);
 
     // Left

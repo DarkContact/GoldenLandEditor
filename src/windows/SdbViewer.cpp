@@ -19,6 +19,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
     bool needResetScroll = false;
 
+    ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
     ImGui::Begin("SDB Viewer", &showWindow);
 
     // Left
