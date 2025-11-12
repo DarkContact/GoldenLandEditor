@@ -66,13 +66,13 @@ jobs:
 
       - name: Extract version
         run: |
-          VERSION=$(cat release-files/VERSION)
+          VERSION=$(cat release-files/VERSION | tr -d '\r\n')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract changelog for this version
         run: |
           VERSION=${{ env.VERSION }}
-          awk "/^\[$VERSION\]/ {flag=1; next} /^\[/ {flag=0} flag" release-files/CHANGELOG.md > ReleaseNotes.txt
+          awk "/\[${VERSION}\]/ {flag=1; next} /^\[/ {flag=0} flag" release-files/CHANGELOG.md > ReleaseNotes.txt
           echo "===== Release notes for $VERSION ====="
           cat ReleaseNotes.txt
 
