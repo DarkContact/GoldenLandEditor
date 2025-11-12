@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-file(STRINGS "${CMAKE_SOURCE_DIR}/VERSION" FILE_VERSION LIMIT_COUNT 1)
-project(GoldenLandEditor VERSION ${FILE_VERSION})
+# Гарантируем пересборку CMake при изменении файла
+set(VERSION_FILE "${CMAKE_SOURCE_DIR}/VERSION")
+set_property(DIRECTORY PROPERTY CMAKE_CONFIGURE_DEPENDS "${VERSION_FILE}")
+
+# Считываем версию проекта
+file(STRINGS "${VERSION_FILE}" VERSION_FILE_DATA LIMIT_COUNT 1)
+project(GoldenLandEditor VERSION ${VERSION_FILE_DATA})
+message(STATUS "Project version: ${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -100,7 +106,7 @@ set_source_files_properties(
 set_source_files_properties(
     src/main.cpp
     PROPERTIES COMPILE_DEFINITIONS
-    GOLDENLAND_VERSION_STRING="${FILE_VERSION}"
+    GOLDENLAND_VERSION_STRING="${PROJECT_VERSION}"
 )
 
 target_include_directories(GoldenLandEditor PRIVATE src)
