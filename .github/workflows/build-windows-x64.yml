@@ -71,10 +71,25 @@ jobs:
 
       - name: Extract changelog for this version
         run: |
-          VERSION=${{ env.VERSION }}
-          awk "/\[${VERSION}\]/ {flag=1; next} /^\[/ {flag=0} flag" release-files/CHANGELOG.md > ReleaseNotes.txt
-          echo "===== Release notes for $VERSION ====="
-          cat ReleaseNotes.txt
+          version=${{ env.VERSION }}
+          awk -v ver="$version" '
+            # Start of requested version (ignore leading # and spaces)
+            $0 ~ "^[[:space:]]*#*\\s*\\[" ver "\\]" { in_section=1; next }
+
+            # Stop at next version header
+            in_section && $0 ~ "^[[:space:]]*#*\\s*\\[" { in_section=0 }
+
+            # Collect lines
+            in_section { lines[++n]=$0 }
+
+            END {
+              if (n>0) {
+                # Remove trailing blank lines
+                while(n>0 && lines[n] ~ /^[[:space:]]*$/) n--
+                for(i=1;i<=n;i++) print lines[i]
+              }
+            }
+          ' release-files/CHANGELOG.md > ReleaseNotes.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
