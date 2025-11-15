@@ -25,7 +25,8 @@ enum MainDirectories {
     Levels_Pack,
     Levels_Single,
     Levels_Multiplayer,
-    Magic_Bitmap
+    Magic_Bitmap,
+    Scripts_Dialogs
 };
 
 Resources::Resources(std::string_view rootDirectory) :
@@ -47,6 +48,7 @@ Resources::Resources(std::string_view rootDirectory) :
     m_mainDirectories[Levels_Single] = std::format("{}/levels/single", m_rootDirectory);
     m_mainDirectories[Levels_Multiplayer] = std::format("{}/levels/multiplayer", m_rootDirectory);
     m_mainDirectories[Magic_Bitmap] = std::format("{}/magic/bitmap", m_rootDirectory);
+    m_mainDirectories[Scripts_Dialogs] = std::format("{}/scripts/dialogs", m_rootDirectory);
 }
 
 std::vector<std::string> Resources::levelNames(LevelType type) const
@@ -80,6 +82,11 @@ std::vector<std::string> Resources::csxFiles() const
 std::vector<std::string> Resources::mdfFiles() const
 {
     return filesWithExtension({Magic}, ".mdf"); // TODO: fs::directory_iterator
+}
+
+std::vector<std::string> Resources::csFiles() const
+{
+    return filesWithExtension({Scripts_Dialogs}, ".cs");
 }
 
 std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {

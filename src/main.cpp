@@ -19,6 +19,7 @@
 #include "windows/CsxViewer.h"
 #include "windows/SdbViewer.h"
 #include "windows/MdfViewer.h"
+#include "windows/CsViewer.h"
 
 #include "utils/TracyProfiler.h"
 #include "utils/DebugLog.h"
@@ -32,11 +33,13 @@ struct RootDirectoryContext {
     std::vector<std::string> csxFiles;
     std::vector<std::string> sdbFiles;
     std::vector<std::string> mdfFiles;
+    std::vector<std::string> csFiles;
     std::vector<Level> levels;
     int selectedLevelIndex = 0;
     bool showCsxWindow = false;
     bool showSdbWindow = false;
     bool showMdfWindow = false;
+    bool showCsWindow = false;
 
     std::string_view rootDirectory() const { return m_rootDirectory; }
 
@@ -46,6 +49,7 @@ struct RootDirectoryContext {
         showCsxWindow = false;
         showSdbWindow = false;
         showMdfWindow = false;
+        showCsWindow = false;
         m_rootDirectory = rootDirectory;
     }
 
@@ -75,6 +79,7 @@ int main(int, char**)
         rootDirectoryContext.csxFiles = resources.csxFiles();
         rootDirectoryContext.sdbFiles = resources.sdbFiles();
         rootDirectoryContext.mdfFiles = resources.mdfFiles();
+        rootDirectoryContext.csFiles = resources.csFiles();
         backgroundWork = false;
     };
     auto bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(rootDirectoryContext));
@@ -214,6 +219,9 @@ int main(int, char**)
                 if (ImGui::MenuItem("MDF Viewer")) {
                     rootDirectoryContext.showMdfWindow = !rootDirectoryContext.mdfFiles.empty();
                 }
+                if (ImGui::MenuItem("CS Viewer")) {
+                    rootDirectoryContext.showCsWindow = !rootDirectoryContext.csFiles.empty();
+                }
                 ImGui::EndMenu();
             }
 
@@ -248,6 +256,7 @@ int main(int, char**)
                                 rootDirectoryContext->csxFiles = resources.csxFiles();
                                 rootDirectoryContext->sdbFiles = resources.sdbFiles();
                                 rootDirectoryContext->mdfFiles = resources.mdfFiles();
+                                rootDirectoryContext->csFiles = resources.csFiles();
                                 // TODO: Запись rootDirectory в ini файл настроек
                                 backgroundWork = false;
                             };
@@ -274,6 +283,9 @@ int main(int, char**)
         }
         if (rootDirectoryContext.showMdfWindow && !rootDirectoryContext.mdfFiles.empty()) {
             MdfViewer::update(rootDirectoryContext.showMdfWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.mdfFiles);
+        }
+        if (rootDirectoryContext.showCsWindow && !rootDirectoryContext.csFiles.empty()) {
+            CsViewer::update(rootDirectoryContext.showCsWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csFiles);
         }
 
         if (showLevelsWindow && !rootDirectoryContext.singleLevelNames.empty()) {
