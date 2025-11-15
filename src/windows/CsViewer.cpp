@@ -11,40 +11,6 @@
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
 
-static std::string csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs) {
-    std::string additionInfo;
-    if (node.opcode >= 0 && node.opcode <= 20) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    } else if (node.opcode == 21 || node.opcode == 24) {
-        if (node.opcode == 24) {
-            auto it = sdbDialogs.strings.find(node.value);
-            if (it != sdbDialogs.strings.cend()) {
-                additionInfo = std::format("val: {} [{}]", node.value, it->second);
-            } else {
-                additionInfo = std::format("val: {}", node.value);
-            }
-        } else {
-            additionInfo = std::format("val: {}", node.value);
-        }
-    } else if (node.opcode == 22 || node.opcode == 23) {
-        additionInfo = std::format("txt: {}", node.text);
-    } else if (node.opcode == 48) {
-        std::string childInfo;
-        for (int j = 0; j < node.child.size(); j++) {
-            int32_t idx = node.child[j];
-            if (idx == -1) break;
-            childInfo += std::format("{} ", idx);
-        }
-        additionInfo = std::format("val: {} [{}], c: {}, d: {}, childs: [{}]", node.value, CS_Parser::funcStr(node.value), node.c, node.d, StringUtils::trimRight(childInfo));
-    } else if (node.opcode == 49) {
-        additionInfo = std::format("c: {}, d: {}", node.c, node.d);
-    } else if (node.opcode == 50) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    }
-
-    return std::format("Opcode: {} [{}] | {}", node.opcode, CS_Parser::opcodeStr(node.opcode), additionInfo);
-}
-
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
     Tracy_ZoneScoped;
@@ -150,4 +116,86 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         sdbDialogs = {};
         onceWhenOpen = false;
     }
+}
+
+const char* CsViewer::opcodeStr(int32_t opcode) {
+    switch (opcode) {
+        case 0: return "||";
+        case 1: return "^^";
+        case 2: return "&&";
+        case 3: return "|";
+        case 4: return "^";
+        case 5: return "&";
+        case 6: return "!=";
+        case 7: return "==";
+        case 8: return ">=";
+        case 9: return "<=";
+        case 10: return ">";
+        case 11: return "<";
+        case 12: return "<<";
+        case 13: return ">>";
+        case 14: return "+";
+        case 15: return "-";
+        case 16: return "*";
+        case 17: return "/";
+        case 18: return "%";
+        case 19: return "~";
+        case 20: return "!";
+        case 21: return "real_var";
+        case 22: return "str";
+        case 23: return "str_var";
+        case 24: return "real";
+        case 48: return "func";
+        case 49: return "jmp";
+        case 50: return "if_call";
+        default: return "unk";
+    }
+}
+
+const char* CsViewer::funcStr(double value) {
+    if (value == 16777220) return "D_Say";
+    if (value == 16777222) return "D_Answer";
+    if (value == 33554432) return "LE_CastEffect";
+    if (value == 67108864) return "RS_GetPersonParameterI";
+    if (value == 67108865) return "RS_SetPersonParameterI";
+    return "unk";
+}
+
+std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs) {
+    std::string additionInfo;
+    if (node.opcode >= 0 && node.opcode <= 20) {
+        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
+    } else if (node.opcode == 21 || node.opcode == 24) {
+        if (node.opcode == 24) {
+            auto it = sdbDialogs.strings.find(node.value);
+            if (it != sdbDialogs.strings.cend()) {
+                additionInfo = std::format("val: {} [{}]", node.value, it->second);
+            } else {
+                additionInfo = std::format("val: {}", node.value);
+            }
+        } else {
+            additionInfo = std::format("val: {}", node.value);
+        }
+    } else if (node.opcode == 22 || node.opcode == 23) {
+        additionInfo = std::format("txt: {}", node.text);
+    } else if (node.opcode == 48) {
+        std::string childInfo;
+        for (int j = 0; j < node.child.size(); j++) {
+            int32_t idx = node.child[j];
+            if (idx == -1) break;
+            childInfo += std::format("{} ", idx);
+        }
+        std::string_view funcStr = CsViewer::funcStr(node.value);
+        if (funcStr == "unk") {
+            additionInfo = std::format("val: {} [{}], c: {}, d: {}, childs: [{}]", node.value, funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
+        } else {
+            additionInfo = std::format("val: [{}], c: {}, d: {}, childs: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
+        }
+    } else if (node.opcode == 49) {
+        additionInfo = std::format("c: {}, d: {}", node.c, node.d);
+    } else if (node.opcode == 50) {
+        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
+    }
+
+    return std::format("Opcode: {} [{}] | {}", node.opcode, CsViewer::opcodeStr(node.opcode), additionInfo);
 }

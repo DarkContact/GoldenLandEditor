@@ -25,8 +25,5 @@ public:
     CS_Parser() = delete;
 
     static bool parse(std::string_view csPath, CS_Data& data, std::string* error);
-
-    static const char* opcodeStr(int32_t opcode);
-    static const char* funcStr(double value);
 };
 
