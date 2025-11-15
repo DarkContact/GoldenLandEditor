@@ -113,7 +113,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         csError.clear();
         textFilterFile.Clear();
         textFilterString.Clear();
-        sdbDialogs = {};
+        sdbDialogs = {}; // FIXME: Не чистится если сменили RootDirectory
         onceWhenOpen = false;
     }
 }
@@ -154,10 +154,16 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
 
 const char* CsViewer::funcStr(double value) {
     if (value == 16777220) return "D_Say";
+    if (value == 16777221) return "D_CloseDialog";
     if (value == 16777222) return "D_Answer";
+    if (value == 16777223) return "D_PlaySound";
     if (value == 33554432) return "LE_CastEffect";
+    if (value == 50331650) return "RS_SetTribesRelation";
     if (value == 67108864) return "RS_GetPersonParameterI";
     if (value == 67108865) return "RS_SetPersonParameterI";
+    if (value == 83886082) return "RS_GetItemCountI";
+    if (value == 83886085) return "RS_PersonRemoveItem";
+    if (value == 117440522) return "RS_GetRandMinMaxI";
     return "unk";
 }
 
