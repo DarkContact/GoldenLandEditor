@@ -161,8 +161,16 @@ const char* CsViewer::funcStr(double value) {
     if (value == 50331650) return "RS_SetTribesRelation";
     if (value == 67108864) return "RS_GetPersonParameterI";
     if (value == 67108865) return "RS_SetPersonParameterI";
+    if (value == 67108866) return "RS_AddPerson_1";
+    if (value == 67108867) return "RS_AddPerson_2";
+    if (value == 67108869) return "RS_AddExp";
+    if (value == 67108870) return "RS_IsPersonExistsI";
+    if (value == 67108871) return "RS_DelPerson";
+    if (value == 83886081) return "RS_PersonTransferItemI";
     if (value == 83886082) return "RS_GetItemCountI";
     if (value == 83886085) return "RS_PersonRemoveItem";
+    // if (value == 117440513) return "-"; // RS_StageEnable? RS_StageComplete?
+    // if (value == 117440515) return "-"; // RS_StageEnable? RS_StageComplete?
     if (value == 117440522) return "RS_GetRandMinMaxI";
     return "unk";
 }
