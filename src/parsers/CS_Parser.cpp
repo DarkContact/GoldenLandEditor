@@ -25,31 +25,37 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
 
         node.opcode = readInt32(fileData, offset);
         if (node.opcode >= 0 && node.opcode <= 20) {
-            offset += 16;
+            node.a = readInt32(fileData, offset);
+            node.b = readInt32(fileData, offset);
+            node.c = readInt32(fileData, offset);
+            node.d = readInt32(fileData, offset);
         } else if (node.opcode == 21 || node.opcode == 24) {
             node.value = readDouble(fileData, offset);
         } else if (node.opcode == 22 || node.opcode == 23) {
             std::string_view text = readCString(fileData, offset);
             node.text = std::string(text);
         } else if (node.opcode == 48) {
-            offset += 16;
-            int32_t child01 = readInt32(fileData, offset);
-            if (child01 != -1) {
-                int32_t child02 = readInt32(fileData, offset);
-                if (child02 != -1) {
-                    int32_t child03 = readInt32(fileData, offset);
-                    if (child03 != -1) {
-                        int32_t child04 = readInt32(fileData, offset);
-                        if (child04 != -1) {
-                            int32_t child05 = readInt32(fileData, offset);
-                            if (child05 != -1) {
-                                int32_t child06 = readInt32(fileData, offset);
-                                if (child06 != -1) {
-                                    int32_t child07 = readInt32(fileData, offset);
-                                    if (child07 != -1) {
-                                        int32_t child08 = readInt32(fileData, offset);
-                                        if (child08 != -1) {
-                                            int32_t child09 = readInt32(fileData, offset);
+            node.c = readInt32(fileData, offset);
+            node.d = readInt32(fileData, offset);
+            node.value = readDouble(fileData, offset);
+
+            node.child[0] = readInt32(fileData, offset);
+            if (node.child[0] != -1) {
+                node.child[1] = readInt32(fileData, offset);
+                if (node.child[1] != -1) {
+                    node.child[2] = readInt32(fileData, offset);
+                    if (node.child[2] != -1) {
+                        node.child[3] = readInt32(fileData, offset);
+                        if (node.child[3] != -1) {
+                            node.child[4] = readInt32(fileData, offset);
+                            if (node.child[4] != -1) {
+                                node.child[5] = readInt32(fileData, offset);
+                                if (node.child[5] != -1) {
+                                    node.child[6] = readInt32(fileData, offset);
+                                    if (node.child[6] != -1) {
+                                        node.child[7] = readInt32(fileData, offset);
+                                        if (node.child[7] != -1) {
+                                            node.child[8] = readInt32(fileData, offset);
                                         }
                                     }
                                 }
@@ -59,9 +65,13 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
                 }
             }
         } else if (node.opcode == 49) {
-            offset += 8;
+            node.c = readInt32(fileData, offset);
+            node.d = readInt32(fileData, offset);
         } else if (node.opcode == 50) {
-            offset += 16;
+            node.a = readInt32(fileData, offset);
+            node.b = readInt32(fileData, offset);
+            node.c = readInt32(fileData, offset);
+            node.d = readInt32(fileData, offset);
         }
 
         data.nodes.push_back(std::move(node));
@@ -95,11 +105,11 @@ const char* CS_Parser::opcodeStr(int32_t opcode)
         case 18: return "%";
         case 19: return "~";
         case 20: return "!";
-        case 21: return "real";
+        case 21: return "realVar";
         case 22: return "str";
         case 23: return "strVar";
-        case 24: return "realVar";
-        case 48: return "48";
+        case 24: return "real";
+        case 48: return "func";
         case 49: return "49";
         case 50: return "50";
         default: return "unk";
