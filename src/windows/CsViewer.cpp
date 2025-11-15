@@ -6,6 +6,25 @@
 
 #include "parsers/CS_Parser.h"
 
+static std::string csNodeString(const CS_Node& node) {
+    std::string additionInfo;
+    if (node.opcode >= 0 && node.opcode <= 20) {
+
+    } else if (node.opcode == 21 || node.opcode == 24) {
+        additionInfo = std::format("val: {}", node.value);
+    } else if (node.opcode == 22 || node.opcode == 23) {
+        additionInfo = std::format("txt: {}", node.text);
+    } else if (node.opcode == 48) {
+
+    } else if (node.opcode == 49) {
+
+    } else if (node.opcode == 50) {
+
+    }
+
+    return std::format("Opcode: {} [{}] | {}", node.opcode, CS_Parser::opcodeStr(node.opcode), additionInfo);
+}
+
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
     static int selectedIndex = -1;
@@ -50,10 +69,16 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     if (!csData.nodes.empty()) {
         ImGui::BeginGroup();
         {
-            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
             if (needResetScroll) {
                 ImGui::SetScrollX(0.0f);
                 ImGui::SetScrollY(0.0f);
+            }
+
+            for (const auto& node : csData.nodes) {
+                ImGui::PushFont(NULL, 14.0f);
+                ImGui::Text("%s", csNodeString(node).c_str());
+                ImGui::PopFont();
             }
 
             ImGui::EndChild();

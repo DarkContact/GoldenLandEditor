@@ -4,13 +4,15 @@
 #include <vector>
 
 struct CS_Node {
-    int32_t opcode;
-    int32_t a;
-    int32_t b;
-    int32_t c;
-    int32_t d;
-    CS_Node* child[9];
+    int32_t opcode = -1;
+    int32_t a = 0;
+    int32_t b = 0;
+    int32_t c = 0;
+    int32_t d = 0;
+    int32_t child[9] = {0};
+
     std::string text;
+    double value;
 };
 
 struct CS_Data {
@@ -22,5 +24,7 @@ public:
     CS_Parser() = delete;
 
     static bool parse(std::string_view csPath, CS_Data& data, std::string* error);
+
+    static const char* opcodeStr(int32_t opcode);
 };
 

@@ -14,6 +14,24 @@ std::string_view readString(std::span<const uint8_t> fileData, int stringSize, s
     return sv;
 }
 
+
+std::string_view readCString(std::span<const uint8_t> fileData, size_t& offset)
+{
+    assert(!fileData.empty());
+    size_t start = offset;
+
+    while (fileData[offset] != '\0') {
+        ++offset;
+        assert(offset < fileData.size());
+    }
+
+    std::string_view sv(reinterpret_cast<const char*>(&fileData[start]), offset - start);
+    ++offset; // пропускаем '\0'
+
+    assert(offset <= fileData.size());
+    return sv;
+}
+
 std::string_view readStringWithSize(std::span<const uint8_t> fileData, size_t& offset)
 {
     assert(offset + 4 <= fileData.size());
@@ -62,8 +80,21 @@ float readFloat(std::span<const uint8_t> fileData, size_t& offset) {
     return result;
 }
 
+double readDouble(std::span<const uint8_t> fileData, size_t& offset) {
+    double result = *reinterpret_cast<const double*>(&fileData[offset]);
+    offset += sizeof(double);
+    return result;
+}
+
 void writeString(std::vector<uint8_t>& buffer, std::string_view value) {
     buffer.insert(buffer.end(), value.begin(), value.end());
+}
+
+
+void writeCString(std::vector<uint8_t>& buffer, std::string_view value)
+{
+    buffer.insert(buffer.end(), value.begin(), value.end());
+    buffer.push_back('\0');
 }
 
 void writeStringWithSize(std::vector<uint8_t>& buffer, std::string_view value) {
@@ -101,6 +132,12 @@ void writeFloat(std::vector<uint8_t>& buffer, float value) {
     uint8_t bytes[4];
     std::memcpy(bytes, &value, sizeof(float));
     buffer.insert(buffer.end(), bytes, bytes + 4);
+}
+
+void writeDouble(std::vector<uint8_t>& buffer, double value) {
+    uint8_t bytes[8];
+    std::memcpy(bytes, &value, sizeof(double));
+    buffer.insert(buffer.end(), bytes, bytes + 48);
 }
 
 } // IoUtils
