@@ -4,7 +4,9 @@
 
 #include "imgui.h"
 
+#include "utils/DebugLog.h"
 #include "utils/StringUtils.h"
+#include "utils/TracyProfiler.h"
 #include "parsers/CS_Parser.h"
 
 static std::string csNodeString(const CS_Node& node) {
@@ -34,6 +36,8 @@ static std::string csNodeString(const CS_Node& node) {
 
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
+    Tracy_ZoneScoped;
+
     static int selectedIndex = -1;
     static ImGuiTextFilter textFilterFile;
     static ImGuiTextFilter textFilterString;
@@ -64,6 +68,17 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     std::string csPath = std::format("{}/{}", rootDirectory, csFiles[i]);
                     CS_Parser::parse(csPath, csData, &csError);
 
+                    // // Отладочный вывод
+                    // std::string csDataInfo;
+                    // int counter = 0;
+                    // for (const auto& node : csData.nodes) {
+                    //     std::string nodeInfo = csNodeString(node);
+                    //     csDataInfo += std::format("[i:{}] {}\n", counter, nodeInfo);
+                    //     ++counter;
+                    // }
+                    // LogFmt("File: {}, Data: {}", csFiles[i], csDataInfo);
+                    // // ---
+
                     needResetScroll = true;
                 }
             }
@@ -74,32 +89,34 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     ImGui::SameLine();
 
     // Right
-    if (!csData.nodes.empty()) {
-        ImGui::BeginGroup();
-        {
+    {
+        ImGui::BeginChild("right pane");
+        textFilterString.Draw();
+
             ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
-            textFilterString.Draw();
-            if (needResetScroll) {
-                ImGui::SetScrollX(0.0f);
-                ImGui::SetScrollY(0.0f);
-            }
 
-            int counter = 0;
-            ImGui::PushFont(NULL, 15.0f);
-            for (const auto& node : csData.nodes) {
-                std::string nodeInfo = csNodeString(node);
-                if (textFilterString.PassFilter(nodeInfo.c_str())) {
-                    ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
+            if (!csData.nodes.empty()) {
+                if (needResetScroll) {
+                    ImGui::SetScrollX(0.0f);
+                    ImGui::SetScrollY(0.0f);
                 }
-                ++counter;
-            }
-            ImGui::PopFont();
 
+                int counter = 0;
+                ImGui::PushFont(NULL, 15.0f);
+                for (const auto& node : csData.nodes) {
+                    std::string nodeInfo = csNodeString(node);
+                    if (textFilterString.PassFilter(nodeInfo.c_str())) {
+                        ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
+                    }
+                    ++counter;
+                }
+                ImGui::PopFont();
+            } else if (selectedIndex >= 0) {
+                ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", csError.c_str());
+            }
             ImGui::EndChild();
-        }
-        ImGui::EndGroup();
-    } else if (selectedIndex >= 0) {
-        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", csError.c_str());
+
+        ImGui::EndChild();
     }
 
     ImGui::End();

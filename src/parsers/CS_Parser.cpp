@@ -85,13 +85,13 @@ const char* CS_Parser::opcodeStr(int32_t opcode)
         case 18: return "%";
         case 19: return "~";
         case 20: return "!";
-        case 21: return "realVar";
+        case 21: return "real_var";
         case 22: return "str";
-        case 23: return "strVar";
+        case 23: return "str_var";
         case 24: return "real";
         case 48: return "func";
-        case 49: return "49";
-        case 50: return "50";
+        case 49: return "jmp";
+        case 50: return "if_call";
         default: return "unk";
     }
 }
@@ -99,5 +99,7 @@ const char* CS_Parser::opcodeStr(int32_t opcode)
 const char* CS_Parser::funcStr(double value)
 {
     if (value == 33554432) return "LE_CastEffect";
+    if (value == 67108864) return "RS_GetPersonParameterI";
+    if (value == 67108865) return "RS_SetPersonParameterI";
     return "unk";
 }
