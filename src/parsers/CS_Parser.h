@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 
 struct CS_Node {
     int32_t opcode = -1;
@@ -9,10 +10,10 @@ struct CS_Node {
     int32_t b = 0;
     int32_t c = 0;
     int32_t d = 0;
-    int32_t child[9] = {0};
+    std::array<int32_t, 9> child = {0};
 
     std::string text;
-    double value;
+    double value = 0.0;
 };
 
 struct CS_Data {
@@ -26,5 +27,6 @@ public:
     static bool parse(std::string_view csPath, CS_Data& data, std::string* error);
 
     static const char* opcodeStr(int32_t opcode);
+    static const char* funcStr(double value);
 };
 

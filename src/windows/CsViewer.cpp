@@ -17,12 +17,12 @@ static std::string csNodeString(const CS_Node& node) {
         additionInfo = std::format("txt: {}", node.text);
     } else if (node.opcode == 48) {
         std::string childInfo;
-        for (int j = 0; j < 9; j++) {
+        for (int j = 0; j < node.child.size(); j++) {
             int32_t idx = node.child[j];
             if (idx == -1) break;
             childInfo += std::format("{} ", idx);
         }
-        additionInfo = std::format("val: {}, c: {}, d: {}, childs: [{}]", node.value, node.c, node.d, StringUtils::trimRight(childInfo));
+        additionInfo = std::format("val: {} [{}], c: {}, d: {}, childs: [{}]", node.value, CS_Parser::funcStr(node.value), node.c, node.d, StringUtils::trimRight(childInfo));
     } else if (node.opcode == 49) {
         additionInfo = std::format("c: {}, d: {}", node.c, node.d);
     } else if (node.opcode == 50) {
@@ -35,7 +35,8 @@ static std::string csNodeString(const CS_Node& node) {
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
     static int selectedIndex = -1;
-    static ImGuiTextFilter textFilter;
+    static ImGuiTextFilter textFilterFile;
+    static ImGuiTextFilter textFilterString;
     static CS_Data csData;
     static std::string csError;
 
@@ -47,12 +48,12 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     // Left
     {
         ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
-        textFilter.Draw();
+        textFilterFile.Draw();
         ImGui::Separator();
             ImGui::BeginChild("file list");
             for (int i = 0; i < static_cast<int>(csFiles.size()); ++i)
             {
-                if (textFilter.PassFilter(csFiles[i].c_str())
+                if (textFilterFile.PassFilter(csFiles[i].c_str())
                     && ImGui::Selectable(csFiles[i].c_str(), selectedIndex == i))
                 {
                     selectedIndex = i;
@@ -77,19 +78,22 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         ImGui::BeginGroup();
         {
             ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+            textFilterString.Draw();
             if (needResetScroll) {
                 ImGui::SetScrollX(0.0f);
                 ImGui::SetScrollY(0.0f);
             }
 
             int counter = 0;
+            ImGui::PushFont(NULL, 15.0f);
             for (const auto& node : csData.nodes) {
-                ImGui::PushFont(NULL, 15.0f);
-                ImGui::Text("[i:%d] %s", counter, csNodeString(node).c_str());
-                ImGui::PopFont();
-
+                std::string nodeInfo = csNodeString(node);
+                if (textFilterString.PassFilter(nodeInfo.c_str())) {
+                    ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
+                }
                 ++counter;
             }
+            ImGui::PopFont();
 
             ImGui::EndChild();
         }
@@ -103,6 +107,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     if (!showWindow) {
         selectedIndex = -1;
         csError.clear();
-        textFilter.Clear();
+        textFilterFile.Clear();
+        textFilterString.Clear();
     }
 }

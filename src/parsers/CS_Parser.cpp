@@ -39,30 +39,10 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
             node.d = readInt32(fileData, offset);
             node.value = readDouble(fileData, offset);
 
-            node.child[0] = readInt32(fileData, offset);
-            if (node.child[0] != -1) {
-                node.child[1] = readInt32(fileData, offset);
-                if (node.child[1] != -1) {
-                    node.child[2] = readInt32(fileData, offset);
-                    if (node.child[2] != -1) {
-                        node.child[3] = readInt32(fileData, offset);
-                        if (node.child[3] != -1) {
-                            node.child[4] = readInt32(fileData, offset);
-                            if (node.child[4] != -1) {
-                                node.child[5] = readInt32(fileData, offset);
-                                if (node.child[5] != -1) {
-                                    node.child[6] = readInt32(fileData, offset);
-                                    if (node.child[6] != -1) {
-                                        node.child[7] = readInt32(fileData, offset);
-                                        if (node.child[7] != -1) {
-                                            node.child[8] = readInt32(fileData, offset);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            for (int i = 0; i < node.child.size(); ++i) {
+                node.child[i] = readInt32(fileData, offset);
+                if (node.child[i] == -1)
+                    break;
             }
         } else if (node.opcode == 49) {
             node.c = readInt32(fileData, offset);
@@ -114,4 +94,10 @@ const char* CS_Parser::opcodeStr(int32_t opcode)
         case 50: return "50";
         default: return "unk";
     }
+}
+
+const char* CS_Parser::funcStr(double value)
+{
+    if (value == 33554432) return "LE_CastEffect";
+    return "unk";
 }
