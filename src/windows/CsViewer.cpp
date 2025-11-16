@@ -21,6 +21,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     static CS_Data csData;
     static SDB_Data sdbDialogs;
     static std::string csError;
+    static std::vector<bool> funcNodes;
+    static bool showOnlyFunctions = false;
+    static bool showDialogPhrases = true;
     static bool onceWhenOpen = false;
 
     bool needResetScroll = false;
@@ -51,6 +54,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     csError.clear();
                     csData.nodes.clear();
+                    funcNodes.clear();
 
                     std::string csPath = std::format("{}/{}", rootDirectory, csFiles[i]);
                     CS_Parser::parse(csPath, csData, &csError);
@@ -66,6 +70,20 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     // LogFmt("File: {}, Data: {}", csFiles[i], csDataInfo);
                     // // ---
 
+                    funcNodes.resize(csData.nodes.size(), false);
+                    for (size_t i = 0; i < csData.nodes.size(); ++i) {
+                        const auto& node = csData.nodes[i];
+                        if (node.opcode == 48) {
+                            funcNodes[i] = true;
+                            for (int j = 0; j < node.child.size(); ++j) {
+                                int32_t idx = node.child[j];
+                                if (idx == -1) break;
+
+                                funcNodes[++i] = true;
+                            }
+                        }
+                    }
+
                     needResetScroll = true;
                 }
             }
@@ -80,7 +98,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         ImGui::BeginChild("right pane");
         textFilterString.Draw();
 
-            ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+        {
+            ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
             if (!csData.nodes.empty()) {
                 if (needResetScroll) {
@@ -91,9 +110,12 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                 int counter = 0;
                 ImGui::PushFont(NULL, 15.0f);
                 for (const auto& node : csData.nodes) {
-                    std::string nodeInfo = csNodeString(node, sdbDialogs);
-                    if (textFilterString.PassFilter(nodeInfo.c_str())) {
-                        ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
+                    std::string nodeInfo = csNodeString(node, sdbDialogs, showDialogPhrases);
+
+                    if (showOnlyFunctions && funcNodes[counter]
+                        || !showOnlyFunctions) {
+                        if (textFilterString.PassFilter(nodeInfo.c_str()))
+                            ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
                     }
                     ++counter;
                 }
@@ -102,6 +124,11 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                 ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", csError.c_str());
             }
             ImGui::EndChild();
+        }
+
+        ImGui::Checkbox("Funcs only", &showOnlyFunctions);
+        ImGui::SameLine();
+        ImGui::Checkbox("Dialog phrases", &showDialogPhrases);
 
         ImGui::EndChild();
     }
@@ -114,6 +141,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         textFilterFile.Clear();
         textFilterString.Clear();
         sdbDialogs = {}; // FIXME: Не чистится если сменили RootDirectory
+        funcNodes.clear();
         onceWhenOpen = false;
     }
 }
@@ -166,21 +194,24 @@ const char* CsViewer::funcStr(double value) {
     if (value == 67108869) return "RS_AddExp";
     if (value == 67108870) return "RS_IsPersonExistsI";
     if (value == 67108871) return "RS_DelPerson";
+    if (value == 83886080) return "RS_TestPersonHasItem";
     if (value == 83886081) return "RS_PersonTransferItemI";
     if (value == 83886082) return "RS_GetItemCountI";
     if (value == 83886085) return "RS_PersonRemoveItem";
-    // if (value == 117440513) return "-"; // RS_StageEnable? RS_StageComplete?
-    // if (value == 117440515) return "-"; // RS_StageEnable? RS_StageComplete?
+    if (value == 117440513) return "RS_StageEnable";
+    if (value == 117440514) return "RS_QuestEnable";
+    if (value == 117440515) return "RS_StageComplete";
     if (value == 117440522) return "RS_GetRandMinMaxI";
+    if (value == 117440526) return "RS_GetDialogEnabled"; // Связано с убеждением (передаётся значение 2), dlg2 == 1 прошли проверку
     return "unk";
 }
 
-std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs) {
+std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs, bool showDialogPhrases) {
     std::string additionInfo;
     if (node.opcode >= 0 && node.opcode <= 20) {
         additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
     } else if (node.opcode == 21 || node.opcode == 24) {
-        if (node.opcode == 24) {
+        if (showDialogPhrases && node.opcode == 24) {
             auto it = sdbDialogs.strings.find(node.value);
             if (it != sdbDialogs.strings.cend()) {
                 additionInfo = std::format("val: {} [{}]", node.value, it->second);

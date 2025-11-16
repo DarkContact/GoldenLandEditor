@@ -6,14 +6,14 @@
 
 struct CS_Node {
     int32_t opcode = -1;
-    int32_t a = 0;
-    int32_t b = 0;
-    int32_t c = 0;
-    int32_t d = 0;
-    std::array<int32_t, 9> child = {0};
+    int32_t a = -1;
+    int32_t b = -1;
+    int32_t c = -1;
+    int32_t d = -1;
+    std::array<int32_t, 9> child = {-1};
 
     std::string text;
-    double value = 0.0;
+    double value = -1.0;
 };
 
 struct CS_Data {

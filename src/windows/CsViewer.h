@@ -15,6 +15,6 @@ private:
     static const char* opcodeStr(int32_t opcode);
     static const char* funcStr(double value);
 
-    static std::string csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs);
+    static std::string csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs, bool showDialogPhrases = true);
 };
 
