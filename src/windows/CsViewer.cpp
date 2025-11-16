@@ -27,6 +27,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     static bool showDialogPhrases = true;
     static bool onceWhenOpen = false;
 
+    static const ImVec4 defaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+    static const ImVec4 funcTextColor(1.0f, 0.92f, 0.5f, 1.0f);
+
     bool needResetScroll = false;
 
     if (!onceWhenOpen) {
@@ -130,8 +133,10 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     if (showOnlyFunctions && funcNodes[i]
                         || !showOnlyFunctions) {
-                        if (textFilterString.PassFilter(nodeInfo.c_str()))
-                            ImGui::Text("[i:%zu] %s", i, nodeInfo.c_str());
+                        if (textFilterString.PassFilter(nodeInfo.c_str())) {
+                            bool isFunc = node.opcode == 48;
+                            ImGui::TextColored(isFunc ? funcTextColor : defaultTextColor, "[i:%zu] %s", i, nodeInfo.c_str());
+                        }
                     }
                 }
                 ImGui::PopFont();
