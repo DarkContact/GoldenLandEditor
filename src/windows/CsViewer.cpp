@@ -245,7 +245,7 @@ const char* CsViewer::funcStr(double value) {
     if (value == 117440520) return "RS_SetLocationAccess";
     if (value == 117440521) return "RS_EnableTrigger";
     if (value == 117440522) return "RS_GetRandMinMaxI";
-    //if (value == 117440523) 1 param [1] // l81.posilatel, nature_wizard, golden_civil
+    if (value == 117440523) return "RS_SetWeather";
     if (value == 117440524) return "RS_SetSpecialPerk";
     if (value == 117440525) return "RS_PassToTradePanel";
     if (value == 117440526) return "RS_GetDialogEnabled";

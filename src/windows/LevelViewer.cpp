@@ -264,7 +264,7 @@ bool LevelViewer::leftMouseDownOnLevel(const Level& level) {
            ImGui::IsMouseDown(ImGuiMouseButton_Left);
 }
 
-std::string LevelViewer::maskSoundToString(MapDataSound sound) {
+const char* LevelViewer::maskSoundToString(MapDataSound sound) {
     switch (sound) {
         case MapDataSound::Ground: return "Ground";
         case MapDataSound::Grass:  return "Grass";
@@ -728,7 +728,7 @@ void LevelViewer::drawTileBorderAndTooltip(const MapTile& tile, ImVec2 tileTopLe
                           tileColumn, tileRow,
                           chunkColumn, chunkRow,
                           tile.relief,
-                          maskSoundToString(static_cast<MapDataSound>(tile.sound)).c_str(), tile.sound,
+                          maskSoundToString(static_cast<MapDataSound>(tile.sound)), tile.sound,
                           tile.mask);
     }
 }

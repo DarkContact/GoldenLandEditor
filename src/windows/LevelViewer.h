@@ -15,7 +15,7 @@ private:
     static ImVec2 computeMinimapPosition(const Level& level, ImVec2 minimapSize);
     static ImVec2 transformPoint(const ImVec2& pointInSource, const ImRect& sourceRect, const ImRect& targetRect);
     static bool leftMouseDownOnLevel(const Level& level);
-    static std::string maskSoundToString(MapDataSound sound);
+    static const char* maskSoundToString(MapDataSound sound);
     static std::string personInfo(const SEF_Person& person);
 
     static void handleLevelDragScroll(Level& level);
