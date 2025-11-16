@@ -192,30 +192,49 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
 }
 
 const char* CsViewer::funcStr(double value) {
+    if (value == 0) return "RS_GetPersonParameterI (0)";
     if (value == 16777220) return "D_Say";
     if (value == 16777221) return "D_CloseDialog";
     if (value == 16777222) return "D_Answer";
     if (value == 16777223) return "D_PlaySound";
     if (value == 33554432) return "LE_CastEffect";
+    if (value == 33554434) return "LE_CastMagic";
+    if (value == 50331648) return "WD_LoadArea";
     if (value == 50331650) return "RS_SetTribesRelation";
+    if (value == 50331653) return "WD_SetVisible"; // Animation
+    if (value == 50331655) return "WD_TitlesAndLoadArea";
     if (value == 67108864) return "RS_GetPersonParameterI";
     if (value == 67108865) return "RS_SetPersonParameterI";
     if (value == 67108866) return "RS_AddPerson_1";
     if (value == 67108867) return "RS_AddPerson_2";
+    if (value == 67108868) return "RS_IsPersonExistsI";
     if (value == 67108869) return "RS_AddExp";
-    if (value == 67108870) return "RS_IsPersonExistsI";
-    if (value == 67108871) return "RS_DelPerson";
+    if (value == 67108870) return "RS_DelPerson";
+    if (value == 67108871) return "RS_AddToHeroPartyName";
+    if (value == 67108872) return "RS_RemoveFromHeroPartyName";
+    if (value == 67108873) return "RS_TestHeroHasPartyName";
+    if (value == 67108874) return "RS_AllyCmd";
     if (value == 83886080) return "RS_TestPersonHasItem";
     if (value == 83886081) return "RS_PersonTransferItemI";
     if (value == 83886082) return "RS_GetItemCountI";
+    if (value == 83886084) return "RS_PersonAddItem";
     if (value == 83886085) return "RS_PersonRemoveItem";
+    //if (value == 100663296) RS_GetDayOrNight or RS_GetCurrentTimeOfDayI
+    if (value == 100663298) return "RS_GetDaysFromBeginningI";
+    //if (value == 100663299) 2 param [6 20] [3 30] [1 0]
     if (value == 117440512) return "RS_QuestComplete";
     if (value == 117440513) return "RS_StageEnable";
     if (value == 117440514) return "RS_QuestEnable";
     if (value == 117440515) return "RS_StageComplete";
+    if (value == 117440516) return "RS_StorylineQuestEnable";
+    if (value == 117440520) return "RS_SetLocationAccess";
+    if (value == 117440521) return "RS_EnableTrigger";
     if (value == 117440522) return "RS_GetRandMinMaxI";
+    if (value == 117440524) return "RS_SetSpecialPerk";
     if (value == 117440525) return "RS_PassToTradePanel";
-    if (value == 117440526) return "RS_GetDialogEnabled"; // Связано с убеждением (передаётся значение 2), dlg2 == 1 прошли проверку
+    if (value == 117440526) return "RS_GetDialogEnabled";
+    if (value == 117440531) return "RS_SetInjured";
+    if (value == 117440532) return "RS_SetDoorState";
     return "unk";
 }
 
