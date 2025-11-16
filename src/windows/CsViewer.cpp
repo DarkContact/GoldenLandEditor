@@ -60,17 +60,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     std::string csPath = std::format("{}/{}", rootDirectory, csFiles[i]);
                     CS_Parser::parse(csPath, csData, &csError);
 
-                    // // Отладочный вывод
-                    // std::string csDataInfo;
-                    // int counter = 0;
-                    // for (const auto& node : csData.nodes) {
-                    //     std::string nodeInfo = csNodeString(node, {});
-                    //     csDataInfo += std::format("[i:{}] {}\n", counter, nodeInfo);
-                    //     ++counter;
-                    // }
-                    // LogFmt("File: {}, Data: {}", csFiles[i], csDataInfo);
-                    // // ---
-
+                    // Заполнение данных для фильтрации функций
                     funcNodes.resize(csData.nodes.size(), false);
                     for (size_t i = 0; i < csData.nodes.size(); ++i) {
                         const auto& node = csData.nodes[i];
@@ -221,7 +211,7 @@ const char* CsViewer::funcStr(double value) {
     if (value == 83886085) return "RS_PersonRemoveItem";
     if (value == 100663296) return "RS_GetDayOrNight"; // Или RS_GetCurrentTimeOfDayI
     if (value == 100663298) return "RS_GetDaysFromBeginningI";
-    //if (value == 100663299) 2 param [6 20] [3 30] [1 0]
+    if (value == 100663299) return "RS_AddTime";
     if (value == 117440512) return "RS_QuestComplete";
     if (value == 117440513) return "RS_StageEnable";
     if (value == 117440514) return "RS_QuestEnable";
@@ -231,7 +221,7 @@ const char* CsViewer::funcStr(double value) {
     if (value == 117440520) return "RS_SetLocationAccess";
     if (value == 117440521) return "RS_EnableTrigger";
     if (value == 117440522) return "RS_GetRandMinMaxI";
-    //if (value == 117440523) 1 param [1]
+    //if (value == 117440523) 1 param [1] // l81.posilatel, nature_wizard, golden_civil
     if (value == 117440524) return "RS_SetSpecialPerk";
     if (value == 117440525) return "RS_PassToTradePanel";
     if (value == 117440526) return "RS_GetDialogEnabled";
