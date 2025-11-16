@@ -5,7 +5,7 @@
 #include <array>
 
 struct CS_Node {
-    int32_t opcode = -1;
+    int32_t opcode = -1; // TODO: Создать Enum для опкодов
     int32_t a = -1;
     int32_t b = -1;
     int32_t c = -1;

@@ -104,17 +104,35 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     ImGui::SetScrollY(0.0f);
                 }
 
-                int counter = 0;
                 ImGui::PushFont(NULL, 15.0f);
-                for (const auto& node : csData.nodes) {
-                    std::string nodeInfo = csNodeString(node, sdbDialogs, showDialogPhrases);
+                for (size_t i = 0; i < csData.nodes.size(); ++i) {
+                    const CS_Node* prevNode = nullptr;
+                    if (i > 0) {
+                        prevNode = &csData.nodes[i - 1];
+                    }
 
-                    if (showOnlyFunctions && funcNodes[counter]
+                    bool isDialogPhrase = false;
+                    if (prevNode) {
+                        if (prevNode->opcode == 23) {
+                            if (prevNode->text == "LastPhrase" || prevNode->text == "LastAnswer")
+                                isDialogPhrase = true;
+                        }
+
+                        if (prevNode->opcode == 48) {
+                            std::string_view funcStr = CsViewer::funcStr(prevNode->value);
+                            if (funcStr == "D_Say" || funcStr == "D_Answer")
+                                isDialogPhrase = true;
+                        }
+                    }
+
+                    const CS_Node& node = csData.nodes[i];
+                    std::string nodeInfo = csNodeString(node, sdbDialogs, isDialogPhrase && showDialogPhrases);
+
+                    if (showOnlyFunctions && funcNodes[i]
                         || !showOnlyFunctions) {
                         if (textFilterString.PassFilter(nodeInfo.c_str()))
-                            ImGui::Text("[i:%d] %s", counter, nodeInfo.c_str());
+                            ImGui::Text("[i:%zu] %s", i, nodeInfo.c_str());
                     }
-                    ++counter;
                 }
                 ImGui::PopFont();
             } else if (selectedIndex >= 0) {
@@ -139,6 +157,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     if (!showWindow) {
         selectedIndex = -1;
         csError.clear();
+        csData.nodes.clear();
         textFilterFile.Clear();
         textFilterString.Clear();
         sdbDialogs = {}; // FIXME: Не чистится если сменили RootDirectory
