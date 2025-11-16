@@ -205,53 +205,73 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
     }
 }
 
+// SERVER.DLL [14042464]
 const char* CsViewer::funcStr(double value) {
     if (value == 0) return "RS_GetPersonParameterI (0)";
-    if (value == 16777220) return "D_Say";
-    if (value == 16777221) return "D_CloseDialog";
-    if (value == 16777222) return "D_Answer";
-    if (value == 16777223) return "D_PlaySound";
-    if (value == 33554432) return "LE_CastEffect";
-    if (value == 33554434) return "LE_CastMagic";
-    if (value == 50331648) return "WD_LoadArea";
-    if (value == 50331650) return "RS_SetTribesRelation";
-    if (value == 50331653) return "WD_SetVisible"; // Animation
-    if (value == 50331655) return "WD_TitlesAndLoadArea";
-    if (value == 67108864) return "RS_GetPersonParameterI";
-    if (value == 67108865) return "RS_SetPersonParameterI";
-    if (value == 67108866) return "RS_AddPerson_1";
-    if (value == 67108867) return "RS_AddPerson_2";
-    if (value == 67108868) return "RS_IsPersonExistsI";
-    if (value == 67108869) return "RS_AddExp";
-    if (value == 67108870) return "RS_DelPerson";
-    if (value == 67108871) return "RS_AddToHeroPartyName";
-    if (value == 67108872) return "RS_RemoveFromHeroPartyName";
-    if (value == 67108873) return "RS_TestHeroHasPartyName";
-    if (value == 67108874) return "RS_AllyCmd";
-    if (value == 83886080) return "RS_TestPersonHasItem";
-    if (value == 83886081) return "RS_PersonTransferItemI";
-    if (value == 83886082) return "RS_GetItemCountI";
-    if (value == 83886084) return "RS_PersonAddItem";
-    if (value == 83886085) return "RS_PersonRemoveItem";
-    if (value == 100663296) return "RS_GetDayOrNight"; // Или RS_GetCurrentTimeOfDayI
-    if (value == 100663298) return "RS_GetDaysFromBeginningI";
-    if (value == 100663299) return "RS_AddTime";
-    if (value == 117440512) return "RS_QuestComplete";
-    if (value == 117440513) return "RS_StageEnable";
-    if (value == 117440514) return "RS_QuestEnable";
-    if (value == 117440515) return "RS_StageComplete";
-    if (value == 117440516) return "RS_StorylineQuestEnable";
-    //if (value == 117440519) 1 param [KrezDeath] hospital_leader
-    if (value == 117440520) return "RS_SetLocationAccess";
-    if (value == 117440521) return "RS_EnableTrigger";
-    if (value == 117440522) return "RS_GetRandMinMaxI";
-    if (value == 117440523) return "RS_SetWeather";
-    if (value == 117440524) return "RS_SetSpecialPerk";
-    if (value == 117440525) return "RS_PassToTradePanel";
-    if (value == 117440526) return "RS_GetDialogEnabled";
-    if (value == 117440527) return "RS_SetUndeadState";
-    if (value == 117440531) return "RS_SetInjured";
-    if (value == 117440532) return "RS_SetDoorState";
+    if (value == 0x1000000) return "Exit";
+    if (value == 0x1000001) return "Signal";
+    if (value == 0x1000002) return "Console";
+    if (value == 0x1000003) return "Cmd";
+    if (value == 0x1000004) return "D_Say";
+    if (value == 0x1000005) return "D_CloseDialog";
+    if (value == 0x1000006) return "D_Answer";
+    if (value == 0x1000007) return "D_PlaySound";
+    if (value == 0x2000000) return "LE_CastEffect";
+    if (value == 0x2000001) return "LE_DelEffect";
+    if (value == 0x2000002) return "LE_CastMagic";
+    if (value == 0x3000000) return "WD_LoadArea";
+    if (value == 0x3000001) return "WD_SetCellsGroupFlag";
+    if (value == 0x3000002) return "RS_SetTribesRelation";
+    if (value == 0x3000003) return "RS_GetTribesRelation";
+    if (value == 0x3000004) return "RS_StartDialog";
+    if (value == 0x3000005) return "WD_SetVisible";
+    if (value == 0x3000006) return "C_FINISHED";
+    if (value == 0x3000007) return "WD_TitlesAndLoadArea";
+    if (value == 0x3000008) return "C_TitlesAndFINISHED";
+    if (value == 0x4000000) return "RS_GetPersonParameterI";
+    if (value == 0x4000001) return "RS_SetPersonParameterI";
+    if (value == 0x4000002) return "RS_AddPerson_1";
+    if (value == 0x4000003) return "RS_AddPerson_2";
+    if (value == 0x4000004) return "RS_IsPersonExistsI";
+    if (value == 0x4000005) return "RS_AddExp";
+    if (value == 0x4000006) return "RS_DelPerson";
+    if (value == 0x4000007) return "RS_AddToHeroPartyName";
+    if (value == 0x4000008) return "RS_RemoveFromHeroPartyName";
+    if (value == 0x4000009) return "RS_TestHeroHasPartyName";
+    if (value == 0x400000A) return "RS_AllyCmd";
+    if (value == 0x400000B) return "RS_ShowMessage";
+    if (value == 0x5000000) return "RS_TestPersonHasItem";
+    if (value == 0x5000001) return "RS_PersonTransferItemI";
+    if (value == 0x5000002) return "RS_GetItemCountI";
+    if (value == 0x5000003) return "RS_PersonTransferAllItemsI";
+    if (value == 0x5000004) return "RS_PersonAddItem";
+    if (value == 0x5000005) return "RS_PersonRemoveItem";
+    if (value == 0x5000006) return "RS_PersonAddItemToTrade";
+    if (value == 0x5000007) return "RS_PersonRemoveItemToTrade";
+    if (value == 0x5000008) return "RS_GetMoney";
+    if (value == 0x6000000) return "RS_GetDayOrNight";
+    if (value == 0x6000001) return "RS_GetCurrentTimeOfDayI";
+    if (value == 0x6000002) return "RS_GetDaysFromBeginningI";
+    if (value == 0x6000003) return "RS_AddTime";
+    if (value == 0x7000000) return "RS_QuestComplete";
+    if (value == 0x7000001) return "RS_StageEnable";
+    if (value == 0x7000002) return "RS_QuestEnable";
+    if (value == 0x7000003) return "RS_StageComplete";
+    if (value == 0x7000004) return "RS_StorylineQuestEnable";
+    if (value == 0x7000005) return "RS_SetEvent";
+    if (value == 0x7000006) return "RS_GetEvent";
+    if (value == 0x7000007) return "RS_ClearEvent";
+    if (value == 0x7000008) return "RS_SetLocationAccess";
+    if (value == 0x7000009) return "RS_EnableTrigger";
+    if (value == 0x700000A) return "RS_GetRandMinMaxI";
+    if (value == 0x700000B) return "RS_SetWeather";
+    if (value == 0x700000C) return "RS_SetSpecialPerk";
+    if (value == 0x700000D) return "RS_PassToTradePanel";
+    if (value == 0x700000E) return "RS_GetDialogEnabled";
+    if (value == 0x700000F) return "RS_SetUndeadState";
+    if (value == 0x7000010) return "RS_GlobalMap";
+    if (value == 0x7000013) return "RS_SetInjured";
+    if (value == 0x7000014) return "RS_SetDoorState";
     return "unk";
 }
 
@@ -281,7 +301,7 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
         }
         std::string_view funcStr = CsViewer::funcStr(node.value);
         if (funcStr == "unk") {
-            additionInfo = std::format("val: {} [{}], c: {}, d: {}, childs: [{}]", node.value, funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
+            additionInfo = std::format("val: {:X} [{}], c: {}, d: {}, childs: [{}]", (int)node.value, funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
         } else {
             additionInfo = std::format("val: [{}], c: {}, d: {}, childs: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
         }
