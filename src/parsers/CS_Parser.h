@@ -10,8 +10,9 @@ struct CS_Node {
     int32_t b = -1;
     int32_t c = -1;
     int32_t d = -1;
-    std::array<int32_t, 9> child = {-1};
-
+    std::array<int32_t, 9> child = {-1, -1, -1,
+                                    -1, -1, -1,
+                                    -1, -1, -1};
     std::string text;
     double value = -1.0;
 };

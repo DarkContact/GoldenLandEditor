@@ -219,7 +219,7 @@ const char* CsViewer::funcStr(double value) {
     if (value == 83886082) return "RS_GetItemCountI";
     if (value == 83886084) return "RS_PersonAddItem";
     if (value == 83886085) return "RS_PersonRemoveItem";
-    //if (value == 100663296) RS_GetDayOrNight or RS_GetCurrentTimeOfDayI
+    if (value == 100663296) return "RS_GetDayOrNight"; // Или RS_GetCurrentTimeOfDayI
     if (value == 100663298) return "RS_GetDaysFromBeginningI";
     //if (value == 100663299) 2 param [6 20] [3 30] [1 0]
     if (value == 117440512) return "RS_QuestComplete";
@@ -227,12 +227,15 @@ const char* CsViewer::funcStr(double value) {
     if (value == 117440514) return "RS_QuestEnable";
     if (value == 117440515) return "RS_StageComplete";
     if (value == 117440516) return "RS_StorylineQuestEnable";
+    //if (value == 117440519) 1 param [KrezDeath] hospital_leader
     if (value == 117440520) return "RS_SetLocationAccess";
     if (value == 117440521) return "RS_EnableTrigger";
     if (value == 117440522) return "RS_GetRandMinMaxI";
+    //if (value == 117440523) 1 param [1]
     if (value == 117440524) return "RS_SetSpecialPerk";
     if (value == 117440525) return "RS_PassToTradePanel";
     if (value == 117440526) return "RS_GetDialogEnabled";
+    if (value == 117440527) return "RS_SetUndeadState";
     if (value == 117440531) return "RS_SetInjured";
     if (value == 117440532) return "RS_SetDoorState";
     return "unk";
