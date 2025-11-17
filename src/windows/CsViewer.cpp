@@ -23,7 +23,6 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     static std::string csError;
     static std::vector<bool> funcNodes;
     static bool showOnlyFunctions = false;
-    static bool showOnlyUnknownFunctions = false; // TODO: Удалить после того как все функции станут известны
     static bool showDialogPhrases = true;
     static bool onceWhenOpen = false;
 
@@ -67,13 +66,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     funcNodes.resize(csData.nodes.size(), false);
                     for (size_t i = 0; i < csData.nodes.size(); ++i) {
                         const auto& node = csData.nodes[i];
-                        bool pass = true;
-                        if (showOnlyUnknownFunctions) {
-                            std::string_view funcStr = CsViewer::funcStr(node.value);
-                            pass = (funcStr == "unk");
-                        }
-
-                        if (node.opcode == 48 && pass) {
+                        if (node.opcode == 48) {
                             funcNodes[i] = true;
                             for (int j = 0; j < node.child.size(); ++j) {
                                 int32_t idx = node.child[j];
@@ -148,10 +141,6 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
         ImGui::Checkbox("Funcs only", &showOnlyFunctions);
         ImGui::SameLine();
-        if (showOnlyFunctions) {
-            ImGui::Checkbox("Only [unk]", &showOnlyUnknownFunctions);
-            ImGui::SameLine();
-        }
         ImGui::Checkbox("Dialog phrases", &showDialogPhrases);
 
         ImGui::EndChild();
