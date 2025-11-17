@@ -34,14 +34,14 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
         } else if (node.opcode == 22 || node.opcode == 23) {
             std::string_view text = readCString(fileData, offset);
             node.text = std::string(text);
-        } else if (node.opcode == 48) {
+        } else if (node.opcode == kFunc) {
             node.c = readInt32(fileData, offset);
             node.d = readInt32(fileData, offset);
             node.value = readDouble(fileData, offset);
 
-            for (int i = 0; i < node.child.size(); ++i) {
-                node.child[i] = readInt32(fileData, offset);
-                if (node.child[i] == -1)
+            for (int i = 0; i < node.args.size(); ++i) {
+                node.args[i] = readInt32(fileData, offset);
+                if (node.args[i] == -1)
                     break;
             }
         } else if (node.opcode == 49) {

@@ -66,10 +66,10 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     funcNodes.resize(csData.nodes.size(), false);
                     for (size_t i = 0; i < csData.nodes.size(); ++i) {
                         const auto& node = csData.nodes[i];
-                        if (node.opcode == 48) {
+                        if (node.opcode == kFunc) {
                             funcNodes[i] = true;
-                            for (int j = 0; j < node.child.size(); ++j) {
-                                int32_t idx = node.child[j];
+                            for (int j = 0; j < node.args.size(); ++j) {
+                                int32_t idx = node.args[j];
                                 if (idx == -1) break;
 
                                 funcNodes[++i] = true;
@@ -109,12 +109,12 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     bool isDialogPhrase = false;
                     if (prevNode) {
-                        if (prevNode->opcode == 23) {
+                        if (prevNode->opcode == kStringVarName) {
                             if (prevNode->text == "LastPhrase" || prevNode->text == "LastAnswer")
                                 isDialogPhrase = true;
                         }
 
-                        if (prevNode->opcode == 48) {
+                        if (prevNode->opcode == kFunc) {
                             std::string_view funcStr = CsViewer::funcStr(prevNode->value);
                             if (funcStr == "D_Say" || funcStr == "D_Answer")
                                 isDialogPhrase = true;
@@ -127,7 +127,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     if (showOnlyFunctions && funcNodes[i]
                         || !showOnlyFunctions) {
                         if (textFilterString.PassFilter(nodeInfo.c_str())) {
-                            bool isFunc = node.opcode == 48;
+                            bool isFunc = node.opcode == kFunc;
                             ImGui::TextColored(isFunc ? funcTextColor : defaultTextColor, "[i:%zu] %s", i, nodeInfo.c_str());
                         }
                     }
@@ -183,10 +183,10 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
         case 18: return "%";
         case 19: return "~";
         case 20: return "!";
-        case 21: return "real_var";
+        case 21: return "int_var";
         case 22: return "str";
         case 23: return "str_var";
-        case 24: return "real";
+        case 24: return "int";
         case 48: return "func";
         case 49: return "jmp";
         case 50: return "if_call";
@@ -268,8 +268,8 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
     std::string additionInfo;
     if (node.opcode >= 0 && node.opcode <= 20) {
         additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    } else if (node.opcode == 21 || node.opcode == 24) {
-        if (showDialogPhrases && node.opcode == 24) {
+    } else if (node.opcode == kIntLiteral || node.opcode == kIntVarName) {
+        if (showDialogPhrases && node.opcode == kIntLiteral) {
             auto it = sdbDialogs.strings.find(node.value);
             if (it != sdbDialogs.strings.cend()) {
                 additionInfo = std::format("val: {} [{}]", node.value, it->second);
@@ -279,20 +279,20 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
         } else {
             additionInfo = std::format("val: {}", node.value);
         }
-    } else if (node.opcode == 22 || node.opcode == 23) {
+    } else if (node.opcode == kStringLiteral || node.opcode == kStringVarName) {
         additionInfo = std::format("txt: {}", node.text);
-    } else if (node.opcode == 48) {
-        std::string childInfo;
-        for (int j = 0; j < node.child.size(); j++) {
-            int32_t idx = node.child[j];
+    } else if (node.opcode == kFunc) {
+        std::string argsInfo;
+        for (int j = 0; j < node.args.size(); j++) {
+            int32_t idx = node.args[j];
             if (idx == -1) break;
-            childInfo += std::format("{} ", idx);
+            argsInfo += std::format("{} ", idx);
         }
         std::string_view funcStr = CsViewer::funcStr(node.value);
         if (funcStr == "unk") {
-            additionInfo = std::format("val: {:X} [{}], c: {}, d: {}, childs: [{}]", (int)node.value, funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
+            additionInfo = std::format("val: {:X} [{}], c: {}, d: {}, args: [{}]", (int)node.value, funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
         } else {
-            additionInfo = std::format("val: [{}], c: {}, d: {}, childs: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(childInfo));
+            additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
         }
     } else if (node.opcode == 49) {
         additionInfo = std::format("c: {}, d: {}", node.c, node.d);
