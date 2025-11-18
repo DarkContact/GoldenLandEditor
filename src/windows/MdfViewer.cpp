@@ -375,7 +375,8 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             if (showInfo) {
                 ImGui::SetCursorScreenPos({startPos.x + maxTextureW + maxTextureXOffset + 12.0f, startPos.y});
 
-                ImGui::PushFont(NULL, 14.0f);
+                ImGuiStyle& style = ImGui::GetStyle();
+                ImGui::PushFont(NULL, style.FontSizeBase - 2.0f);
                 ImGui::Text("%s", mdfDataInfo.c_str());
                 ImGui::PopFont();
             }

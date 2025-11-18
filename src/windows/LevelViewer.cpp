@@ -701,6 +701,7 @@ void LevelViewer::drawTileBg(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 til
 
     if (mapTilesMode == MapTilesMode::Mask && tile.mask != 0xffff) {
         ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
+
         ImGui::PushFont(NULL, 10.0f);
         ImGui::Text("%u", tile.mask);
         ImGui::PopFont();

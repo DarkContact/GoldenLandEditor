@@ -100,7 +100,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     ImGui::SetScrollY(0.0f);
                 }
 
-                ImGui::PushFont(NULL, 15.0f);
+                ImGuiStyle& style = ImGui::GetStyle();
+                ImGui::PushFont(NULL, style.FontSizeBase - 1.0f);
                 for (size_t i = 0; i < csData.nodes.size(); ++i) {
                     const CS_Node* prevNode = nullptr;
                     if (i > 0) {
