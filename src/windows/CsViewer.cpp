@@ -281,7 +281,7 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
             additionInfo = std::format("val: {}", node.value);
         }
     } else if (node.opcode == kStringLiteral || node.opcode == kStringVarName) {
-        additionInfo = std::format("txt: {}", node.text);
+        additionInfo = std::format("txt: {}", StringUtils::decodeWin1251ToUtf8(node.text));
     } else if (node.opcode == kFunc) {
         std::string argsInfo;
         for (int j = 0; j < node.args.size(); j++) {
