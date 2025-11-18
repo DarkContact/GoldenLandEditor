@@ -190,7 +190,7 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
         case 24: return "num";
         case 48: return "func";
         case 49: return "jmp";
-        case 50: return "if_call";
+        case 50: return "assign";
         default: return "unk";
     }
 }
