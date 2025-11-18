@@ -7,8 +7,8 @@
 enum OpcodeType {
     kUnknown = -1,
     // [0 - 20] Операторы
-    kIntLiteral = 24,
-    kIntVarName = 21,
+    kNumberLiteral = 24,
+    kNumberVarName = 21,
     kStringLiteral = 22,
     kStringVarName = 23,
     kFunc = 48

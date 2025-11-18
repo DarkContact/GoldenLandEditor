@@ -183,10 +183,10 @@ const char* CsViewer::opcodeStr(int32_t opcode) {
         case 18: return "%";
         case 19: return "~";
         case 20: return "!";
-        case 21: return "int_var";
+        case 21: return "num_var";
         case 22: return "str";
         case 23: return "str_var";
-        case 24: return "int";
+        case 24: return "num";
         case 48: return "func";
         case 49: return "jmp";
         case 50: return "if_call";
@@ -268,8 +268,8 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
     std::string additionInfo;
     if (node.opcode >= 0 && node.opcode <= 20) {
         additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    } else if (node.opcode == kIntLiteral || node.opcode == kIntVarName) {
-        if (showDialogPhrases && node.opcode == kIntLiteral) {
+    } else if (node.opcode == kNumberLiteral || node.opcode == kNumberVarName) {
+        if (showDialogPhrases && node.opcode == kNumberLiteral) {
             auto it = sdbDialogs.strings.find(node.value);
             if (it != sdbDialogs.strings.cend()) {
                 additionInfo = std::format("val: {} [{}]", node.value, it->second);
