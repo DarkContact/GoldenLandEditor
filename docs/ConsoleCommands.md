@@ -1,268 +1,268 @@
-| Name                         | Type | Flags | Описание                                         | 
-|------------------------------|------|-------|--------------------------------------------------|
-| add_ally                     | func | --S-- |                                                  |
-| add_person                   | func | --S-- |                                                  |
-| ai_see                       | var  | ----- |                                                  |
-| ai_think                     | var  | ----- |                                                  |
-| ap_set_route                 | func | --S-- |                                                  |
-| apply_settings               | func | ----- |                                                  |
-| attach_to_person             | func | ----- |                                                  |
-| bind                     	   | func | ----N | Назначить клавишу для переменной с префиксом vk_ |
-| broadcast_print              | func | -H--- | Печать сообщения в консоль                       |
-| build_save_list              | func | ----- |                                                  |
-| cache_all_dialogs            | func | --S-- |                                                  |
-| cc_common                    | var  | ----- |                                                  |
-| cc_cursed                    | var  | ----- |                                                  |
-| cc_default                   | var  | ----- |                                                  |
-| cc_description               | var  | ----- |                                                  |
-| cc_magical                   | var  | ----- |                                                  |
-| cc_not_enough                | var  | ----- |                                                  |
-| cc_pars_not_enough           | var  | ----- |                                                  |
-| cc_pars_std                  | var  | ----- |                                                  |
-| cc_special                   | var  | ----- |                                                  |
-| cc_unique_or_quest           | var  | ----- |                                                  |
-| ch_KrepkajaSpina             | var  | C-S-- |                                                  |
-| ch_ZorkijGlaz                | var  | C-S-- |                                                  |
-| ch_add_exp                   | func | C-S-- |                                                  |
-| ch_all_skill                 | func | C-S-- |                                                  |
-| ch_finish_game               | func | ----- |                                                  |
-| ch_give                      | func | C-S-- |                                                  |
-| ch_god                       | func | C-S-- |                                                  |
-| ch_max_primary_value         | var  | C-S-- |                                                  |
-| ch_max_skill_value           | var  | C-S-- |                                                  |
-| ch_money                     | func | C-S-- |                                                  |
-| ch_skip_random_meet          | var  | C-S-- |                                                  |
-| change_state                 | func | ----- |                                                  |
-| choice_magic                 | func | --S-- |                                                  |
-| cl_GXFps                     | var  | -H-C- | Получить значение FPS в формате "20.1097"        |
-| cl_bpd                       | var  | ----- |                                                  |
-| cl_bpd_limit_to_show         | var  | ----- |                                                  |
-| cl_bpf                       | var  | ----- |                                                  |
-| cl_bpf_limit_to_show         | var  | ----- |                                                  |
-| cl_console_time              | var  | ----- |                                                  |
-| cl_mini_console_lines        | var  | ----- |                                                  |
-| cl_reconnect_time            | var  | ----- |                                                  |
-| cl_skinname                  | var  | ----- |                                                  |
-| cl_spawn                     | var  | -H--- |                                                  |
-| cl_timeout                   | var  | ----- |                                                  |
-| cl_traffic                   | var  | ----- |                                                  |
-| cl_username                  | var  | ---C- |                                                  |
-| client_spawn                 | func | --S-- |                                                  |
-| cmd                          | func | ----- |                                                  |
-| connect                      | func | ----- |                                                  |
-| connection_error             | func | ----- |                                                  |
-| d_area_load                  | var  | ----- |                                                  |
-| d_color                      | var  | ----- |                                                  |
-| d_console                    | var  | -H-C- |                                                  |
-| d_create_dialogs_cache       | var  | ----- |                                                  |
-| d_go_to_cast                 | var  | ----- |                                                  |
-| d_history_log                | var  | ----- |                                                  |
-| d_hooks                      | var  | ----- |                                                  |
-| d_info_global_map            | var  | ----- |                                                  |
-| d_info_items                 | var  | ----- |                                                  |
-| d_info_persons               | var  | ----- |                                                  |
-| d_info_phrases               | var  | ----- |                                                  |
-| d_info_role                  | var  | ----- |                                                  |
-| d_info_tbsynchr              | var  | ----- |                                                  |
-| d_info_world                 | var  | ----- |                                                  |
-| d_location                   | var  | -H--- |                                                  |
-| d_log_person                 | var  | -H-C- |                                                  |
-| d_magic                      | var  | ----- |                                                  |
-| d_minimize_idle              | var  | ----- |                                                  |
-| d_net                        | var  | ----- |                                                  |
-| d_persons                    | var  | ----- |                                                  |
-| d_persons_path               | var  | ----- |                                                  |
-| d_random_generate            | var  | ----- |                                                  |
-| d_sound_shaders              | var  | ----- |                                                  |
-| d_spritex_holder             | var  | ----- |                                                  |
-| d_test                       | var  | ----- |                                                  |
-| d_test_magic                 | var  | -H--- |                                                  |
-| d_triggers                   | var  | ----- |                                                  |
-| d_up_window                  | var  | ----- |                                                  |
-| d_update_idle                | var  | ----- |                                                  |
-| d_user_function              | var  | ----- |                                                  |
-| del_person                   | func | --S-- |                                                  |
-| disconnect                   | func | ----- |                                                  |
-| distance_attack              | func | --S-- |                                                  |
-| exit                         | func | --S-- |                                                  |
-| fetch_baselines              | func | -HS-N |                                                  |
-| fetch_itembaselines          | func | -HS-N |                                                  |
-| fetch_questbaselines         | func | -HS-N |                                                  |
-| fetch_sounds                 | func | -HS-N |                                                  |
-| fetch_sync_svars             | func | -HS-N |                                                  |
-| fire_start                   | func | --S-- |                                                  |
-| fire_stop                    | func | --S-- |                                                  |
-| game_load                    | func | ----- |                                                  |
-| game_save                    | func | --S-- |                                                  |
-| gv_HeroPtsPerLevel           | var  | ----- |                                                  |
-| gv_MouseAutoRepeatFirstDelay | var  | ----- |                                                  |
-| gv_MouseAutoRepeatNextDelay  | var  | ----- |                                                  |
-| gv_OnFastHintDelay           | var  | ----- |                                                  |
-| gv_OnHintDelay               | var  | ----- |                                                  |
-| gv_SkillPtsPerLevel          | var  | ----- |                                                  |
-| gv_Title                     | var  | -H-C- |                                                  |
-| gv_Weather_max_delay         | var  | ----- |                                                  |
-| gv_Weather_min_delay         | var  | ----- |                                                  |
-| gv_addon                     | var  | ----- |                                                  |
-| gv_anim_speed                | var  | ----- |                                                  |
-| gv_blood                     | var  | ----- |                                                  |
-| gv_cgc_sync                  | var  | ----- |                                                  |
-| gv_change_location           | var  | -H--- |                                                  |
-| gv_clip_path_calc            | var  | ----- |                                                  |
-| gv_day_night                 | var  | ----- |                                                  |
-| gv_debug_dialog              | var  | ----- |                                                  |
-| gv_dialog_hacker             | var  | ----- |                                                  |
-| gv_disable_scroll            | var  | ----- |                                                  |
-| gv_double_click_speed        | var  | ----- |                                                  |
-| gv_exotic_items_transfer     | var  | ----- |                                                  |
-| gv_free_camera               | var  | ----- |                                                  |
-| gv_gm_scroll_delay           | var  | ----- |                                                  |
-| gv_gm_step_delay             | var  | ----- |                                                  |
-| gv_hints_show                | var  | ----- |                                                  |
-| gv_in_game                   | var  | -H--- |                                                  |
-| gv_is_multiplayer            | var  | -H--- |                                                  |
-| gv_item_transaction_timeout  | var  | ----- |                                                  |
-| gv_item_using_timeout        | var  | ----- |                                                  |
-| gv_items_regenerate_interval | var  | ----- |                                                  |
-| gv_loading_jpg               | var  | -H--- |                                                  |
-| gv_location_cache            | var  | ----- |                                                  |
-| gv_location_start            | var  | -H-C- |                                                  |
-| gv_map_walker                | var  | -H--- |                                                  |
-| gv_meet_offset               | var  | ----- |                                                  |
-| gv_minimap_alpha             | var  | ----- |                                                  |
-| gv_minimap_detail            | var  | ----- |                                                  |
-| gv_minimap_scroll_speed      | var  | ----- |                                                  |
-| gv_minimap_show              | var  | ----- |                                                  |
-| gv_minimap_smooth_scroll     | var  | ----- |                                                  |
-| gv_minimap_step_scale        | var  | ----- |                                                  |
-| gv_monster_max_dist          | var  | ----- |                                                  |
-| gv_monster_min_dist          | var  | ----- |                                                  |
-| gv_mouse_speed               | var  | ----- |                                                  |
-| gv_pause                     | var  | --S-- |                                                  |
-| gv_pause_beetween_turn       | var  | ----- |                                                  |
-| gv_pause_start_round         | var  | ----- |                                                  |
-| gv_person_tips               | var  | ----- |                                                  |
-| gv_random_location           | var  | -H--- |                                                  |
-| gv_relax_time_factor         | var  | ----- |                                                  |
-| gv_run_always                | var  | ----- |                                                  |
-| gv_scroll_speed              | var  | ----- |                                                  |
-| gv_seconds_per_turn          | var  | ----- |                                                  |
-| gv_skip_logo                 | var  | -H--- |                                                  |
-| gv_sound_eax                 | var  | ----- |                                                  |
-| gv_sound_effect_vol          | var  | ----- |                                                  |
-| gv_sound_fading              | var  | ----- |                                                  |
-| gv_sound_music_vol           | var  | ----- |                                                  |
-| gv_sound_speak_vol           | var  | ----- |                                                  |
-| gv_status_bar_history_depth  | var  | ----- |                                                  |
-| gv_status_bar_show_history   | var  | ----- |                                                  |
-| gv_status_bar_show_time      | var  | ----- |                                                  |
-| gv_tcpip_ok                  | var  | -H--- |                                                  |
-| gv_titles_speed              | var  | ----- |                                                  |
-| gv_weather                   | var  | ----- |                                                  |
-| kill_person                  | func | --S-- |                                                  |
-| list                         | func | ----- |                                                  |
-| load_all                     | func | -H--N |                                                  |
-| load_area                    | func | ----- |                                                  |
-| map                          | func | ----- |                                                  |
-| mem_usage                    | func | ----- |                                                  |
-| net_hotspot                  | var  | -H--- |                                                  |
-| net_ip                       | var  | ----- |                                                  |
-| net_port                     | var  | ----- |                                                  |
-| net_stress                   | var  | ----- |                                                  |
-| net_stress_delaylocal        | var  | ----- |                                                  |
-| new                          | func | -HS-- |                                                  |
-| ping                         | func | ----- |                                                  |
-| play_demo                    | func | ----- |                                                  |
-| r_antialiasing               | var  | ----- |                                                  |
-| r_baselines_show             | var  | ----- |                                                  |
-| r_fps_show                   | var  | ----- |                                                  |
-| r_gamma                      | var  | ----- |                                                  |
-| r_masked_show                | var  | ----- |                                                  |
-| r_masks_mode                 | var  | ----- |                                                  |
-| r_masks_show                 | var  | ----- |                                                  |
-| r_max_texture_width          | var  | ----- |                                                  |
-| r_noview_show                | var  | ----- |                                                  |
-| r_noway_show                 | var  | ----- |                                                  |
-| r_person_rect_show           | var  | ----- |                                                  |
-| r_resolution                 | var  | ----- |                                                  |
-| r_senses_limits_show         | var  | ----- |                                                  |
-| r_senses_show                | var  | ----- |                                                  |
-| r_shadow_rect_show           | var  | ----- |                                                  |
-| r_triggers_show              | var  | ----- |                                                  |
-| r_windowed                   | var  | ----- |                                                  |
-| rec_demo                     | func | ----- |                                                  |
-| restart                      | func | ----- |                                                  |
-| say                          | func | ----- |                                                  |
-| set_anim_object_visibility   | func | ----- |                                                  |
-| set_context                  | func | ----- |                                                  |
-| set_speed                    | func | --S-- |                                                  |
-| set_tb_mode                  | func | --S-- |                                                  |
-| show_panel                   | func | ----- |                                                  |
-| show_quick_save              | func | -H--- |                                                  |
-| single_start                 | func | -H--N |                                                  |
-| sv_cheats                    | var  | -HS-- |                                                  |
-| sv_dedicated                 | var  | -HS-- |                                                  |
-| sv_demo                      | var  | -H-C- |                                                  |
-| sv_fps                       | var  | --S-- |                                                  |
-| sv_game_speed                | var  | --S-- |                                                  |
-| sv_hostname                  | var  | -HS-- |                                                  |
-| sv_localhost                 | var  | --S-- |                                                  |
-| sv_maxclients                | var  | --SC- |                                                  |
-| sv_multiplayer               | var  | ----- |                                                  |
-| sv_start_rec_demo            | var  | -H-C- |                                                  |
-| test_dialog                  | func | ----- |                                                  |
-| test_inv                     | func | ----- |                                                  |
-| test_weather                 | func | ----- |                                                  |
-| transition                   | func | --S-- |                                                  |
-| use_all_magic                | func | --S-- |                                                  |
-| vk_activale_aimed_hits       | var  | -H-C- |                                                  |
-| vk_alchemy                   | var  | -H-C- |                                                  |
-| vk_attacktype_toogle         | var  | -H-C- |                                                  |
-| vk_diary_show                | var  | -H-C- |                                                  |
-| vk_dlghot_0                  | var  | -H-C- |                                                  |
-| vk_dlghot_1                  | var  | -H-C- |                                                  |
-| vk_dlghot_2                  | var  | -H-C- |                                                  |
-| vk_dlghot_3                  | var  | -H-C- |                                                  |
-| vk_dlghot_4                  | var  | -H-C- |                                                  |
-| vk_dlghot_5                  | var  | -H-C- |                                                  |
-| vk_dlghot_6                  | var  | -H-C- |                                                  |
-| vk_dlghot_7                  | var  | -H-C- |                                                  |
-| vk_dlghot_8                  | var  | -H-C- |                                                  |
-| vk_dlghot_9                  | var  | -H-C- |                                                  |
-| vk_down_arrow                | var  | -H-C- |                                                  |
-| vk_flash_objects             | var  | -H-C- |                                                  |
-| vk_flash_objects_alt         | var  | -H-C- |                                                  |
-| vk_free_camera               | var  | -H-C- |                                                  |
-| vk_globalmap_show            | var  | -H-C- |                                                  |
-| vk_inventory_show            | var  | -H-C- |                                                  |
-| vk_left_arrow                | var  | -H-C- |                                                  |
-| vk_location_test             | var  | -H-C- |                                                  |
-| vk_lshift                    | var  | -H-C- |                                                  |
-| vk_magic_test                | var  | -H-C- |                                                  |
-| vk_magicbook_current_spell   | var  | -H-C- |                                                  |
-| vk_magicbook_show            | var  | -H-C- |                                                  |
-| vk_menu_toogle               | var  | -H-C- |                                                  |
-| vk_minimap_decrease          | var  | -H-C- |                                                  |
-| vk_minimap_increase          | var  | -H-C- |                                                  |
-| vk_minimap_show              | var  | -H-C- |                                                  |
-| vk_panel_toogle              | var  | -H-C- |                                                  |
-| vk_player_info               | var  | -H-C- |                                                  |
-| vk_quick_load                | var  | -H-C- |                                                  |
-| vk_quick_save                | var  | -H-C- |                                                  |
-| vk_relaxation                | var  | -H-C- |                                                  |
-| vk_reload_weapon             | var  | -H-C- |                                                  |
-| vk_repairing                 | var  | -H-C- |                                                  |
-| vk_right_arrow               | var  | -H-C- |                                                  |
-| vk_rshift                    | var  | -H-C- |                                                  |
-| vk_screenshot                | var  | -H-C- |                                                  |
-| vk_skip_turn                 | var  | -H-C- |                                                  |
-| vk_smith                     | var  | -H-C- |                                                  |
-| vk_spawn_player              | var  | -H-C- |                                                  |
-| vk_speed_down                | var  | -H-C- |                                                  |
-| vk_speed_up                  | var  | -H-C- |                                                  |
-| vk_staff_charging            | var  | -H-C- |                                                  |
-| vk_staff_current_spell       | var  | -H-C- |                                                  |
-| vk_stealing                  | var  | -H-C- |                                                  |
-| vk_up_arrow                  | var  | -H-C- |                                                  |
-| vk_weapon_toggle             | var  | -H-C- |                                                  |
-| zombie_time                  | var  | -H-C- |                                                  |
+| Name                         | Type | Flags | Описание                                         | Аналог в AGE  |
+|------------------------------|------|-------|--------------------------------------------------|---------------|
+| add_ally                     | func | --S-- |                                                  |               |
+| add_person                   | func | --S-- |                                                  |               |
+| ai_see                       | var  | ----- |                                                  |               |
+| ai_think                     | var  | ----- |                                                  |               |
+| ap_set_route                 | func | --S-- |                                                  |               |
+| apply_settings               | func | ----- |                                                  |               |
+| attach_to_person             | func | ----- |                                                  |               |
+| bind                     	   | func | ----N | Назначить клавишу для переменной с префиксом vk_ |               |
+| broadcast_print              | func | -H--- | Печать сообщения в консоль                       | Console       |
+| build_save_list              | func | ----- |                                                  |               |
+| cache_all_dialogs            | func | --S-- |                                                  |               |
+| cc_common                    | var  | ----- |                                                  |               |
+| cc_cursed                    | var  | ----- |                                                  |               |
+| cc_default                   | var  | ----- |                                                  |               |
+| cc_description               | var  | ----- |                                                  |               |
+| cc_magical                   | var  | ----- |                                                  |               |
+| cc_not_enough                | var  | ----- |                                                  |               |
+| cc_pars_not_enough           | var  | ----- |                                                  |               |
+| cc_pars_std                  | var  | ----- |                                                  |               |
+| cc_special                   | var  | ----- |                                                  |               |
+| cc_unique_or_quest           | var  | ----- |                                                  |               |
+| ch_KrepkajaSpina             | var  | C-S-- |                                                  |               |
+| ch_ZorkijGlaz                | var  | C-S-- |                                                  |               |
+| ch_add_exp                   | func | C-S-- |                                                  |               |
+| ch_all_skill                 | func | C-S-- |                                                  |               |
+| ch_finish_game               | func | ----- |                                                  |               |
+| ch_give                      | func | C-S-- |                                                  |               |
+| ch_god                       | func | C-S-- |                                                  |               |
+| ch_max_primary_value         | var  | C-S-- |                                                  |               |
+| ch_max_skill_value           | var  | C-S-- |                                                  |               |
+| ch_money                     | func | C-S-- |                                                  |               |
+| ch_skip_random_meet          | var  | C-S-- |                                                  |               |
+| change_state                 | func | ----- |                                                  |               |
+| choice_magic                 | func | --S-- |                                                  |               |
+| cl_GXFps                     | var  | -H-C- | Получить значение FPS в формате "20.1097"        |               |
+| cl_bpd                       | var  | ----- |                                                  |               |
+| cl_bpd_limit_to_show         | var  | ----- |                                                  |               |
+| cl_bpf                       | var  | ----- |                                                  |               |
+| cl_bpf_limit_to_show         | var  | ----- |                                                  |               |
+| cl_console_time              | var  | ----- |                                                  |               |
+| cl_mini_console_lines        | var  | ----- |                                                  |               |
+| cl_reconnect_time            | var  | ----- |                                                  |               |
+| cl_skinname                  | var  | ----- |                                                  |               |
+| cl_spawn                     | var  | -H--- |                                                  |               |
+| cl_timeout                   | var  | ----- |                                                  |               |
+| cl_traffic                   | var  | ----- |                                                  |               |
+| cl_username                  | var  | ---C- |                                                  |               |
+| client_spawn                 | func | --S-- |                                                  |               |
+| cmd                          | func | ----- |                                                  |               |
+| connect                      | func | ----- |                                                  |               |
+| connection_error             | func | ----- |                                                  |               |
+| d_area_load                  | var  | ----- |                                                  |               |
+| d_color                      | var  | ----- |                                                  |               |
+| d_console                    | var  | -H-C- |                                                  |               |
+| d_create_dialogs_cache       | var  | ----- |                                                  |               |
+| d_go_to_cast                 | var  | ----- |                                                  |               |
+| d_history_log                | var  | ----- |                                                  |               |
+| d_hooks                      | var  | ----- |                                                  |               |
+| d_info_global_map            | var  | ----- |                                                  |               |
+| d_info_items                 | var  | ----- |                                                  |               |
+| d_info_persons               | var  | ----- |                                                  |               |
+| d_info_phrases               | var  | ----- |                                                  |               |
+| d_info_role                  | var  | ----- |                                                  |               |
+| d_info_tbsynchr              | var  | ----- |                                                  |               |
+| d_info_world                 | var  | ----- |                                                  |               |
+| d_location                   | var  | -H--- |                                                  |               |
+| d_log_person                 | var  | -H-C- |                                                  |               |
+| d_magic                      | var  | ----- |                                                  |               |
+| d_minimize_idle              | var  | ----- |                                                  |               |
+| d_net                        | var  | ----- |                                                  |               |
+| d_persons                    | var  | ----- |                                                  |               |
+| d_persons_path               | var  | ----- |                                                  |               |
+| d_random_generate            | var  | ----- |                                                  |               |
+| d_sound_shaders              | var  | ----- |                                                  |               |
+| d_spritex_holder             | var  | ----- |                                                  |               |
+| d_test                       | var  | ----- |                                                  |               |
+| d_test_magic                 | var  | -H--- |                                                  |               |
+| d_triggers                   | var  | ----- |                                                  |               |
+| d_up_window                  | var  | ----- |                                                  |               |
+| d_update_idle                | var  | ----- |                                                  |               |
+| d_user_function              | var  | ----- |                                                  |               |
+| del_person                   | func | --S-- |                                                  |               |
+| disconnect                   | func | ----- |                                                  |               |
+| distance_attack              | func | --S-- |                                                  |               |
+| exit                         | func | --S-- |                                                  |               |
+| fetch_baselines              | func | -HS-N |                                                  |               |
+| fetch_itembaselines          | func | -HS-N |                                                  |               |
+| fetch_questbaselines         | func | -HS-N |                                                  |               |
+| fetch_sounds                 | func | -HS-N |                                                  |               |
+| fetch_sync_svars             | func | -HS-N |                                                  |               |
+| fire_start                   | func | --S-- |                                                  |               |
+| fire_stop                    | func | --S-- |                                                  |               |
+| game_load                    | func | ----- |                                                  |               |
+| game_save                    | func | --S-- |                                                  |               |
+| gv_HeroPtsPerLevel           | var  | ----- |                                                  |               |
+| gv_MouseAutoRepeatFirstDelay | var  | ----- |                                                  |               |
+| gv_MouseAutoRepeatNextDelay  | var  | ----- |                                                  |               |
+| gv_OnFastHintDelay           | var  | ----- |                                                  |               |
+| gv_OnHintDelay               | var  | ----- |                                                  |               |
+| gv_SkillPtsPerLevel          | var  | ----- |                                                  |               |
+| gv_Title                     | var  | -H-C- |                                                  |               |
+| gv_Weather_max_delay         | var  | ----- |                                                  |               |
+| gv_Weather_min_delay         | var  | ----- |                                                  |               |
+| gv_addon                     | var  | ----- |                                                  |               |
+| gv_anim_speed                | var  | ----- |                                                  |               |
+| gv_blood                     | var  | ----- |                                                  |               |
+| gv_cgc_sync                  | var  | ----- |                                                  |               |
+| gv_change_location           | var  | -H--- |                                                  |               |
+| gv_clip_path_calc            | var  | ----- |                                                  |               |
+| gv_day_night                 | var  | ----- |                                                  |               |
+| gv_debug_dialog              | var  | ----- |                                                  |               |
+| gv_dialog_hacker             | var  | ----- |                                                  |               |
+| gv_disable_scroll            | var  | ----- |                                                  |               |
+| gv_double_click_speed        | var  | ----- |                                                  |               |
+| gv_exotic_items_transfer     | var  | ----- |                                                  |               |
+| gv_free_camera               | var  | ----- |                                                  |               |
+| gv_gm_scroll_delay           | var  | ----- |                                                  |               |
+| gv_gm_step_delay             | var  | ----- |                                                  |               |
+| gv_hints_show                | var  | ----- |                                                  |               |
+| gv_in_game                   | var  | -H--- |                                                  |               |
+| gv_is_multiplayer            | var  | -H--- |                                                  |               |
+| gv_item_transaction_timeout  | var  | ----- |                                                  |               |
+| gv_item_using_timeout        | var  | ----- |                                                  |               |
+| gv_items_regenerate_interval | var  | ----- |                                                  |               |
+| gv_loading_jpg               | var  | -H--- |                                                  |               |
+| gv_location_cache            | var  | ----- |                                                  |               |
+| gv_location_start            | var  | -H-C- |                                                  |               |
+| gv_map_walker                | var  | -H--- |                                                  |               |
+| gv_meet_offset               | var  | ----- |                                                  |               |
+| gv_minimap_alpha             | var  | ----- |                                                  |               |
+| gv_minimap_detail            | var  | ----- |                                                  |               |
+| gv_minimap_scroll_speed      | var  | ----- |                                                  |               |
+| gv_minimap_show              | var  | ----- |                                                  |               |
+| gv_minimap_smooth_scroll     | var  | ----- |                                                  |               |
+| gv_minimap_step_scale        | var  | ----- |                                                  |               |
+| gv_monster_max_dist          | var  | ----- |                                                  |               |
+| gv_monster_min_dist          | var  | ----- |                                                  |               |
+| gv_mouse_speed               | var  | ----- |                                                  |               |
+| gv_pause                     | var  | --S-- |                                                  |               |
+| gv_pause_beetween_turn       | var  | ----- |                                                  |               |
+| gv_pause_start_round         | var  | ----- |                                                  |               |
+| gv_person_tips               | var  | ----- |                                                  |               |
+| gv_random_location           | var  | -H--- |                                                  |               |
+| gv_relax_time_factor         | var  | ----- |                                                  |               |
+| gv_run_always                | var  | ----- |                                                  |               |
+| gv_scroll_speed              | var  | ----- |                                                  |               |
+| gv_seconds_per_turn          | var  | ----- |                                                  |               |
+| gv_skip_logo                 | var  | -H--- |                                                  |               |
+| gv_sound_eax                 | var  | ----- |                                                  |               |
+| gv_sound_effect_vol          | var  | ----- |                                                  |               |
+| gv_sound_fading              | var  | ----- |                                                  |               |
+| gv_sound_music_vol           | var  | ----- |                                                  |               |
+| gv_sound_speak_vol           | var  | ----- |                                                  |               |
+| gv_status_bar_history_depth  | var  | ----- |                                                  |               |
+| gv_status_bar_show_history   | var  | ----- |                                                  |               |
+| gv_status_bar_show_time      | var  | ----- |                                                  |               |
+| gv_tcpip_ok                  | var  | -H--- |                                                  |               |
+| gv_titles_speed              | var  | ----- |                                                  |               |
+| gv_weather                   | var  | ----- |                                                  |               |
+| kill_person                  | func | --S-- |                                                  |               |
+| list                         | func | ----- |                                                  |               |
+| load_all                     | func | -H--N |                                                  |               |
+| load_area                    | func | ----- |                                                  |               |
+| map                          | func | ----- |                                                  |               |
+| mem_usage                    | func | ----- |                                                  |               |
+| net_hotspot                  | var  | -H--- |                                                  |               |
+| net_ip                       | var  | ----- |                                                  |               |
+| net_port                     | var  | ----- |                                                  |               |
+| net_stress                   | var  | ----- |                                                  |               |
+| net_stress_delaylocal        | var  | ----- |                                                  |               |
+| new                          | func | -HS-- |                                                  |               |
+| ping                         | func | ----- |                                                  |               |
+| play_demo                    | func | ----- |                                                  |               |
+| r_antialiasing               | var  | ----- |                                                  |               |
+| r_baselines_show             | var  | ----- |                                                  |               |
+| r_fps_show                   | var  | ----- |                                                  |               |
+| r_gamma                      | var  | ----- |                                                  |               |
+| r_masked_show                | var  | ----- |                                                  |               |
+| r_masks_mode                 | var  | ----- |                                                  |               |
+| r_masks_show                 | var  | ----- |                                                  |               |
+| r_max_texture_width          | var  | ----- |                                                  |               |
+| r_noview_show                | var  | ----- |                                                  |               |
+| r_noway_show                 | var  | ----- |                                                  |               |
+| r_person_rect_show           | var  | ----- |                                                  |               |
+| r_resolution                 | var  | ----- |                                                  |               |
+| r_senses_limits_show         | var  | ----- |                                                  |               |
+| r_senses_show                | var  | ----- |                                                  |               |
+| r_shadow_rect_show           | var  | ----- |                                                  |               |
+| r_triggers_show              | var  | ----- |                                                  |               |
+| r_windowed                   | var  | ----- |                                                  |               |
+| rec_demo                     | func | ----- |                                                  |               |
+| restart                      | func | ----- |                                                  |               |
+| say                          | func | ----- |                                                  |               |
+| set_anim_object_visibility   | func | ----- |                                                  |               |
+| set_context                  | func | ----- |                                                  |               |
+| set_speed                    | func | --S-- |                                                  |               |
+| set_tb_mode                  | func | --S-- |                                                  |               |
+| show_panel                   | func | ----- |                                                  |               |
+| show_quick_save              | func | -H--- |                                                  |               |
+| single_start                 | func | -H--N |                                                  |               |
+| sv_cheats                    | var  | -HS-- |                                                  |               |
+| sv_dedicated                 | var  | -HS-- |                                                  |               |
+| sv_demo                      | var  | -H-C- |                                                  |               |
+| sv_fps                       | var  | --S-- |                                                  |               |
+| sv_game_speed                | var  | --S-- |                                                  |               |
+| sv_hostname                  | var  | -HS-- |                                                  |               |
+| sv_localhost                 | var  | --S-- |                                                  |               |
+| sv_maxclients                | var  | --SC- |                                                  |               |
+| sv_multiplayer               | var  | ----- |                                                  |               |
+| sv_start_rec_demo            | var  | -H-C- |                                                  |               |
+| test_dialog                  | func | ----- |                                                  |               |
+| test_inv                     | func | ----- |                                                  |               |
+| test_weather                 | func | ----- |                                                  |               |
+| transition                   | func | --S-- |                                                  |               |
+| use_all_magic                | func | --S-- |                                                  |               |
+| vk_activale_aimed_hits       | var  | -H-C- |                                                  |               |
+| vk_alchemy                   | var  | -H-C- |                                                  |               |
+| vk_attacktype_toogle         | var  | -H-C- |                                                  |               |
+| vk_diary_show                | var  | -H-C- |                                                  |               |
+| vk_dlghot_0                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_1                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_2                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_3                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_4                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_5                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_6                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_7                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_8                  | var  | -H-C- |                                                  |               |
+| vk_dlghot_9                  | var  | -H-C- |                                                  |               |
+| vk_down_arrow                | var  | -H-C- |                                                  |               |
+| vk_flash_objects             | var  | -H-C- |                                                  |               |
+| vk_flash_objects_alt         | var  | -H-C- |                                                  |               |
+| vk_free_camera               | var  | -H-C- |                                                  |               |
+| vk_globalmap_show            | var  | -H-C- |                                                  |               |
+| vk_inventory_show            | var  | -H-C- |                                                  |               |
+| vk_left_arrow                | var  | -H-C- |                                                  |               |
+| vk_location_test             | var  | -H-C- |                                                  |               |
+| vk_lshift                    | var  | -H-C- |                                                  |               |
+| vk_magic_test                | var  | -H-C- |                                                  |               |
+| vk_magicbook_current_spell   | var  | -H-C- |                                                  |               |
+| vk_magicbook_show            | var  | -H-C- |                                                  |               |
+| vk_menu_toogle               | var  | -H-C- |                                                  |               |
+| vk_minimap_decrease          | var  | -H-C- |                                                  |               |
+| vk_minimap_increase          | var  | -H-C- |                                                  |               |
+| vk_minimap_show              | var  | -H-C- |                                                  |               |
+| vk_panel_toogle              | var  | -H-C- |                                                  |               |
+| vk_player_info               | var  | -H-C- |                                                  |               |
+| vk_quick_load                | var  | -H-C- |                                                  |               |
+| vk_quick_save                | var  | -H-C- |                                                  |               |
+| vk_relaxation                | var  | -H-C- |                                                  |               |
+| vk_reload_weapon             | var  | -H-C- |                                                  |               |
+| vk_repairing                 | var  | -H-C- |                                                  |               |
+| vk_right_arrow               | var  | -H-C- |                                                  |               |
+| vk_rshift                    | var  | -H-C- |                                                  |               |
+| vk_screenshot                | var  | -H-C- |                                                  |               |
+| vk_skip_turn                 | var  | -H-C- |                                                  |               |
+| vk_smith                     | var  | -H-C- |                                                  |               |
+| vk_spawn_player              | var  | -H-C- |                                                  |               |
+| vk_speed_down                | var  | -H-C- |                                                  |               |
+| vk_speed_up                  | var  | -H-C- |                                                  |               |
+| vk_staff_charging            | var  | -H-C- |                                                  |               |
+| vk_staff_current_spell       | var  | -H-C- |                                                  |               |
+| vk_stealing                  | var  | -H-C- |                                                  |               |
+| vk_up_arrow                  | var  | -H-C- |                                                  |               |
+| vk_weapon_toggle             | var  | -H-C- |                                                  |               |
+| zombie_time                  | var  | -H-C- |                                                  |               |
