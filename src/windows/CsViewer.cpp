@@ -10,6 +10,7 @@
 
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
+#include "CsExecutor.h"
 
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
@@ -76,6 +77,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                             }
                         }
                     }
+
+                    // CsExecutor executor(csData.nodes);
+                    // executor.readGlobalVariables(rootDirectory, &csError);
 
                     needResetScroll = true;
                 }

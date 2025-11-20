@@ -48,6 +48,30 @@ int StringUtils::toInt(std::string_view input, int defaultValue) noexcept
     return result;
 }
 
+uint32_t StringUtils::toUInt(std::string_view input, uint32_t defaultValue) noexcept
+{
+    uint32_t result = 0;
+    auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), result);
+
+    if (ec != std::errc()) {
+        return defaultValue;
+    }
+
+    return result;
+}
+
+double StringUtils::toDouble(std::string_view input, double defaultValue) noexcept
+{
+    double result = 0.0;
+    auto [ptr, ec] = std::from_chars(input.data(), input.data() + input.size(), result);
+
+    if (ec != std::errc()) {
+        return defaultValue;
+    }
+
+    return result;
+}
+
 bool StringUtils::parsePosition(std::string_view input, uint16_t& x, uint16_t& y) noexcept {
     auto spacePos = input.find(' ');
     if (spacePos == std::string_view::npos)
