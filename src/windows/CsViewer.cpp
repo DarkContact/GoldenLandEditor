@@ -230,6 +230,7 @@ const char* CsViewer::funcStr(double value) {
     if (value == 0x4000009) return "RS_TestHeroHasPartyName";
     if (value == 0x400000A) return "RS_AllyCmd";
     if (value == 0x400000B) return "RS_ShowMessage";
+    if (value == 0x400000C) return "RS_GetPersonSkillI";
     if (value == 0x5000000) return "RS_TestPersonHasItem";
     if (value == 0x5000001) return "RS_PersonTransferItemI";
     if (value == 0x5000002) return "RS_GetItemCountI";
