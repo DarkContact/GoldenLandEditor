@@ -219,6 +219,10 @@ if (dialog_branch != 0 && (LastAnswer == 6 || LastAnswer == 2181)) {
 ```
 
 
+## Встроенные функции
+Описание всех функций в файле [AgeScriptFunctions.md](AgeScriptFunctions.md)
+
+
 ## Полезные советы
 
 ### Эмуляция цикла while
