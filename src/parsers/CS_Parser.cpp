@@ -29,9 +29,9 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
             node.b = readInt32(fileData, offset);
             node.c = readInt32(fileData, offset);
             node.d = readInt32(fileData, offset);
-        } else if (node.opcode == 21 || node.opcode == 24) {
+        } else if (node.opcode == kNumberVarName || node.opcode == kNumberLiteral) {
             node.value = readDouble(fileData, offset);
-        } else if (node.opcode == 22 || node.opcode == 23) {
+        } else if (node.opcode == kStringVarName || node.opcode == kStringLiteral) {
             std::string_view text = readCString(fileData, offset);
             node.text = std::string(text);
         } else if (node.opcode == kFunc) {
@@ -44,10 +44,10 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
                 if (node.args[i] == -1)
                     break;
             }
-        } else if (node.opcode == 49) {
+        } else if (node.opcode == kJmp) {
             node.c = readInt32(fileData, offset);
             node.d = readInt32(fileData, offset);
-        } else if (node.opcode == 50) {
+        } else if (node.opcode == kAssign) {
             node.a = readInt32(fileData, offset);
             node.b = readInt32(fileData, offset);
             node.c = readInt32(fileData, offset);

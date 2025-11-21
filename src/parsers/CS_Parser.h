@@ -11,8 +11,9 @@ enum OpcodeType {
     kNumberVarName = 21,
     kStringLiteral = 22,
     kStringVarName = 23,
-    kFunc = 48
-    // Когда станет понятно точно что такое 49 и 50, можно добавить
+    kFunc = 48,
+    kJmp = 49,
+    kAssign = 50
 };
 
 struct CS_Node {

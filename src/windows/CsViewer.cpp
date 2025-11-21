@@ -80,6 +80,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     // CsExecutor executor(csData.nodes);
                     // executor.readGlobalVariables(rootDirectory, &csError);
+                    // executor.readScriptVariables(&csError);
+
+                    // auto varInfos = executor.variablesInfo();
 
                     needResetScroll = true;
                 }
@@ -300,9 +303,9 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
         } else {
             additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
         }
-    } else if (node.opcode == 49) {
+    } else if (node.opcode == kJmp) {
         additionInfo = std::format("c: {}, d: {}", node.c, node.d);
-    } else if (node.opcode == 50) {
+    } else if (node.opcode == kAssign) {
         additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
     }
 

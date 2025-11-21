@@ -1,5 +1,6 @@
 #include "CsExecutor.h"
 
+#include <cassert>
 #include <format>
 
 #include "utils/FileUtils.h"
@@ -8,7 +9,7 @@
 CsExecutor::CsExecutor(std::span<const CS_Node> nodes) :
     m_nodes(nodes)
 {
-
+    assert(!m_nodes.empty());
 }
 
 bool parse3(std::string_view line,
@@ -77,8 +78,98 @@ bool CsExecutor::readGlobalVariables(std::string_view rootDirectory, std::string
             varValue = std::string(StringUtils::extractQuotedValue(value));
         }
 
-        m_vars.emplace(std::string(name), varValue);
+        m_globalVars.emplace(std::string(name), varValue);
     });
 
+    return true;
+}
+
+bool CsExecutor::readScriptVariables(std::string* error)
+{
+    for (const auto& node : m_nodes) {
+        if (node.opcode == OpcodeType::kStringVarName) {
+            if (auto it = m_globalVars.find(node.text); it != m_globalVars.end()) {
+                m_scriptVars.emplace(node.text, it->second);
+            }
+        }
+    }
+    return true;
+}
+
+std::vector<std::string> CsExecutor::variablesInfo()
+{
+    std::vector<std::string> out;
+    out.reserve(m_scriptVars.size());
+
+    for (auto& [name, val] : m_scriptVars)
+    {
+        if (auto p = std::get_if<int32_t>(&val))
+            out.emplace_back("int " + name + " " + std::to_string(*p));
+
+        else if (auto p = std::get_if<uint32_t>(&val))
+            out.emplace_back("DWORD " + name + " " + std::to_string(*p));
+
+        else if (auto p = std::get_if<double>(&val))
+            out.emplace_back("float " + name + " " + std::to_string(*p));
+
+        else if (auto p = std::get_if<std::string>(&val))
+            out.emplace_back("string " + name + " " + *p);
+    }
+
+    return out;
+}
+
+bool CsExecutor::next()
+{
+    const CS_Node& currentNode = m_nodes[m_currentNodeIndex];
+
+    if (currentNode.opcode >= 6 && currentNode.opcode <= 11) { // Операторы сравнения
+        const CS_Node& lNode = m_nodes[currentNode.a];
+        Variable_t lValue;
+        if (lNode.opcode == kStringVarName) {
+            lValue = m_scriptVars[lNode.text];
+        } else if (lNode.opcode == kNumberLiteral) {
+            lValue = lNode.value;
+        } else {
+            // TODO: Обход нод пока не найдём опкод со значением
+            assert(false);
+        }
+
+        const CS_Node& rNode = m_nodes[currentNode.b];
+        Variable_t rValue;
+        if (rNode.opcode == kStringVarName) {
+            rValue = m_scriptVars[rNode.text];
+        } else if (rNode.opcode == kNumberLiteral) {
+            rValue = rNode.value;
+        } else {
+            // TODO: Обход нод пока не найдём опкод со значением
+            assert(false);
+        }
+
+        bool isTrue = false;
+        if (currentNode.opcode == 6) {
+            isTrue = (lValue != rValue);
+        } else if (currentNode.opcode == 7) {
+            isTrue = (lValue == rValue);
+        } else if (currentNode.opcode == 8) {
+            isTrue = (lValue >= rValue);
+        } else if (currentNode.opcode == 9) {
+            isTrue = (lValue <= rValue);
+        } else if (currentNode.opcode == 10) {
+            isTrue = (lValue > rValue);
+        } else if (currentNode.opcode == 11) {
+            isTrue = (lValue < rValue);
+        }
+
+        m_currentNodeIndex = isTrue ? currentNode.d : currentNode.c;
+    }
+
+    if (currentNode.opcode == kFunc) {
+
+    } else if (currentNode.opcode == kJmp) {
+        m_currentNodeIndex = currentNode.d;
+    } else if (currentNode.opcode == kAssign) {
+
+    }
     return true;
 }
