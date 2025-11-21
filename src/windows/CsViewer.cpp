@@ -10,7 +10,8 @@
 
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
-#include "CsExecutor.h"
+
+#include "CsExecutorViewer.h"
 
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
@@ -25,12 +26,14 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     static std::vector<bool> funcNodes;
     static bool showOnlyFunctions = false;
     static bool showDialogPhrases = true;
+    static bool showExecuteWindow = false;
     static bool onceWhenOpen = false;
 
     static const ImVec4 defaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
     static const ImVec4 funcTextColor(1.0f, 0.92f, 0.5f, 1.0f);
 
     bool needResetScroll = false;
+    bool needUpdate = false;
 
     if (!onceWhenOpen) {
         std::string error;
@@ -78,17 +81,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                         }
                     }
 
-                    // CsExecutor executor(csData.nodes);
-                    // executor.readGlobalVariables(rootDirectory, &csError);
-                    // executor.readScriptVariables(&csError);
-
-                    // auto varInfos = executor.variablesInfo();
-                    // while (executor.next()) {
-                    //     LogFmt("vars: {}", executor.variablesInfo());
-                    //     LogFmt("funcs: {}", executor.funcsInfo());
-                    // }
-
                     needResetScroll = true;
+                    needUpdate = true;
                 }
             }
             ImGui::EndChild();
@@ -154,11 +148,22 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         ImGui::Checkbox("Funcs only", &showOnlyFunctions);
         ImGui::SameLine();
         ImGui::Checkbox("Dialog phrases", &showDialogPhrases);
+        ImGui::SameLine();
+
+        if (!csData.nodes.empty()) {
+            ImGui::BeginDisabled(showExecuteWindow);
+            if (ImGui::Button("Execute")) {
+                showExecuteWindow = true;
+            }
+            ImGui::EndDisabled();
+        }
 
         ImGui::EndChild();
     }
 
     ImGui::End();
+
+    CsExecutorViewer::update(showExecuteWindow, needUpdate, rootDirectory, csData.nodes);
 
     if (!showWindow) {
         selectedIndex = -1;

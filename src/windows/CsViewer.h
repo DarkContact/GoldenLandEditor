@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #include <vector>
 #include <string>
 
@@ -14,7 +15,6 @@ public:
     static const char* opcodeStr(int32_t opcode);
     static const char* funcStr(double value);
 
-private:
     static std::string csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs, bool showDialogPhrases = true);
 };
 

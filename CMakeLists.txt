@@ -96,6 +96,8 @@ add_executable(GoldenLandEditor WIN32
     src/windows/CsViewer.cpp
     src/CsExecutor.h
     src/CsExecutor.cpp
+    src/windows/CsExecutorViewer.h
+    src/windows/CsExecutorViewer.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE

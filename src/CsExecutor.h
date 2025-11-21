@@ -25,10 +25,12 @@ public:
     bool readGlobalVariables(std::string_view rootDirectory, std::string* error);
     bool readScriptVariables(std::string* error);
 
+    void restart();
     bool next();
 
-    std::vector<std::string> variablesInfo();
-    std::vector<std::string> funcsInfo();
+    int currentNodeIndex() const;
+    std::vector<std::string> variablesInfo() const;
+    std::vector<std::string> funcsInfo() const;
 
 private:
     std::span<const CS_Node> m_nodes;
@@ -37,4 +39,7 @@ private:
 
     std::vector<std::string> m_funcs;
     int m_currentNodeIndex = 0;
+
+    int m_counter = 0;
+    static constexpr int kStopCounter = 10000;
 };

@@ -97,12 +97,24 @@ bool CsExecutor::readScriptVariables(std::string* error)
     return true;
 }
 
-std::vector<std::string> CsExecutor::variablesInfo()
+void CsExecutor::restart()
+{
+    m_counter = 0;
+    m_currentNodeIndex = 0;
+    m_funcs.clear();
+    m_scriptVars.clear();
+    readScriptVariables(nullptr);
+}
+
+int CsExecutor::currentNodeIndex() const
+{
+    return m_currentNodeIndex;
+}
+
+std::vector<std::string> CsExecutor::variablesInfo() const
 {
     std::vector<std::string> out;
     out.reserve(m_scriptVars.size());
-
-    out.emplace_back("m_currentNodeIndex: " + std::to_string(m_currentNodeIndex));
 
     for (auto& [name, val] : m_scriptVars)
     {
@@ -122,13 +134,18 @@ std::vector<std::string> CsExecutor::variablesInfo()
     return out;
 }
 
-std::vector<std::string> CsExecutor::funcsInfo()
-{
+std::vector<std::string> CsExecutor::funcsInfo() const {
     return m_funcs;
 }
 
 bool CsExecutor::next()
 {
+    // Защита от бесконечного выполнения
+    if (m_counter >= CsExecutor::kStopCounter) {
+        return false;
+    }
+    ++m_counter;
+
     const CS_Node& currentNode = m_nodes[m_currentNodeIndex];
 
     if (currentNode.opcode >= 6 && currentNode.opcode <= 11) { // Операторы сравнения
