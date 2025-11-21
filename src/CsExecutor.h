@@ -3,6 +3,7 @@
 #include <string_view>
 #include <variant>
 #include <cstdint>
+#include <vector>
 #include <span>
 
 #include "parsers/CS_Parser.h"
@@ -27,11 +28,13 @@ public:
     bool next();
 
     std::vector<std::string> variablesInfo();
+    std::vector<std::string> funcsInfo();
 
 private:
     std::span<const CS_Node> m_nodes;
     std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual> m_globalVars;
     std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual> m_scriptVars;
 
+    std::vector<std::string> m_funcs;
     int m_currentNodeIndex = 0;
 };

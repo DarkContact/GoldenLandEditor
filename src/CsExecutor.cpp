@@ -5,6 +5,7 @@
 
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "windows/CsViewer.h"
 
 CsExecutor::CsExecutor(std::span<const CS_Node> nodes) :
     m_nodes(nodes)
@@ -101,6 +102,8 @@ std::vector<std::string> CsExecutor::variablesInfo()
     std::vector<std::string> out;
     out.reserve(m_scriptVars.size());
 
+    out.emplace_back("m_currentNodeIndex: " + std::to_string(m_currentNodeIndex));
+
     for (auto& [name, val] : m_scriptVars)
     {
         if (auto p = std::get_if<int32_t>(&val))
@@ -119,6 +122,11 @@ std::vector<std::string> CsExecutor::variablesInfo()
     return out;
 }
 
+std::vector<std::string> CsExecutor::funcsInfo()
+{
+    return m_funcs;
+}
+
 bool CsExecutor::next()
 {
     const CS_Node& currentNode = m_nodes[m_currentNodeIndex];
@@ -131,7 +139,6 @@ bool CsExecutor::next()
         } else if (lNode.opcode == kNumberLiteral) {
             lValue = lNode.value;
         } else {
-            // TODO: Обход нод пока не найдём опкод со значением
             assert(false);
         }
 
@@ -142,7 +149,6 @@ bool CsExecutor::next()
         } else if (rNode.opcode == kNumberLiteral) {
             rValue = rNode.value;
         } else {
-            // TODO: Обход нод пока не найдём опкод со значением
             assert(false);
         }
 
@@ -164,12 +170,33 @@ bool CsExecutor::next()
         m_currentNodeIndex = isTrue ? currentNode.d : currentNode.c;
     }
 
-    if (currentNode.opcode == kFunc) {
+    if (currentNode.opcode == kJmp) {
+        if (currentNode.d == -1)
+            return false;
 
-    } else if (currentNode.opcode == kJmp) {
-        m_currentNodeIndex = currentNode.d;
+        m_currentNodeIndex = currentNode.c;
     } else if (currentNode.opcode == kAssign) {
+        const CS_Node& rNode = m_nodes[currentNode.b];
+        Variable_t rValue;
+        if (rNode.opcode == kStringVarName) {
+            rValue = m_scriptVars[rNode.text];
+        } else if (rNode.opcode == kNumberLiteral) {
+            rValue = (int)rNode.value; // TODO: Корректное приведение типов
+        } else if (rNode.opcode == kFunc) {
+            m_funcs.emplace_back(CsViewer::funcStr(rNode.value));
+            rValue = 0; // Пока не реализовано, будет так
+        } else {
+            assert(false);
+        }
 
+        const CS_Node& lNode = m_nodes[currentNode.a];
+        if (lNode.opcode == kStringVarName) {
+            m_scriptVars[lNode.text] = rValue;
+        } else {
+            assert(false);
+        }
+
+        m_currentNodeIndex = currentNode.d;
     }
     return true;
 }

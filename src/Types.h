@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <format>
 
 #include "SDL3/SDL_timer.h"
 #include "Texture.h"
@@ -84,3 +85,28 @@ struct StringViewEqual {
         return lhs == rhs;
     }
 };
+
+template <>
+struct std::formatter<std::string> : std::formatter<std::string_view> {
+    auto format(const std::string& s, format_context& ctx) const {
+        return formatter<std::string_view>::format(s, ctx);
+    }
+};
+
+template <typename T>
+struct std::formatter<std::vector<T>> : std::formatter<T> {
+    auto format(const std::vector<T>& vec, auto& ctx) const {
+        auto out = ctx.out();
+        *out++ = '[';
+
+        for (size_t i = 0; i < vec.size(); ++i) {
+            out = std::formatter<T>::format(vec[i], ctx);
+            if (i + 1 != vec.size()) {
+                *out++ = ','; *out++ = ' ';
+            }
+        }
+        *out++ = ']';
+        return out;
+    }
+};
+

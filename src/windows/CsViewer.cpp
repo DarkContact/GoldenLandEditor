@@ -83,6 +83,10 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     // executor.readScriptVariables(&csError);
 
                     // auto varInfos = executor.variablesInfo();
+                    // while (executor.next()) {
+                    //     LogFmt("vars: {}", executor.variablesInfo());
+                    //     LogFmt("funcs: {}", executor.funcsInfo());
+                    // }
 
                     needResetScroll = true;
                 }
