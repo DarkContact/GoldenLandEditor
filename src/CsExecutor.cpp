@@ -3,8 +3,9 @@
 #include <cassert>
 #include <format>
 
-#include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 #include "windows/CsViewer.h"
 
 CsExecutor::CsExecutor(std::span<const CS_Node> nodes) :
@@ -111,6 +112,11 @@ int CsExecutor::currentNodeIndex() const
     return m_currentNodeIndex;
 }
 
+int CsExecutor::counter() const
+{
+    return m_counter;
+}
+
 std::vector<std::string> CsExecutor::variablesInfo() const
 {
     std::vector<std::string> out;
@@ -156,7 +162,7 @@ bool CsExecutor::next()
         } else if (lNode.opcode == kNumberLiteral) {
             lValue = lNode.value;
         } else {
-            assert(false);
+            assert(true);
         }
 
         const CS_Node& rNode = m_nodes[currentNode.b];
@@ -164,9 +170,16 @@ bool CsExecutor::next()
         if (rNode.opcode == kStringVarName) {
             rValue = m_scriptVars[rNode.text];
         } else if (rNode.opcode == kNumberLiteral) {
-            rValue = rNode.value;
+            std::visit([&rValue, rNode](auto&& lv){
+                using T = std::decay_t<decltype(lv)>;
+                if constexpr (std::is_same_v<T, std::string>) {
+                    rValue = rNode.value;
+                } else {
+                    rValue = (T)rNode.value;
+                }
+            }, lValue);
         } else {
-            assert(false);
+            assert(true);
         }
 
         bool isTrue = false;
@@ -183,8 +196,9 @@ bool CsExecutor::next()
         } else if (currentNode.opcode == 11) {
             isTrue = (lValue < rValue);
         }
+        //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
 
-        m_currentNodeIndex = isTrue ? currentNode.d : currentNode.c;
+        m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
     }
 
     if (currentNode.opcode == kJmp) {
@@ -203,14 +217,14 @@ bool CsExecutor::next()
             m_funcs.emplace_back(CsViewer::funcStr(rNode.value));
             rValue = 0; // Пока не реализовано, будет так
         } else {
-            assert(false);
+            assert(true);
         }
 
         const CS_Node& lNode = m_nodes[currentNode.a];
         if (lNode.opcode == kStringVarName) {
             m_scriptVars[lNode.text] = rValue;
         } else {
-            assert(false);
+            assert(true);
         }
 
         m_currentNodeIndex = currentNode.d;

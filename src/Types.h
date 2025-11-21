@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <variant>
 #include <vector>
 #include <string>
 #include <format>
@@ -110,3 +111,25 @@ struct std::formatter<std::vector<T>> : std::formatter<T> {
     }
 };
 
+using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
+
+template <>
+struct std::formatter<Variable_t> : std::formatter<std::string> {
+    auto format(const Variable_t& v, std::format_context& ctx) const {
+        std::string out;
+
+        std::visit([&](auto&& arg){
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, int32_t>)
+                out = std::format("int32: {}", arg);
+            else if constexpr (std::is_same_v<T, uint32_t>)
+                out = std::format("uint32: {}", arg);
+            else if constexpr (std::is_same_v<T, double>)
+                out = std::format("double: {}", arg);
+            else if constexpr (std::is_same_v<T, std::string>)
+                out = std::format("string: \"{}\"", arg);
+        }, v);
+
+        return std::formatter<std::string>::format(out, ctx);
+    }
+};

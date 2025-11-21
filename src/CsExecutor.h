@@ -16,8 +16,6 @@ enum VarType {
     kString
 };
 
-typedef std::variant<int32_t, uint32_t, double, std::string> Variable_t;
-
 class CsExecutor {
 public:
     CsExecutor(std::span<const CS_Node> nodes);
@@ -29,6 +27,7 @@ public:
     bool next();
 
     int currentNodeIndex() const;
+    int counter() const;
     std::vector<std::string> variablesInfo() const;
     std::vector<std::string> funcsInfo() const;
 
