@@ -275,16 +275,10 @@ int main(int, char**)
         if (showSettingsWindow) {
             FontSettings::update(showSettingsWindow);
         }
-        if (rootDirectoryContext.showCsxWindow && !rootDirectoryContext.csxFiles.empty()) {
+        if (!backgroundWork) {
             CsxViewer::update(rootDirectoryContext.showCsxWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csxFiles);
-        }
-        if (rootDirectoryContext.showSdbWindow && !rootDirectoryContext.sdbFiles.empty()) {
             SdbViewer::update(rootDirectoryContext.showSdbWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.sdbFiles);
-        }
-        if (rootDirectoryContext.showMdfWindow && !rootDirectoryContext.mdfFiles.empty()) {
             MdfViewer::update(rootDirectoryContext.showMdfWindow, renderer, rootDirectoryContext.rootDirectory(), rootDirectoryContext.mdfFiles);
-        }
-        if (rootDirectoryContext.showCsWindow && !rootDirectoryContext.csFiles.empty()) {
             CsViewer::update(rootDirectoryContext.showCsWindow, rootDirectoryContext.rootDirectory(), rootDirectoryContext.csFiles);
         }
 
