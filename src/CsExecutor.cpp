@@ -10,10 +10,14 @@
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 
-CsExecutor::CsExecutor(std::span<const CS_Node> nodes) :
-    m_nodes(nodes)
+CsExecutor::CsExecutor(std::span<const CS_Node> nodes, const UMapStringVar_t& globalVars) :
+    m_nodes(nodes),
+    m_globalVars(globalVars)
 {
     assert(!m_nodes.empty());
+    assert(!m_globalVars.empty());
+
+    readScriptVariables();
 }
 
 bool parse3(std::string_view line,
@@ -47,17 +51,15 @@ bool parse3(std::string_view line,
     return true;
 }
 
-// TODO: Нет смысла каждый раз читать этот файл. Вынести куда-то отдельно
-bool CsExecutor::readGlobalVariables(std::string_view rootDirectory, std::string* error)
+bool CsExecutor::readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error)
 {
-    std::string varsPath = std::format("{}/scripts/dialogs_special/zlato_vars.scr", rootDirectory);
     auto fileData = FileUtils::loadFile(varsPath, error);
     if (fileData.empty()) {
         return false;
     }
 
     std::string_view fileStringView((char*)fileData.data(), fileData.size());
-    StringUtils::forEachLine(fileStringView, [this] (std::string_view line)
+    StringUtils::forEachLine(fileStringView, [&globalVars] (std::string_view line)
     {
         std::size_t commentPos = line.find("//");
         if (commentPos != std::string::npos) {
@@ -83,14 +85,15 @@ bool CsExecutor::readGlobalVariables(std::string_view rootDirectory, std::string
             varValue = std::string(StringUtils::extractQuotedValue(value));
         }
 
-        m_globalVars.emplace(std::string(name), varValue);
+        globalVars.emplace(std::string(name), varValue);
     });
 
     return true;
 }
 
-bool CsExecutor::readScriptVariables(std::string* error)
+void CsExecutor::readScriptVariables()
 {
+    m_scriptVars.clear();
     for (const auto& node : m_nodes) {
         if (node.opcode == OpcodeType::kStringVarName) {
             if (auto it = m_globalVars.find(node.text); it != m_globalVars.end()) {
@@ -98,7 +101,6 @@ bool CsExecutor::readScriptVariables(std::string* error)
             }
         }
     }
-    return true;
 }
 
 void CsExecutor::restart()
@@ -106,8 +108,8 @@ void CsExecutor::restart()
     m_counter = 0;
     m_currentNodeIndex = 0;
     m_funcs.clear();
-    m_scriptVars.clear();
-    readScriptVariables(nullptr);
+
+    readScriptVariables();
 }
 
 int CsExecutor::currentNodeIndex() const

@@ -7,15 +7,15 @@
 
 #include "CsExecutor.h"
 
-void CsExecutorViewer::update(bool& showWindow, bool& needUpdate, std::string_view rootDirectory, std::span<const CS_Node> nodes)
+void CsExecutorViewer::update(bool& showWindow,
+                              bool& needUpdate,
+                              std::span<const CS_Node> nodes,
+                              const UMapStringVar_t& globalVars)
 {
     static std::unique_ptr<CsExecutor> pExecutor = nullptr;
-    static std::string uiError;
 
     if (needUpdate) {
-        pExecutor = std::make_unique<CsExecutor>(nodes);
-        pExecutor->readGlobalVariables(rootDirectory, &uiError);
-        pExecutor->readScriptVariables(&uiError);
+        pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
         needUpdate = false;
     }
 

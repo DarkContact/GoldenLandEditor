@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 #include <cstdint>
 #include <variant>
 #include <vector>
@@ -112,6 +113,7 @@ struct std::formatter<std::vector<T>> : std::formatter<T> {
 };
 
 using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
+using UMapStringVar_t = std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual>;
 
 template <>
 struct std::formatter<Variable_t> : std::formatter<std::string> {

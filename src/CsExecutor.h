@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_map>
 #include <string_view>
 #include <vector>
 #include <span>
@@ -16,10 +15,9 @@ enum VarType {
 
 class CsExecutor {
 public:
-    CsExecutor(std::span<const CS_Node> nodes);
+    CsExecutor(std::span<const CS_Node> nodes, const UMapStringVar_t& globalVars);
 
-    bool readGlobalVariables(std::string_view rootDirectory, std::string* error);
-    bool readScriptVariables(std::string* error);
+    static bool readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error);
 
     void restart();
     bool next();
@@ -30,9 +28,11 @@ public:
     std::vector<std::string> funcsInfo() const;
 
 private:
+    void readScriptVariables();
+
     std::span<const CS_Node> m_nodes;
-    std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual> m_globalVars;
-    std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual> m_scriptVars;
+    UMapStringVar_t m_globalVars;
+    UMapStringVar_t m_scriptVars;
 
     std::vector<std::string> m_funcs;
     int m_currentNodeIndex = 0;

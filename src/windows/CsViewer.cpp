@@ -4,6 +4,8 @@
 
 #include "imgui.h"
 
+#include "Types.h"
+
 #include "enums/CsFunctions.h"
 #include "enums/CsOpcodes.h"
 
@@ -13,6 +15,7 @@
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
 
+#include "CsExecutor.h"
 #include "CsExecutorViewer.h"
 
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
@@ -23,6 +26,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     static ImGuiTextFilter textFilterString;
     static CS_Data csData;
     static SDB_Data sdbDialogs;
+    static UMapStringVar_t globalVars;
     static std::string csError;
     static std::vector<bool> funcNodes;
     static bool showOnlyFunctions = false;
@@ -45,6 +49,10 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
             std::string sdbPath = std::format("{}/sdb/dialogs/dialogsphrases.sdb", rootDirectory);
             if (!SDB_Parser::parse(sdbPath, sdbDialogs, &error))
                 LogFmt("Load dialogsphrases.sdb error: {}", error);
+
+            std::string varsPath = std::format("{}/scripts/dialogs_special/zlato_vars.scr", rootDirectory);
+            if (!CsExecutor::readGlobalVariables(varsPath, globalVars, &error))
+                LogFmt("Load zlato_vars.scr error: {}", error);
             onceWhenOpen = true;
         }
 
@@ -169,7 +177,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
         ImGui::End();
 
-        CsExecutorViewer::update(showExecuteWindow, needUpdate, rootDirectory, csData.nodes);
+        CsExecutorViewer::update(showExecuteWindow, needUpdate, csData.nodes, globalVars);
     }
 
     // Очистка
@@ -180,6 +188,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         textFilterFile.Clear();
         textFilterString.Clear();
         sdbDialogs = {};
+        globalVars.clear();
         funcNodes.clear();
         onceWhenOpen = false;
         onceWhenClose = true;
