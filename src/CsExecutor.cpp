@@ -66,6 +66,7 @@ bool CsExecutor::readGlobalVariables(std::string_view rootDirectory, std::string
 
         std::string_view type, name, value;
         if (!parse3(line, type, name, value)) {
+            LogFmt("Can't parse line: {}", line);
             return;
         }
 
