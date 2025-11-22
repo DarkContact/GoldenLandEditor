@@ -131,17 +131,13 @@ std::vector<std::string> CsExecutor::variablesInfo() const
     {
         if (auto p = std::get_if<int32_t>(&val))
             out.emplace_back("int " + name + " " + std::to_string(*p));
-
         else if (auto p = std::get_if<uint32_t>(&val))
             out.emplace_back("DWORD " + name + " " + std::to_string(*p));
-
         else if (auto p = std::get_if<double>(&val))
             out.emplace_back("float " + name + " " + std::to_string(*p));
-
         else if (auto p = std::get_if<std::string>(&val))
             out.emplace_back("string " + name + " " + *p);
     }
-
     return out;
 }
 

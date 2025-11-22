@@ -1,5 +1,6 @@
 #include "CsExecutorViewer.h"
 
+#include <algorithm>
 #include <memory>
 #include <format>
 
@@ -19,21 +20,22 @@ void CsExecutorViewer::update(bool& showWindow,
         needUpdate = false;
     }
 
-    if (!pExecutor)
-        return;
-
-    if (showWindow) {
+    if (showWindow && pExecutor) {
         ImGui::SetNextWindowSize({600, 400}, ImGuiCond_FirstUseEver);
         ImGui::Begin("CS Executor", &showWindow, ImGuiWindowFlags_HorizontalScrollbar);
 
         int nodeIndex = pExecutor->currentNodeIndex();
-
         ImGui::Text("[i:%d] %s (step:%d)",
                     nodeIndex,
                     nodes[nodeIndex].toString(false).c_str(),
                     pExecutor->counter());
-        ImGui::Text("%s", std::format("vars: {}", pExecutor->variablesInfo()).c_str());
-        ImGui::Text("%s", std::format("funcs: {}", pExecutor->funcsInfo()).c_str());
+
+        auto varsInfo = pExecutor->variablesInfo();
+        std::sort(varsInfo.begin(), varsInfo.end());
+        ImGui::Text("%s", std::format("vars: {}", varsInfo).c_str());
+
+        auto funcsInfo = pExecutor->funcsInfo();
+        ImGui::Text("%s", std::format("funcs: {}", funcsInfo).c_str());
 
         if (ImGui::Button("Step")) {
             pExecutor->next();
