@@ -8,7 +8,6 @@
 #include "enums/CsOpcodes.h"
 
 #include "utils/DebugLog.h"
-#include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
 #include "parsers/CS_Parser.h"
@@ -135,7 +134,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                         }
 
                         const CS_Node& node = csData.nodes[i];
-                        std::string nodeInfo = csNodeString(node, sdbDialogs, isDialogPhrase && showDialogPhrases);
+                        std::string nodeInfo = node.toString((isDialogPhrase && showDialogPhrases), sdbDialogs.strings);
 
                         if (showOnlyFunctions && funcNodes[i]
                             || !showOnlyFunctions) {
@@ -185,39 +184,4 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         onceWhenOpen = false;
         onceWhenClose = true;
     }
-}
-
-std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs, bool showDialogPhrases) {
-    std::string additionInfo;
-    if (node.opcode >= 0 && node.opcode <= 20) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    } else if (node.opcode == kNumberLiteral || node.opcode == kNumberVarName) {
-        if (showDialogPhrases && node.opcode == kNumberLiteral) {
-            auto it = sdbDialogs.strings.find(node.value);
-            if (it != sdbDialogs.strings.cend()) {
-                additionInfo = std::format("val: {} [{}]", node.value, it->second);
-            } else {
-                additionInfo = std::format("val: {}", node.value);
-            }
-        } else {
-            additionInfo = std::format("val: {}", node.value);
-        }
-    } else if (node.opcode == kStringLiteral || node.opcode == kStringVarName) {
-        additionInfo = std::format("txt: {}", StringUtils::decodeWin1251ToUtf8(node.text));
-    } else if (node.opcode == kFunc) {
-        std::string argsInfo;
-        for (int j = 0; j < node.args.size(); j++) {
-            int32_t idx = node.args[j];
-            if (idx == -1) break;
-            argsInfo += std::format("{} ", idx);
-        }
-        std::string_view funcStr = csFuncToString(node.value);
-        additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
-    } else if (node.opcode == kJmp) {
-        additionInfo = std::format("c: {}, d: {}", node.c, node.d);
-    } else if (node.opcode == kAssign) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
-    }
-
-    return std::format("Opcode: {} [{}] | {}", node.opcode, csOpcodeToString(node.opcode), additionInfo);
 }

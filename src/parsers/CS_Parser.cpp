@@ -1,14 +1,52 @@
 #include "CS_Parser.h"
 
+#include <format>
 #include <cassert>
 
+#include "enums/CsFunctions.h"
 #include "enums/CsOpcodes.h"
 
 #include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
+#include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
 
 using namespace IoUtils;
+
+std::string CS_Node::toString(bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings) const {
+    std::string additionInfo;
+    if (opcode >= 0 && opcode <= 20) {
+        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+    } else if (opcode == kNumberLiteral || opcode == kNumberVarName) {
+        if (showDialogPhrases && !sdbDialogStrings.empty() && opcode == kNumberLiteral) {
+            auto it = sdbDialogStrings.find(value);
+            if (it != sdbDialogStrings.cend()) {
+                additionInfo = std::format("val: {} [{}]", value, it->second);
+            } else {
+                additionInfo = std::format("val: {}", value);
+            }
+        } else {
+            additionInfo = std::format("val: {}", value);
+        }
+    } else if (opcode == kStringLiteral || opcode == kStringVarName) {
+        additionInfo = std::format("txt: {}", StringUtils::decodeWin1251ToUtf8(text));
+    } else if (opcode == kFunc) {
+        std::string argsInfo;
+        for (int j = 0; j < args.size(); j++) {
+            int32_t idx = args[j];
+            if (idx == -1) break;
+            argsInfo += std::format("{} ", idx);
+        }
+        std::string_view funcStr = csFuncToString(value);
+        additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, c, d, StringUtils::trimRight(argsInfo));
+    } else if (opcode == kJmp) {
+        additionInfo = std::format("c: {}, d: {}", c, d);
+    } else if (opcode == kAssign) {
+        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+    }
+
+    return std::format("Opcode: {} [{}] | {}", opcode, csOpcodeToString(opcode), additionInfo);
+}
 
 bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error)
 {
