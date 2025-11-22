@@ -3,10 +3,12 @@
 #include <cassert>
 #include <format>
 
+#include "enums/CsFunctions.h"
+#include "enums/CsOpcodes.h"
+
 #include "utils/StringUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
-#include "windows/CsViewer.h"
 
 CsExecutor::CsExecutor(std::span<const CS_Node> nodes) :
     m_nodes(nodes)
@@ -215,7 +217,7 @@ bool CsExecutor::next()
         } else if (rNode.opcode == kNumberLiteral) {
             rValue = (int)rNode.value; // TODO: Корректное приведение типов
         } else if (rNode.opcode == kFunc) {
-            m_funcs.emplace_back(CsViewer::funcStr(rNode.value));
+            m_funcs.emplace_back(csFuncToString(rNode.value));
             rValue = 0; // Пока не реализовано, будет так
         } else {
             assert(true);

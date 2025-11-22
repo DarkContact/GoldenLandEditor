@@ -98,6 +98,10 @@ add_executable(GoldenLandEditor WIN32
     src/CsExecutor.cpp
     src/windows/CsExecutorViewer.h
     src/windows/CsExecutorViewer.cpp
+    src/enums/CsFunctions.h
+    src/enums/CsFunctions.cpp
+    src/enums/CsOpcodes.h
+    src/enums/CsOpcodes.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE

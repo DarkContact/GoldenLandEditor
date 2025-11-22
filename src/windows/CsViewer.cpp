@@ -4,6 +4,9 @@
 
 #include "imgui.h"
 
+#include "enums/CsFunctions.h"
+#include "enums/CsOpcodes.h"
+
 #include "utils/DebugLog.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
@@ -125,7 +128,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                             }
 
                             if (prevNode->opcode == kFunc) {
-                                std::string_view funcStr = CsViewer::funcStr(prevNode->value);
+                                std::string_view funcStr = csFuncToString(prevNode->value);
                                 if (funcStr == "D_Say" || funcStr == "D_Answer")
                                     isDialogPhrase = true;
                             }
@@ -184,111 +187,6 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
     }
 }
 
-const char* CsViewer::opcodeStr(int32_t opcode) {
-    switch (opcode) {
-        case 0: return "||";
-        case 1: return "^^";
-        case 2: return "&&";
-        case 3: return "|";
-        case 4: return "^";
-        case 5: return "&";
-        case 6: return "!=";
-        case 7: return "==";
-        case 8: return ">=";
-        case 9: return "<=";
-        case 10: return ">";
-        case 11: return "<";
-        case 12: return "<<";
-        case 13: return ">>";
-        case 14: return "+";
-        case 15: return "-";
-        case 16: return "*";
-        case 17: return "/";
-        case 18: return "%";
-        case 19: return "~";
-        case 20: return "!";
-        case 21: return "num_var";
-        case 22: return "str";
-        case 23: return "str_var";
-        case 24: return "num";
-        case 48: return "func";
-        case 49: return "jmp";
-        case 50: return "assign";
-        default: return "unk";
-    }
-}
-
-// SERVER.DLL [14042464]
-const char* CsViewer::funcStr(double value) {
-    if (value == 0) return "RS_GetPersonParameterI (0)";
-    if (value == 0x1000000) return "Exit";
-    if (value == 0x1000001) return "Signal";
-    if (value == 0x1000002) return "Console";
-    if (value == 0x1000003) return "Cmd";
-    if (value == 0x1000004) return "D_Say";
-    if (value == 0x1000005) return "D_CloseDialog";
-    if (value == 0x1000006) return "D_Answer";
-    if (value == 0x1000007) return "D_PlaySound";
-    if (value == 0x2000000) return "LE_CastEffect";
-    if (value == 0x2000001) return "LE_DelEffect";
-    if (value == 0x2000002) return "LE_CastMagic";
-    if (value == 0x3000000) return "WD_LoadArea";
-    if (value == 0x3000001) return "WD_SetCellsGroupFlag";
-    if (value == 0x3000002) return "RS_SetTribesRelation";
-    if (value == 0x3000003) return "RS_GetTribesRelation";
-    if (value == 0x3000004) return "RS_StartDialog";
-    if (value == 0x3000005) return "WD_SetVisible";
-    if (value == 0x3000006) return "C_FINISHED";
-    if (value == 0x3000007) return "WD_TitlesAndLoadArea";
-    if (value == 0x3000008) return "C_TitlesAndFINISHED";
-    if (value == 0x4000000) return "RS_GetPersonParameterI";
-    if (value == 0x4000001) return "RS_SetPersonParameterI";
-    if (value == 0x4000002) return "RS_AddPerson_1";
-    if (value == 0x4000003) return "RS_AddPerson_2";
-    if (value == 0x4000004) return "RS_IsPersonExistsI";
-    if (value == 0x4000005) return "RS_AddExp";
-    if (value == 0x4000006) return "RS_DelPerson";
-    if (value == 0x4000007) return "RS_AddToHeroPartyName";
-    if (value == 0x4000008) return "RS_RemoveFromHeroPartyName";
-    if (value == 0x4000009) return "RS_TestHeroHasPartyName";
-    if (value == 0x400000A) return "RS_AllyCmd";
-    if (value == 0x400000B) return "RS_ShowMessage";
-    if (value == 0x400000C) return "RS_GetPersonSkillI";
-    if (value == 0x5000000) return "RS_TestPersonHasItem";
-    if (value == 0x5000001) return "RS_PersonTransferItemI";
-    if (value == 0x5000002) return "RS_GetItemCountI";
-    if (value == 0x5000003) return "RS_PersonTransferAllItemsI";
-    if (value == 0x5000004) return "RS_PersonAddItem";
-    if (value == 0x5000005) return "RS_PersonRemoveItem";
-    if (value == 0x5000006) return "RS_PersonAddItemToTrade";
-    if (value == 0x5000007) return "RS_PersonRemoveItemToTrade";
-    if (value == 0x5000008) return "RS_GetMoney";
-    if (value == 0x6000000) return "RS_GetDayOrNight";
-    if (value == 0x6000001) return "RS_GetCurrentTimeOfDayI";
-    if (value == 0x6000002) return "RS_GetDaysFromBeginningI";
-    if (value == 0x6000003) return "RS_AddTime";
-    if (value == 0x7000000) return "RS_QuestComplete";
-    if (value == 0x7000001) return "RS_StageEnable";
-    if (value == 0x7000002) return "RS_QuestEnable";
-    if (value == 0x7000003) return "RS_StageComplete";
-    if (value == 0x7000004) return "RS_StorylineQuestEnable";
-    if (value == 0x7000005) return "RS_SetEvent";
-    if (value == 0x7000006) return "RS_GetEvent";
-    if (value == 0x7000007) return "RS_ClearEvent";
-    if (value == 0x7000008) return "RS_SetLocationAccess";
-    if (value == 0x7000009) return "RS_EnableTrigger";
-    if (value == 0x700000A) return "RS_GetRandMinMaxI";
-    if (value == 0x700000B) return "RS_SetWeather";
-    if (value == 0x700000C) return "RS_SetSpecialPerk";
-    if (value == 0x700000D) return "RS_PassToTradePanel";
-    if (value == 0x700000E) return "RS_GetDialogEnabled";
-    if (value == 0x700000F) return "RS_SetUndeadState";
-    if (value == 0x7000010) return "RS_GlobalMap";
-    if (value == 0x7000013) return "RS_SetInjured";
-    if (value == 0x7000014) return "RS_SetDoorState";
-    return "unk";
-}
-
 std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialogs, bool showDialogPhrases) {
     std::string additionInfo;
     if (node.opcode >= 0 && node.opcode <= 20) {
@@ -313,17 +211,13 @@ std::string CsViewer::csNodeString(const CS_Node& node, const SDB_Data& sdbDialo
             if (idx == -1) break;
             argsInfo += std::format("{} ", idx);
         }
-        std::string_view funcStr = CsViewer::funcStr(node.value);
-        if (funcStr == "unk") {
-            additionInfo = std::format("val: {:X} [{}], c: {}, d: {}, args: [{}]", (int)node.value, funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
-        } else {
-            additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
-        }
+        std::string_view funcStr = csFuncToString(node.value);
+        additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, node.c, node.d, StringUtils::trimRight(argsInfo));
     } else if (node.opcode == kJmp) {
         additionInfo = std::format("c: {}, d: {}", node.c, node.d);
     } else if (node.opcode == kAssign) {
         additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", node.a, node.b, node.c, node.d);
     }
 
-    return std::format("Opcode: {} [{}] | {}", node.opcode, CsViewer::opcodeStr(node.opcode), additionInfo);
+    return std::format("Opcode: {} [{}] | {}", node.opcode, csOpcodeToString(node.opcode), additionInfo);
 }

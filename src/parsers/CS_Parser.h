@@ -4,18 +4,6 @@
 #include <vector>
 #include <array>
 
-enum OpcodeType {
-    kUnknown = -1,
-    // [0 - 20] Операторы
-    kNumberLiteral = 24,
-    kNumberVarName = 21,
-    kStringLiteral = 22,
-    kStringVarName = 23,
-    kFunc = 48,
-    kJmp = 49,
-    kAssign = 50
-};
-
 struct CS_Node {
     int32_t opcode = -1;
     int32_t a = -1;

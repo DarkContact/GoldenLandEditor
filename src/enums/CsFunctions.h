@@ -1,0 +1,80 @@
+#pragma once
+#include <cstdint>
+
+enum CsFunctions : uint32_t {
+    kRS_GetPersonParameterI_0        = 0x00000000,
+
+    kExit                            = 0x01000000,
+    kSignal                          = 0x01000001,
+    kConsole                         = 0x01000002,
+    kCmd                             = 0x01000003,
+    kD_Say                           = 0x01000004,
+    kD_CloseDialog                   = 0x01000005,
+    kD_Answer                        = 0x01000006,
+    kD_PlaySound                     = 0x01000007,
+
+    kLE_CastEffect                   = 0x02000000,
+    kLE_DelEffect                    = 0x02000001,
+    kLE_CastMagic                    = 0x02000002,
+
+    kWD_LoadArea                     = 0x03000000,
+    kWD_SetCellsGroupFlag            = 0x03000001,
+    kRS_SetTribesRelation            = 0x03000002,
+    kRS_GetTribesRelation            = 0x03000003,
+    kRS_StartDialog                  = 0x03000004,
+    kWD_SetVisible                   = 0x03000005,
+    kC_FINISHED                      = 0x03000006,
+    kWD_TitlesAndLoadArea            = 0x03000007,
+    kC_TitlesAndFINISHED             = 0x03000008,
+
+    kRS_GetPersonParameterI          = 0x04000000,
+    kRS_SetPersonParameterI          = 0x04000001,
+    kRS_AddPerson_1                  = 0x04000002,
+    kRS_AddPerson_2                  = 0x04000003,
+    kRS_IsPersonExistsI              = 0x04000004,
+    kRS_AddExp                       = 0x04000005,
+    kRS_DelPerson                    = 0x04000006,
+    kRS_AddToHeroPartyName           = 0x04000007,
+    kRS_RemoveFromHeroPartyName      = 0x04000008,
+    kRS_TestHeroHasPartyName         = 0x04000009,
+    kRS_AllyCmd                      = 0x0400000A,
+    kRS_ShowMessage                  = 0x0400000B,
+    kRS_GetPersonSkillI              = 0x0400000C,
+
+    kRS_TestPersonHasItem            = 0x05000000,
+    kRS_PersonTransferItemI          = 0x05000001,
+    kRS_GetItemCountI                = 0x05000002,
+    kRS_PersonTransferAllItemsI      = 0x05000003,
+    kRS_PersonAddItem                = 0x05000004,
+    kRS_PersonRemoveItem             = 0x05000005,
+    kRS_PersonAddItemToTrade         = 0x05000006,
+    kRS_PersonRemoveItemToTrade      = 0x05000007,
+    kRS_GetMoney                     = 0x05000008,
+
+    kRS_GetDayOrNight                = 0x06000000,
+    kRS_GetCurrentTimeOfDayI         = 0x06000001,
+    kRS_GetDaysFromBeginningI        = 0x06000002,
+    kRS_AddTime                      = 0x06000003,
+
+    kRS_QuestComplete                = 0x07000000,
+    kRS_StageEnable                  = 0x07000001,
+    kRS_QuestEnable                  = 0x07000002,
+    kRS_StageComplete                = 0x07000003,
+    kRS_StorylineQuestEnable         = 0x07000004,
+    kRS_SetEvent                     = 0x07000005,
+    kRS_GetEvent                     = 0x07000006,
+    kRS_ClearEvent                   = 0x07000007,
+    kRS_SetLocationAccess            = 0x07000008,
+    kRS_EnableTrigger                = 0x07000009,
+    kRS_GetRandMinMaxI               = 0x0700000A,
+    kRS_SetWeather                   = 0x0700000B,
+    kRS_SetSpecialPerk               = 0x0700000C,
+    kRS_PassToTradePanel             = 0x0700000D,
+    kRS_GetDialogEnabled             = 0x0700000E,
+    kRS_SetUndeadState               = 0x0700000F,
+    kRS_GlobalMap                    = 0x07000010,
+    kRS_SetInjured                   = 0x07000013,
+    kRS_SetDoorState                 = 0x07000014
+};
+
+const char* csFuncToString(double value) noexcept;

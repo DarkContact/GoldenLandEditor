@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "enums/CsOpcodes.h"
+
 #include "utils/IoUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/TracyProfiler.h"
