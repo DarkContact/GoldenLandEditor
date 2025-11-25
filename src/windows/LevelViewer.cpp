@@ -2,7 +2,7 @@
 
 #include <format>
 
-#include "SDL3/SDL_timer.h"
+#include <SDL3/SDL_timer.h>
 #include "imgui_internal.h"
 #include "imgui.h"
 
@@ -10,6 +10,11 @@
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
+
+
+LevelViewer::LevelViewer() {
+
+}
 
 bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
 {

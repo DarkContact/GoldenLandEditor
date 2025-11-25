@@ -10,14 +10,14 @@ struct LevelPickerResult {
     std::string_view loadedLevelName;
 };
 
-class LevelPicker
-{
+class LevelPicker {
 public:
-    LevelPicker() = delete;
+    LevelPickerResult update(bool& showWindow,
+                             const std::vector<std::string>& singleLevelNames,
+                             const std::vector<std::string>& multiLevelNames,
+                             int& selectedLevelIndex);
 
-    static LevelPickerResult update(bool& showWindow,
-                                    const std::vector<std::string>& singleLevelNames,
-                                    const std::vector<std::string>& multiLevelNames,
-                                    int& selectedLevelIndex);
+private:
+    bool m_onceWhenOpen = false;
+    LevelType m_type = LevelType::kSingle;
 };
-

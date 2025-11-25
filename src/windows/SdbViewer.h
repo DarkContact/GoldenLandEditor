@@ -2,11 +2,21 @@
 #include <vector>
 #include <string>
 
+#include "imgui.h"
+
+#include "parsers/SDB_Parser.h"
+
 class SdbViewer
 {
 public:
-    SdbViewer() = delete;
+    SdbViewer();
 
-    static void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files);
+    void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files);
+
+private:
+    int m_selectedIndex = -1;
+    SDB_Data m_sdbRecords;
+    ImGuiTextFilter m_textFilterFile;
+    ImGuiTextFilter m_textFilterString;
+    bool m_onceWhenClose = true;
 };
-

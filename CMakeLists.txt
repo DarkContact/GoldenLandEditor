@@ -102,6 +102,8 @@ add_executable(GoldenLandEditor WIN32
     src/enums/CsFunctions.cpp
     src/enums/CsOpcodes.h
     src/enums/CsOpcodes.cpp
+    src/Application.h
+    src/Application.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE
@@ -116,7 +118,7 @@ set_source_files_properties(
     PROPERTIES HEADER_FILE_ONLY TRUE
 )
 set_source_files_properties(
-    src/main.cpp
+    src/Application.cpp
     PROPERTIES COMPILE_DEFINITIONS
     GOLDENLAND_VERSION_STRING="${PROJECT_VERSION}"
 )

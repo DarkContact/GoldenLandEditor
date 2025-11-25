@@ -1,52 +1,51 @@
 #include "CsExecutorViewer.h"
 
 #include <algorithm>
-#include <memory>
 #include <format>
 
 #include "imgui.h"
 
-#include "CsExecutor.h"
+CsExecutorViewer::CsExecutorViewer() {
+
+}
 
 void CsExecutorViewer::update(bool& showWindow,
                               bool& needUpdate,
                               std::span<const CS_Node> nodes,
                               const UMapStringVar_t& globalVars)
 {
-    static std::unique_ptr<CsExecutor> pExecutor = nullptr;
-
     if (needUpdate) {
-        pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
+        m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
         needUpdate = false;
     }
 
-    if (showWindow && pExecutor) {
+    if (showWindow && m_pExecutor) {
         ImGui::SetNextWindowSize({600, 400}, ImGuiCond_FirstUseEver);
         ImGui::Begin("CS Executor", &showWindow, ImGuiWindowFlags_HorizontalScrollbar);
 
-        int nodeIndex = pExecutor->currentNodeIndex();
+        int nodeIndex = m_pExecutor->currentNodeIndex();
         ImGui::Text("[i:%d] %s (step:%d)",
                     nodeIndex,
                     nodes[nodeIndex].toString(false).c_str(),
-                    pExecutor->counter());
+                    m_pExecutor->counter());
 
-        auto varsInfo = pExecutor->variablesInfo();
+        auto varsInfo = m_pExecutor->variablesInfo();
         std::sort(varsInfo.begin(), varsInfo.end());
         ImGui::Text("%s", std::format("vars: {}", varsInfo).c_str());
 
-        auto funcsInfo = pExecutor->funcsInfo();
+        auto funcsInfo = m_pExecutor->funcsInfo();
         ImGui::Text("%s", std::format("funcs: {}", funcsInfo).c_str());
 
         if (ImGui::Button("Step")) {
-            pExecutor->next();
+            m_pExecutor->next();
         }
         ImGui::SameLine();
         if (ImGui::Button("Execute all")) {
-            while(pExecutor->next());
+            while(m_pExecutor->next());
         }
         ImGui::SameLine();
         if (ImGui::Button("Restart")) {
-            pExecutor->restart();
+            m_pExecutor->restart();
         }
 
         ImGui::End();
