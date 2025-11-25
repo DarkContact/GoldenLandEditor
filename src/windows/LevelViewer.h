@@ -8,6 +8,7 @@ public:
     LevelViewer();
 
     bool update(bool& showWindow, std::string_view rootDirectory, Level& level);
+    bool isAnimating(const Level& level) const;
 
 private:
     ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);

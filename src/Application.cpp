@@ -167,12 +167,27 @@ void Application::loadResources() {
     m_bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(m_rootDirContext));
 }
 
+bool Application::hasActiveAnimations() const {
+    if (backgroundWork) {
+        return true;
+    }
+    if (m_mdfViewer.isAnimating()) {
+        return true;
+    }
+    for (const auto& level : m_rootDirContext.levels) {
+        if (m_levelViewer.isAnimating(level)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Application::mainLoop() {
     std::string uiError;
 
     while (!m_done)
     {
-        processEvents();
+        bool hasEvents = processEvents(m_renderCooldown > 0);
 
         // Start the Dear ImGui frame
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -184,8 +199,7 @@ void Application::mainLoop() {
         static bool showSettingsWindow = false;
         static bool showLevelsWindow = false;
 
-        static bool loaderWindow = false;
-        loaderWindow = backgroundWork;
+        bool loaderWindow = backgroundWork.load();
         ImGuiWidgets::Loader("Loading...", loaderWindow);
         ImGuiWidgets::ShowMessageModal("Error", uiError);
 
@@ -287,7 +301,6 @@ void Application::mainLoop() {
                 Level& level = *it;
                 if (level.data().background) {
                     m_levelViewer.update(openLevel, m_rootDirContext.rootDirectory(), level);
-
                     if (!openLevel) {
                         it = m_rootDirContext.levels.erase(it);
                         continue;
@@ -297,20 +310,37 @@ void Application::mainLoop() {
             }
         }
         
+        if (hasActiveAnimations() || hasEvents) {
+            m_renderCooldown = kRenderCooldownFrames;
+        } else if (m_renderCooldown > 0) {
+            m_renderCooldown--;
+        }
+
         render();
     }
 }
 
-void Application::processEvents() {
+bool Application::processEvents(bool noWait) {
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
+    bool hasEvent = noWait ? SDL_PollEvent(&event)
+                           : SDL_WaitEventTimeout(&event, kWaitTimeoutMs);
+
+    bool hasEvents = hasEvent;
+    while (hasEvent) {
         ImGui_ImplSDL3_ProcessEvent(&event);
+
         if (event.type == SDL_EVENT_QUIT)
             m_done = true;
-        if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_window))
+
+        if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
+            event.window.windowID == SDL_GetWindowID(m_window))
+        {
             m_done = true;
+        }
+
+        hasEvent = SDL_PollEvent(&event);
     }
+    return hasEvents;
 }
 
 void Application::render() {

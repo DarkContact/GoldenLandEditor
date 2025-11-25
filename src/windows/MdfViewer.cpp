@@ -71,6 +71,10 @@ MdfViewer::MdfViewer() {
 
 }
 
+bool MdfViewer::isAnimating() const {
+    return m_playAnimation && !m_animationLayers.empty();
+}
+
 void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles)
 {
     Tracy_ZoneScoped;

@@ -31,11 +31,13 @@ private:
     void initSdl();
     void initImGui();
     void mainLoop();
-    void processEvents();
+    bool processEvents(bool noWait);
     void render();
     void shutdown();
 
     void loadResources();
+
+    bool hasActiveAnimations() const;
 
     struct RootDirectoryContext {
         std::vector<std::string> singleLevelNames;
@@ -69,4 +71,10 @@ private:
     CsViewer m_csViewer;
     bool m_done = false;
     std::future<void> m_bgTaskFuture;
+
+    // Оптимизация обновления логики и отрисовки
+    // (не рисуем часто, когда ничего не происходит)
+    static const int kWaitTimeoutMs = 250;
+    static const int kRenderCooldownFrames = 10;
+    int m_renderCooldown = 0;
 };

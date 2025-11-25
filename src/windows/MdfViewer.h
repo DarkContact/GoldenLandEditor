@@ -17,6 +17,7 @@ public:
     MdfViewer();
 
     void update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles);
+    bool isAnimating() const;
 
 private:
     struct AnimationInfo {

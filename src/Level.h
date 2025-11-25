@@ -63,6 +63,8 @@ struct LevelImgui {
     std::optional<int> highlightCellGroudIndex;
 
     bool showAnimations = true;
+    bool hasVisibleAnimations = false;
+
     bool showSounds = false;
 };
 

@@ -221,6 +221,12 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     return true;
 }
 
+bool LevelViewer::isAnimating(const Level& level) const
+{
+    bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
+    bool showMinimapAnimation = level.data().imgui.minimapAnimating;
+    return showLevelAnimation || showMinimapAnimation;
+}
 
 ImVec2 LevelViewer::computeMinimapSize(const Level& level, bool hasMinimap) {
     if (hasMinimap) {
@@ -461,9 +467,8 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
             imgui.minimapAnimTime = 0.0f;
             imgui.minimapAnimating = true;
         }
-
         // Плавное перемещение scroll при клике
-        if (imgui.minimapAnimating) {
+        else if (imgui.minimapAnimating) {
             imgui.minimapAnimTime += io.DeltaTime * 6.0f;
             if (imgui.minimapAnimTime >= 1.0f) {
                 imgui.minimapAnimTime = 1.0f;
@@ -922,18 +927,27 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImRect windowClipRect = ImGui::GetCurrentWindow()->ClipRect;
+    bool hasVisibleAnimations = false;
+
     uint64_t nowMs = SDL_GetTicks();
     for (LevelAnimation& animation : level.data().animations) {
         animation.update(nowMs);
 
+        if (animation.textures.empty()) { continue; }
+
         ImVec2 animationPosition{drawPosition.x + animation.description.position.x,
                                  drawPosition.y + animation.description.position.y};
+        const Texture& texture = animation.currentTexture();
+        ImRect animationBox = {animationPosition, {animationPosition.x + texture->w, animationPosition.y + texture->h}};
+
+        if (!windowClipRect.Overlaps(animationBox)) { continue; }
+
+        hasVisibleAnimations = true;
         ImGui::SetCursorScreenPos(animationPosition);
 
-        const Texture& texture = animation.currentTexture();
         ImGui::Image((ImTextureID)texture.get(), ImVec2(texture->w, texture->h));
 
-        ImRect animationBox = {animationPosition, {animationPosition.x + texture->w, animationPosition.y + texture->h}};
         if (leftMouseDownOnLevel(level) &&
             animationBox.Contains(ImGui::GetMousePos())) {
 
@@ -956,6 +970,7 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
                                             animation.description.param1, animation.description.param2);
         }
     }
+    level.data().imgui.hasVisibleAnimations = hasVisibleAnimations;
 }
 
 void LevelViewer::drawSounds(Level& level, ImVec2 drawPosition)
