@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <span>
 #include <map>
 
 struct CS_Node {
@@ -17,7 +18,7 @@ struct CS_Node {
     std::string text;
     double value = -1.0;
 
-    std::string toString(bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings = {}) const;
+    void toStringBuffer(std::span<char> buffer, bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings = {}) const;
 };
 
 struct CS_Data {

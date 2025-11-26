@@ -27,6 +27,7 @@ public:
 
     static std::string_view extractQuotedValue(std::string_view line) noexcept;
     static std::string decodeWin1251ToUtf8(std::string_view input) noexcept;
+    static void decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept;
 
     template <LineCallback Callback>
     static void forEachLine(std::string_view buffer, Callback&& callback) noexcept;

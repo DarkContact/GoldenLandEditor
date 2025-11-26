@@ -1,21 +1,33 @@
 #include "StringUtils.h"
 
+#include <string_view>
 #include <charconv>
 #include <cassert>
 
-constexpr static bool isSpace(int ch) noexcept {
+using namespace std::literals::string_view_literals;
+
+static constexpr bool isSpace(int ch) noexcept {
     return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
 }
 
-static constexpr const char* win1251_to_utf8[] = {
-    "Ђ", "Ѓ", "‚", "ѓ", "„", "…", "†", "‡", "€", "‰", "Љ", "‹", "Њ", "Ќ", "Ћ", "Џ",  // 0x80 - 0x8F
-    "ђ", "‘", "’", "“", "”", "•", "–", "—", "?", "™", "љ", "›", "њ", "ќ", "ћ", "џ",  // 0x90 - 0x9F
-    " ", "Ў", "ў", "Ј", "¤", "Ґ", "¦", "§", "Ё", "©", "Є", "«", "¬", "\xAD", "®", "Ї", // 0xA0 - 0xAF
-    "°", "±", "І", "і", "ґ", "µ", "¶", "·", "ё", "№", "є", "»", "ј", "Ѕ", "ѕ", "ї",  // 0xB0 - 0xBF
-    "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П",  // 0xC0 - 0xCF
-    "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я",  // 0xD0 - 0xDF
-    "а", "б", "в", "г", "д", "е", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п",  // 0xE0 - 0xEF
-    "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я",  // 0xF0 - 0xFF
+static constexpr std::string_view win1251_to_utf8[] = {
+    "\x00"sv, "\x01"sv, "\x02"sv, "\x03"sv, "\x04"sv, "\x05"sv, "\x06"sv, "\x07"sv, "\x08"sv, "\x09"sv, "\x0A"sv, "\x0B"sv, "\x0C"sv, "\x0D"sv, "\x0E"sv, "\x0F"sv,
+    "\x10"sv, "\x11"sv, "\x12"sv, "\x13"sv, "\x14"sv, "\x15"sv, "\x16"sv, "\x17"sv, "\x18"sv, "\x19"sv, "\x1A"sv, "\x1B"sv, "\x1C"sv, "\x1D"sv, "\x1E"sv, "\x1F"sv,
+    " "sv, "!"sv, "\""sv, "#"sv, "$"sv, "%"sv, "&"sv, "'"sv, "("sv, ")"sv, "*"sv, "+"sv, ","sv, "-"sv, "."sv, "/"sv,   // 0x20 - 0x2F
+    "0"sv, "1"sv, "2"sv, "3"sv, "4"sv, "5"sv, "6"sv, "7"sv, "8"sv, "9"sv, ":"sv, ";"sv, "<"sv, "="sv, ">"sv, "?"sv,    // 0x30 - 0x3F
+    "@"sv, "A"sv, "B"sv, "C"sv, "D"sv, "E"sv, "F"sv, "G"sv, "H"sv, "I"sv, "J"sv, "K"sv, "L"sv, "M"sv, "N"sv, "O"sv,    // 0x40 - 0x4F
+    "P"sv, "Q"sv, "R"sv, "S"sv, "T"sv, "U"sv, "V"sv, "W"sv, "X"sv, "Y"sv, "Z"sv, "["sv, "\\sv", "]"sv, "^"sv, "_"sv,   // 0x50 - 0x5F
+    "`"sv, "a"sv, "b"sv, "c"sv, "d"sv, "e"sv, "f"sv, "g"sv, "h"sv, "i"sv, "j"sv, "k"sv, "l"sv, "m"sv, "n"sv, "o"sv,    // 0x60 - 0x6F
+    "p"sv, "q"sv, "r"sv, "s"sv, "t"sv, "u"sv, "v"sv, "w"sv, "x"sv, "y"sv, "z"sv, "{"sv, "|"sv, "}"sv, "~"sv, "\x7F"sv, // 0x70 - 0x7F
+
+    "Ђ"sv, "Ѓ"sv, "‚"sv, "ѓ"sv, "„"sv, "…"sv, "†"sv, "‡"sv, "€"sv, "‰"sv, "Љ"sv, "‹"sv, "Њ"sv, "Ќ"sv, "Ћ"sv, "Џ"sv,    // 0x80 - 0x8F
+    "ђ"sv, "‘"sv, "’"sv, "“"sv, "”"sv, "•"sv, "–"sv, "—"sv, "?"sv, "™"sv, "љ"sv, "›"sv, "њ"sv, "ќ"sv, "ћ"sv, "џ"sv,    // 0x90 - 0x9F
+    " "sv, "Ў"sv, "ў"sv, "Ј"sv, "¤"sv, "Ґ"sv, "¦"sv, "§"sv, "Ё"sv, "©"sv, "Є"sv, "«"sv, "¬"sv, "\xAD"sv, "®", "Ї"sv,   // 0xA0 - 0xAF
+    "°"sv, "±"sv, "І"sv, "і"sv, "ґ"sv, "µ"sv, "¶"sv, "·"sv, "ё"sv, "№"sv, "є"sv, "»"sv, "ј"sv, "Ѕ"sv, "ѕ"sv, "ї"sv,    // 0xB0 - 0xBF
+    "А"sv, "Б"sv, "В"sv, "Г"sv, "Д"sv, "Е"sv, "Ж"sv, "З"sv, "И"sv, "Й"sv, "К"sv, "Л"sv, "М"sv, "Н"sv, "О"sv, "П"sv,    // 0xC0 - 0xCF
+    "Р"sv, "С"sv, "Т"sv, "У"sv, "Ф"sv, "Х"sv, "Ц"sv, "Ч"sv, "Ш"sv, "Щ"sv, "Ъ"sv, "Ы"sv, "Ь"sv, "Э"sv, "Ю"sv, "Я"sv,    // 0xD0 - 0xDF
+    "а"sv, "б"sv, "в"sv, "г"sv, "д"sv, "е"sv, "ж"sv, "з"sv, "и"sv, "й"sv, "к"sv, "л"sv, "м"sv, "н"sv, "о"sv, "п"sv,    // 0xE0 - 0xEF
+    "р"sv, "с"sv, "т"sv, "у"sv, "ф"sv, "х"sv, "ц"sv, "ч"sv, "ш"sv, "щ"sv, "ъ"sv, "ы"sv, "ь"sv, "э"sv, "ю"sv, "я"sv,    // 0xF0 - 0xFF
 };
 
 std::string_view StringUtils::trimLeft(std::string_view input) noexcept {
@@ -99,14 +111,27 @@ std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept
 
 std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     std::string result;
-    for (unsigned char c : input) {
-        if (c < 0x80) {
-           result += c;
-        } else {
-           result += win1251_to_utf8[c - 0x80];
-        }
+    for (unsigned char ch : input) {
+        result += win1251_to_utf8[ch];
     }
     return result;
+}
+
+void StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept {
+    assert(!buffer.empty());
+
+    size_t pos = 0;
+    for (unsigned char ch : input) {
+        const std::string_view utf8View = win1251_to_utf8[ch];
+        size_t len = utf8View.length();
+
+        // Проверка на достаточность места
+        assert(pos + len <= buffer.size() - 1);
+
+        memcpy(buffer.data() + pos, utf8View.data(), len);
+        pos += len;
+    }
+    buffer[pos] = '\0';
 }
 
 std::string_view StringUtils::filename(std::string_view path) noexcept

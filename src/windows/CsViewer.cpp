@@ -99,6 +99,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                         ImGui::SetScrollY(0.0f);
                     }
 
+                    char nodeInfoBuffer[4096];
+
                     ImGuiStyle& style = ImGui::GetStyle();
                     ImGui::PushFont(NULL, style.FontSizeBase - 1.0f);
                     for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
@@ -122,13 +124,13 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                         }
 
                         const CS_Node& node = m_csData.nodes[i];
-                        std::string nodeInfo = node.toString((isDialogPhrase && m_showDialogPhrases), m_sdbDialogs.strings);
+                        node.toStringBuffer(nodeInfoBuffer, (isDialogPhrase && m_showDialogPhrases), m_sdbDialogs.strings);
 
                         if (m_showOnlyFunctions && m_funcNodes[i]
                             || !m_showOnlyFunctions) {
-                            if (m_textFilterString.PassFilter(nodeInfo.c_str())) {
+                            if (m_textFilterString.PassFilter(nodeInfoBuffer)) {
                                 bool isFunc = node.opcode == kFunc;
-                                ImGui::TextColored(isFunc ? m_funcTextColor : m_defaultTextColor, "[i:%zu] %s", i, nodeInfo.c_str());
+                                ImGui::TextColored(isFunc ? m_funcTextColor : m_defaultTextColor, "[i:%zu] %s", i, nodeInfoBuffer);
                             }
                         }
                     }

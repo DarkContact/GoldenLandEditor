@@ -24,9 +24,12 @@ void CsExecutorViewer::update(bool& showWindow,
         ImGui::Begin("CS Executor", &showWindow, ImGuiWindowFlags_HorizontalScrollbar);
 
         int nodeIndex = m_pExecutor->currentNodeIndex();
+        char nodeInfoBuffer[4096];
+        nodes[nodeIndex].toStringBuffer(nodeInfoBuffer, false);
+
         ImGui::Text("[i:%d] %s (step:%d)",
                     nodeIndex,
-                    nodes[nodeIndex].toString(false).c_str(),
+                    nodeInfoBuffer,
                     m_pExecutor->counter());
 
         auto varsInfo = m_pExecutor->variablesInfo();

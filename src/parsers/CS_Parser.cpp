@@ -13,39 +13,43 @@
 
 using namespace IoUtils;
 
-std::string CS_Node::toString(bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings) const {
-    std::string additionInfo;
+void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings) const {
+    char additionInfo[3584];
     if (opcode >= 0 && opcode <= 20) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+        StringUtils::formatToBuffer(additionInfo, "a: {}, b: {}, c: {}, d: {}", a, b, c, d);
     } else if (opcode == kNumberLiteral || opcode == kNumberVarName) {
         if (showDialogPhrases && !sdbDialogStrings.empty() && opcode == kNumberLiteral) {
             auto it = sdbDialogStrings.find(value);
             if (it != sdbDialogStrings.cend()) {
-                additionInfo = std::format("val: {} [{}]", value, it->second);
+                StringUtils::formatToBuffer(additionInfo, "val: {} [{}]", value, it->second);
             } else {
-                additionInfo = std::format("val: {}", value);
+                StringUtils::formatToBuffer(additionInfo, "val: {}", value);
             }
         } else {
-            additionInfo = std::format("val: {}", value);
+            StringUtils::formatToBuffer(additionInfo, "val: {}", value);
         }
-    } else if (opcode == kStringLiteral || opcode == kStringVarName) {
-        additionInfo = std::format("txt: {}", StringUtils::decodeWin1251ToUtf8(text));
+    } else if (opcode == kStringLiteral) {
+        char varLiteral[320];
+        StringUtils::decodeWin1251ToUtf8Buffer(text, varLiteral);
+        StringUtils::formatToBuffer(additionInfo, "txt: {}", varLiteral);
+    } else if (opcode == kStringVarName) {
+        StringUtils::formatToBuffer(additionInfo, "txt: {}", text);
     } else if (opcode == kFunc) {
-        std::string argsInfo;
+        char argsInfo[128];
         for (int j = 0; j < args.size(); j++) {
             int32_t idx = args[j];
             if (idx == -1) break;
-            argsInfo += std::format("{} ", idx);
+            StringUtils::formatToBuffer(argsInfo, "{} ", idx);
         }
         std::string_view funcStr = csFuncToString(value);
-        additionInfo = std::format("val: [{}], c: {}, d: {}, args: [{}]", funcStr, c, d, StringUtils::trimRight(argsInfo));
+        StringUtils::formatToBuffer(additionInfo, "val: [{}], c: {}, d: {}, args: [{}]", funcStr, c, d, StringUtils::trimRight(argsInfo));
     } else if (opcode == kJmp) {
-        additionInfo = std::format("c: {}, d: {}", c, d);
+        StringUtils::formatToBuffer(additionInfo, "c: {}, d: {}", c, d);
     } else if (opcode == kAssign) {
-        additionInfo = std::format("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+        StringUtils::formatToBuffer(additionInfo, "a: {}, b: {}, c: {}, d: {}", a, b, c, d);
     }
 
-    return std::format("Opcode: {} [{}] | {}", opcode, csOpcodeToString(opcode), additionInfo);
+    StringUtils::formatToBuffer(buffer, "Opcode: {} [{}] | {}", opcode, csOpcodeToString(opcode), additionInfo);
 }
 
 bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error)
