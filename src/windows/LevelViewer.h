@@ -7,7 +7,7 @@ class LevelViewer {
 public:
     LevelViewer();
 
-    bool update(bool& showWindow, std::string_view rootDirectory, Level& level);
+    void update(bool& showWindow, std::string_view rootDirectory, Level& level);
     bool isAnimating(const Level& level) const;
 
 private:

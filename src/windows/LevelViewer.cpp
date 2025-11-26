@@ -16,16 +16,21 @@ LevelViewer::LevelViewer() {
 
 }
 
-bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
+void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
 {
     Tracy_ZoneScoped;
     auto levelWindowName = Level::levelWindowName(level.data().name, level.data().type);
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    bool isWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::PopStyleVar();
+
+    if (!isWindowVisible) {
+        level.data().imgui.hasVisibleAnimations = false;
+        ImGui::End();
+        return;
+    }
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("View")) {
@@ -139,6 +144,7 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             level.data().imgui.showSounds = !level.data().imgui.showSounds;
         }
 
+        ImGuiIO& io = ImGui::GetIO();
         if (level.data().imgui.showMapTiles) {
             if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_1, false)) {
                 level.data().imgui.mapTilesMode = MapTilesMode::Relief;
@@ -177,23 +183,18 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     if (level.data().imgui.showAnimations) {
         drawAnimations(level, startPos);
     }
-
     if (level.data().imgui.showPersons) {
         drawPersons(level, startPos);
     }
-
     if (level.data().imgui.showEntrancePoints) {
         drawPointsEntrance(level, startPos);
     }
-
     if (level.data().imgui.showCellGroups) {
         drawCellGroups(level, startPos);
     }
-
     if (level.data().imgui.showSounds) {
         drawSounds(level, startPos);
     }
-
     if (level.data().imgui.showMapTiles) {
         drawMapTiles(level, startPos);
     }
@@ -218,7 +219,6 @@ bool LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     }
 
     ImGui::End();
-    return true;
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
