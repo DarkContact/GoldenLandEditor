@@ -3,6 +3,7 @@
 #include <format>
 
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
 SdbViewer::SdbViewer() {
@@ -66,9 +67,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
                     for (const auto& [id, text] : m_sdbRecords.strings) {
                         char filterBuffer[4096];
-                        auto result = std::format_to_n(filterBuffer, std::size(filterBuffer) - 1, "{} {}", id, text);
-                        *result.out = '\0';
-                        assert(result.size < std::size(filterBuffer) - 1);
+                        StringUtils::formatToBuffer(filterBuffer, "{} {}", id, text);
 
                         if (m_textFilterString.PassFilter(filterBuffer)) {
                             ImGui::TableNextRow();

@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <cassert>
 #include <string>
+#include <format>
+#include <span>
 
 template<typename T>
 concept LineCallback = requires(T callback, std::string_view stringView) {
@@ -30,8 +33,10 @@ public:
 
     static std::string_view filename(std::string_view path) noexcept;
     static std::u8string_view utf8View(std::string_view input) noexcept;
-};
 
+    template <typename... Args>
+    static bool formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
+};
 
 
 template<LineCallback Callback>
@@ -56,4 +61,20 @@ inline void StringUtils::forEachLine(std::string_view buffer, Callback&& callbac
     if (start < length) {
         callback(buffer.substr(start));
     }
+}
+
+template<typename... Args>
+inline bool StringUtils::formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) {
+    const size_t bufferSize = buffer.size();
+    assert(bufferSize);
+
+    auto result = std::format_to_n(buffer.data(),
+                                   bufferSize - 1,
+                                   fmt,
+                                   std::forward<Args>(args)...);
+    *result.out = '\0';
+
+    bool isFit = result.size < (bufferSize - 1);
+    assert(isFit);
+    return isFit;
 }
