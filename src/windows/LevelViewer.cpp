@@ -607,6 +607,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
 void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
     const MapTiles& mapTiles = level.data().lvlData.mapTiles;
     if (mapTiles.chunks.empty()) return;
 
@@ -648,8 +649,6 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
             if (allSameColor) {
                 ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + Level::chunkWidth,
                                                  chunkTopLeft.y + Level::chunkHeight);
-
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
                 drawList->AddRectFilled(chunkTopLeft, chunkBottomRight, firstColor);
             }
 
@@ -666,8 +665,18 @@ void LevelViewer::drawMapTiles(Level& level, ImVec2 drawPosition)
                                                 tileTopLeft.y + Level::tileHeight);
 
                 if (!allSameColor) {
-                    drawTileBg(tile, tileTopLeft, tileBottomRight, level);
+                    ImU32 color = getTileColor(tile, level.data().imgui.mapTilesMode);
+                    drawList->AddRectFilled(tileTopLeft, tileBottomRight, color);
                 }
+
+                if (level.data().imgui.mapTilesMode == MapTilesMode::Mask && tile.mask != MapTile::kEmptyMask) {
+                    ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
+
+                    ImGui::PushFont(NULL, 10.0f);
+                    ImGui::Text("%u", tile.mask);
+                    ImGui::PopFont();
+                }
+
                 drawTileBorderAndTooltip(tile, tileTopLeft, tileBottomRight, tileColumn, tileRow, chunkColumn, chunkRow, level);
             }
 
@@ -696,26 +705,10 @@ ImU32 LevelViewer::getTileColor(const MapTile& tile, MapTilesMode mode) {
                 case MapDataSound::Snow:   return IM_COL32(255, 255, 255, 96);
             }
         case MapTilesMode::Mask:
-            return tile.mask == 0xffff ? IM_COL32(255, 0, 0, 96)
-                                       : IM_COL32(0, 0, 0, 96);
+            return tile.mask == MapTile::kEmptyMask ? IM_COL32(255, 0, 0, 96)
+                                                    : IM_COL32(0, 0, 0, 96);
     }
     return IM_COL32(255, 255, 255, 255);
-}
-
-void LevelViewer::drawTileBg(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, Level& level) {
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-    MapTilesMode mapTilesMode = level.data().imgui.mapTilesMode;
-    ImU32 color = getTileColor(tile, mapTilesMode);
-    drawList->AddRectFilled(tileTopLeft, tileBottomRight, color);
-
-    if (mapTilesMode == MapTilesMode::Mask && tile.mask != 0xffff) {
-        ImGui::SetCursorScreenPos({tileTopLeft.x, tileTopLeft.y});
-
-        ImGui::PushFont(NULL, 10.0f);
-        ImGui::Text("%u", tile.mask);
-        ImGui::PopFont();
-    }
 }
 
 void LevelViewer::drawTileBorderAndTooltip(const MapTile& tile, ImVec2 tileTopLeft, ImVec2 tileBottomRight, int tileColumn, int tileRow, int chunkColumn, int chunkRow, Level& level)
