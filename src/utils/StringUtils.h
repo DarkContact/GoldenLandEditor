@@ -36,7 +36,7 @@ public:
     static std::u8string_view utf8View(std::string_view input) noexcept;
 
     template <typename... Args>
-    static bool formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
+    static size_t formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
 };
 
 
@@ -65,7 +65,7 @@ inline void StringUtils::forEachLine(std::string_view buffer, Callback&& callbac
 }
 
 template<typename... Args>
-inline bool StringUtils::formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) {
+inline size_t StringUtils::formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) {
     const size_t bufferSize = buffer.size();
     assert(bufferSize);
 
@@ -75,7 +75,6 @@ inline bool StringUtils::formatToBuffer(std::span<char> buffer, std::format_stri
                                    std::forward<Args>(args)...);
     *result.out = '\0';
 
-    bool isFit = result.size < (bufferSize - 1);
-    assert(isFit);
-    return isFit;
+    assert(result.size < (bufferSize - 1));
+    return result.size;
 }
