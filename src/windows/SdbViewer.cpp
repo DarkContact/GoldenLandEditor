@@ -65,13 +65,18 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                     ImGui::TableHeadersRow();
 
                     for (const auto& [id, text] : m_sdbRecords.strings) {
-                        if (m_textFilterString.PassFilter(std::format("{} {}", id, text).c_str())) {
+                        char filterBuffer[4096];
+                        auto result = std::format_to_n(filterBuffer, std::size(filterBuffer) - 1, "{} {}", id, text);
+                        *result.out = '\0';
+                        assert(result.size < std::size(filterBuffer) - 1);
+
+                        if (m_textFilterString.PassFilter(filterBuffer)) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::Text("%d", id);
 
                             ImGui::TableNextColumn();
-                            ImGui::Text("%s", text.c_str());
+                            ImGui::TextUnformatted(text.c_str());
                         }
                     }
                     ImGui::EndTable();
