@@ -36,6 +36,7 @@ void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, con
         StringUtils::formatToBuffer(additionInfo, "txt: {}", text);
     } else if (opcode == kFunc) {
         char argsInfo[128];
+        argsInfo[0] = '\0';
         for (int j = 0; j < args.size(); j++) {
             int32_t idx = args[j];
             if (idx == -1) break;
