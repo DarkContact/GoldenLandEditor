@@ -24,5 +24,7 @@ private:
     ImGuiTextFilter m_textFilterFile;
     ImGuiTextFilter m_textFilterString;
     SearchByType m_searchByType = kText;
+    std::vector<int> m_filteredKey;
+    bool m_sameHeightForRow = true;
     bool m_onceWhenClose = true;
 };

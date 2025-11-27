@@ -17,6 +17,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
     if (showWindow && !files.empty()) {
         m_onceWhenClose = false;
         bool needResetScroll = false;
+        bool needUpdateFilter = false;
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
         ImGui::Begin("SDB Viewer", &showWindow);
@@ -33,13 +34,28 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                     m_selectedIndex = i;
 
                     m_sdbRecords.strings.clear();
+                    m_filteredKey.clear();
 
                     std::string error;
                     if (!SDB_Parser::parse(std::format("{}/{}", rootDirectory, files[i]), m_sdbRecords, &error)) {
                         LogFmt("SdbViewer error: {}", error);
                     }
 
+                    m_filteredKey.reserve(m_sdbRecords.strings.size());
+                    m_sameHeightForRow = true;
+                    for (const auto& [id, text] : m_sdbRecords.strings) {
+                        m_filteredKey.push_back(id);
+
+                        if (m_sameHeightForRow) {
+                            size_t pos = text.find_first_of("\n\r");
+                            if (pos != std::string::npos) {
+                                m_sameHeightForRow = false;
+                            }
+                        }
+                    }
+
                     needResetScroll = true;
+                    needUpdateFilter = true;
                 }
             }
             ImGui::EndChild();
@@ -50,13 +66,17 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
         ImGui::BeginChild("item view");
         if (ImGui::RadioButton("ID", m_searchByType == kId)) {
             m_searchByType = kId;
+            needUpdateFilter = true;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Text", m_searchByType == kText)) {
             m_searchByType = kText;
+            needUpdateFilter = true;
         }
         ImGui::SameLine();
-        m_textFilterString.Draw();
+        if (m_textFilterString.Draw()) {
+            needUpdateFilter = true;
+        }
 
         if (!m_sdbRecords.strings.empty()) {
             if (ImGui::BeginTable("content", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
@@ -65,29 +85,56 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                     ImGui::SetScrollY(0.0f);
                 }
 
+                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("ID");
                 ImGui::TableSetupColumn("Текст");
                 ImGui::TableHeadersRow();
 
-                char idStr[16];
-                for (const auto& [id, text] : m_sdbRecords.strings) {
-                    std::string_view filter;
-                    if (m_searchByType == kText) {
-                        filter = std::string_view{text.data(), text.size()};
-                    } else if (m_searchByType == kId) {
-                        auto idSize = StringUtils::formatToBuffer(idStr, "{}", id);
-                        filter = std::string_view{idStr, idSize};
-                    }
-
-                    if (m_textFilterString.PassFilter(filter.data(), filter.data() + filter.size())) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%d", id);
-
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(text.data(), text.data() + text.size());
+                int counter = 0;
+                if (needUpdateFilter) {
+                    m_filteredKey.clear();
+                    char idStr[16];
+                    for (const auto& [id, text] : m_sdbRecords.strings) {
+                        std::string_view filter;
+                        if (m_searchByType == kText) {
+                            filter = std::string_view{text.data(), text.size()};
+                        } else if (m_searchByType == kId) {
+                            auto idSize = StringUtils::formatToBuffer(idStr, "{}", id);
+                            filter = std::string_view{idStr, idSize};
+                        }
+                        bool pass = m_textFilterString.PassFilter(filter.data(), filter.data() + filter.size());
+                        if (pass) {
+                            m_filteredKey.push_back(id);
+                        }
+                        ++counter;
                     }
                 }
+
+                auto tableFormat = [this] (int id) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%d", id);
+
+                    std::string_view text = m_sdbRecords.strings[id];
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(text.data(), text.data() + text.size());
+                };
+
+                if (m_sameHeightForRow) {
+                    ImGuiListClipper clipper;
+                    clipper.Begin((int)m_filteredKey.size());
+                    while (clipper.Step()) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
+                            int id = m_filteredKey[i];
+                            tableFormat(id);
+                        }
+                    }
+                } else {
+                    for (int id : m_filteredKey) {
+                        tableFormat(id);
+                    }
+                }
+
                 ImGui::EndTable();
             }
         }
@@ -102,6 +149,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
         m_sdbRecords.strings.clear();
         m_textFilterFile.Clear();
         m_textFilterString.Clear();
+        m_filteredKey.clear();
         m_onceWhenClose = true;
     }
 }
