@@ -598,7 +598,7 @@ void LevelViewer::drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPos
         IM_COL32(0, 0, 0, 96));
 
     ImGui::SetCursorScreenPos({drawPosition.x + offset, drawPosition.y + offset});
-    ImGui::Text("%s", infoMessage.c_str());
+    ImGui::TextColored(ImVec4{1.0f, 1.0f, 1.0f, 1.0f}, "%s", infoMessage.c_str());
 }
 
 // Порядок отрисовки чанков и тайлов:

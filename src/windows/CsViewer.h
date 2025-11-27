@@ -32,8 +32,7 @@ private:
     bool m_onceWhenOpen = false;
     bool m_onceWhenClose = true;
 
-    const ImVec4 m_defaultTextColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    const ImVec4 m_funcTextColor = ImVec4(1.0f, 0.92f, 0.5f, 1.0f);
+    const ImVec4 m_funcTextColor = ImVec4(1.0f, 0.92f, 0.5f, 1.0f); // TODO: Нечитаемо в светлой теме
 
     CsExecutorViewer m_csExecutorViewer;
 };
