@@ -82,8 +82,7 @@ RouteType SEF_Parser::parseRouteType(std::string_view type) {
     return RouteType::STAY;
 }
 
-std::string_view SEF_Parser::getValue(std::string_view rawLine)
-{
+std::string_view SEF_Parser::getValue(std::string_view rawLine) {
     size_t sepPos = rawLine.find_first_of("\t ");
     if (sepPos == std::string::npos) {
         return {};
@@ -92,16 +91,29 @@ std::string_view SEF_Parser::getValue(std::string_view rawLine)
     return StringUtils::trim(rawLine.substr(sepPos + 1));
 }
 
-void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {
+std::optional<std::pair<std::string_view, std::string_view> > SEF_Parser::getKeyValue(std::string_view rawLine)
+{
     std::string_view line = StringUtils::trim(rawLine);
-    if (line.empty() || line == "{" || line == "}") return;
+    if (line.empty() || line.starts_with("{") || line.starts_with("}")) {
+        return std::nullopt;
+    }
 
     size_t sepPos = line.find_first_of("\t ");
-    if (sepPos == std::string::npos) return;
+    if (sepPos == std::string::npos) {
+        return std::nullopt;
+    }
 
     std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
     std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
 
+    return {{key, value}};
+}
+
+void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {    
+    auto keyValueOpt = getKeyValue(rawLine);
+    if (!keyValueOpt) { return; }
+
+    const auto& [key, value] = *keyValueOpt;
     if (key == "name:") {
         SEF_Person newPerson;
         newPerson.techName = StringUtils::extractQuotedValue(value);
@@ -136,15 +148,10 @@ void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {
 
 void SEF_Parser::parsePointEntranceLine(std::string_view rawLine, SEF_Data& data)
 {
-    std::string_view line = StringUtils::trim(rawLine);
-    if (line.empty() || line == "{" || line == "}") return;
+    auto keyValueOpt = getKeyValue(rawLine);
+    if (!keyValueOpt) { return; }
 
-    size_t sepPos = line.find_first_of("\t ");
-    if (sepPos == std::string::npos) return;
-
-    std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
-    std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
-
+    const auto& [key, value] = *keyValueOpt;
     if (key == "name:") {
         SEF_PointEntrance newPoint;
         newPoint.techName = StringUtils::extractQuotedValue(value);
@@ -161,15 +168,10 @@ void SEF_Parser::parsePointEntranceLine(std::string_view rawLine, SEF_Data& data
 
 void SEF_Parser::parseCellGroupLine(std::string_view rawLine, SEF_Data& data)
 {
-    std::string_view line = StringUtils::trim(rawLine);
-    if (line.empty() || line == "{" || line == "}") return;
+    auto keyValueOpt = getKeyValue(rawLine);
+    if (!keyValueOpt) { return; }
 
-    size_t sepPos = line.find_first_of("\t ");
-    if (sepPos == std::string::npos) return;
-
-    std::string_view key = StringUtils::trimRight(line.substr(0, sepPos));
-    std::string_view value = StringUtils::trimLeft(line.substr(sepPos + 1));
-
+    const auto& [key, value] = *keyValueOpt;
     if (key == "name:") {
         CellGroup newGroup;
         newGroup.name = StringUtils::extractQuotedValue(value);

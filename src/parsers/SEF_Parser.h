@@ -77,6 +77,7 @@ private:
     static RouteType parseRouteType(std::string_view type);
 
     static std::string_view getValue(std::string_view rawLine);
+    static std::optional<std::pair<std::string_view, std::string_view>> getKeyValue(std::string_view rawLine);
 
     static void parsePersonLine(std::string_view rawLine, SEF_Data& data);
     static void parsePointEntranceLine(std::string_view rawLine, SEF_Data& data);
