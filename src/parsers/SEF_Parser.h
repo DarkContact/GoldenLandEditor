@@ -55,6 +55,26 @@ struct SEF_PointEntrance {
     std::string direction; // Direction
 };
 
+struct SEF_Trigger {
+    std::string techName;
+    int literaryNameIndex = -1;
+    std::string cursorName;
+    std::string scriptName;
+    std::optional<std::string> invName;
+    std::optional<std::string> cellsName;
+    bool isActive = false;
+    std::optional<bool> isTransition;
+    std::optional<bool> isVisible;
+};
+
+struct SEF_Door {
+    std::string techName;
+    int literaryNameOpenIndex = -1;
+    int literaryNameCloseIndex = -1;
+    std::string cellsName;
+    std::optional<bool> isOpened;
+};
+
 struct SEF_Data {
     std::string version;
     std::string pack;
@@ -64,6 +84,8 @@ struct SEF_Data {
     std::vector<SEF_Person> persons;
     std::vector<SEF_PointEntrance> pointsEntrance;
     std::vector<CellGroup> cellGroups;
+    std::vector<SEF_Trigger> triggers;
+    std::vector<SEF_Door> doors;
 };
 
 class SEF_Parser {
@@ -82,4 +104,6 @@ private:
     static void parsePersonLine(std::string_view rawLine, SEF_Data& data);
     static void parsePointEntranceLine(std::string_view rawLine, SEF_Data& data);
     static void parseCellGroupLine(std::string_view rawLine, SEF_Data& data);
+    static void parseTriggerLine(std::string_view rawLine, SEF_Data& data);
+    static void parseDoorLine(std::string_view rawLine, SEF_Data& data);
 };

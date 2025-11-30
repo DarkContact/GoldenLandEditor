@@ -1,5 +1,6 @@
 #include "SEF_Parser.h"
 
+#include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
@@ -55,6 +56,10 @@ bool SEF_Parser::parse(std::string_view sefPath, SEF_Data& data, std::string* er
             parsePointEntranceLine(line, data);
         } else if (currentSection == ParseSection::CELL_GROUPS) {
             parseCellGroupLine(line, data);
+        } else if (currentSection == ParseSection::TRIGGERS) {
+            parseTriggerLine(line, data);
+        } else if (currentSection == ParseSection::DOORS) {
+            parseDoorLine(line, data);
         }
     });
     return true;
@@ -142,6 +147,8 @@ void SEF_Parser::parsePersonLine(std::string_view rawLine, SEF_Data& data) {
             currentPerson.scriptDialog = StringUtils::extractQuotedValue(value);
         } else if (key == "scr_inv") {
             currentPerson.scriptInventory = StringUtils::extractQuotedValue(value);
+        } else {
+            LogFmt("Unknown key: {} (value: {})", key, value);
         }
     }
 }
@@ -162,6 +169,8 @@ void SEF_Parser::parsePointEntranceLine(std::string_view rawLine, SEF_Data& data
             StringUtils::parsePosition(value, currentPoint.position.x, currentPoint.position.y);
         } else if (key == "direction") {
             currentPoint.direction = StringUtils::extractQuotedValue(value);
+        } else {
+            LogFmt("Unknown key: {} (value: {})", key, value);
         }
     }
 }
@@ -182,6 +191,68 @@ void SEF_Parser::parseCellGroupLine(std::string_view rawLine, SEF_Data& data)
             TilePosition position;
             StringUtils::parsePosition(value, position.x, position.y);
             currentGroup.cells.push_back(position);
+        } else {
+            LogFmt("Unknown key: {} (value: {})", key, value);
+        }
+    }
+}
+
+void SEF_Parser::parseTriggerLine(std::string_view rawLine, SEF_Data& data)
+{
+    auto keyValueOpt = getKeyValue(rawLine);
+    if (!keyValueOpt) { return; }
+
+    const auto& [key, value] = *keyValueOpt;
+    if (key == "name:") {
+        SEF_Trigger newTrigger;
+        newTrigger.techName = StringUtils::extractQuotedValue(value);
+        data.triggers.push_back(newTrigger);
+    } else {
+        SEF_Trigger& currentTrigger = data.triggers.back();
+        if (key == "literary_name") {
+            currentTrigger.literaryNameIndex = StringUtils::toInt(value);
+        } else if (key == "cursor_name") {
+            currentTrigger.cursorName = StringUtils::extractQuotedValue(value);
+        } else if (key == "script_name") {
+            currentTrigger.scriptName = StringUtils::extractQuotedValue(value);
+        } else if (key == "inv_name") {
+            currentTrigger.invName = StringUtils::extractQuotedValue(value);
+        } else if (key == "cells_name") {
+            currentTrigger.cellsName = StringUtils::extractQuotedValue(value);
+        } else if (key == "is_active") {
+            currentTrigger.isActive = StringUtils::toInt(value, 0);
+        } else if (key == "is_transition") {
+            currentTrigger.isTransition = StringUtils::toInt(value, 0);
+        } else if (key == "is_visible") {
+            currentTrigger.isVisible = StringUtils::toInt(value, 0);
+        } else {
+            LogFmt("Unknown key: {} (value: {})", key, value);
+        }
+    }
+}
+
+void SEF_Parser::parseDoorLine(std::string_view rawLine, SEF_Data& data)
+{
+    auto keyValueOpt = getKeyValue(rawLine);
+    if (!keyValueOpt) { return; }
+
+    const auto& [key, value] = *keyValueOpt;
+    if (key == "name:") {
+        SEF_Door newDoor;
+        newDoor.techName = StringUtils::extractQuotedValue(value);
+        data.doors.push_back(newDoor);
+    } else {
+        SEF_Door& currentDoor = data.doors.back();
+        if (key == "literary_name_open") {
+            currentDoor.literaryNameOpenIndex = StringUtils::toInt(value);
+        } else if (key == "literary_name_close") {
+            currentDoor.literaryNameCloseIndex = StringUtils::toInt(value);
+        } else if (key == "cells_name") {
+            currentDoor.cellsName = StringUtils::extractQuotedValue(value);
+        } else if (key == "is_opened") {
+            currentDoor.isOpened = StringUtils::toInt(value, 0);
+        } else {
+            LogFmt("Unknown key: {} (value: {})", key, value);
         }
     }
 }
