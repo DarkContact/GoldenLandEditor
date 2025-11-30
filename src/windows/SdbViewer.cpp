@@ -22,7 +22,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
         ImGui::Begin("SDB Viewer", &showWindow);
 
-        ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
+        ImGui::BeginChild("left pane", ImVec2(340, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
         m_textFilterFile.Draw();
         ImGui::Separator();
             ImGui::BeginChild("file list");

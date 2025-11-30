@@ -30,7 +30,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
         // Left
         {
-            ImGui::BeginChild("left pane", ImVec2(300, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
+            ImGui::BeginChild("left pane", ImVec2(400, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
             m_textFilter.Draw();
             ImGui::Separator();
                 ImGui::BeginChild("file list");

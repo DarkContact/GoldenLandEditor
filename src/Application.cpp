@@ -104,6 +104,7 @@ void Application::initImGui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.IniFilename = NULL;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 
@@ -261,9 +262,13 @@ void Application::mainLoop() {
             FontSettings::update(showSettingsWindow);
         }
         if (!backgroundWork) {
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles);
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles);
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles);
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
         }
 
@@ -300,6 +305,7 @@ void Application::mainLoop() {
                 bool openLevel = true;
                 Level& level = *it;
                 if (level.data().background) {
+                    ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
                     m_levelViewer.update(openLevel, m_rootDirContext.rootDirectory(), level);
                     if (!openLevel) {
                         it = m_rootDirContext.levels.erase(it);
