@@ -84,6 +84,15 @@ double StringUtils::toDouble(std::string_view input, double defaultValue) noexce
     return result;
 }
 
+std::string_view StringUtils::eraseOneLineComment(std::string_view line) noexcept
+{
+    std::size_t commentPos = line.find("//");
+    if (commentPos != std::string_view::npos) {
+        return line.substr(0, commentPos);
+    }
+    return line;
+}
+
 bool StringUtils::parsePosition(std::string_view input, uint16_t& x, uint16_t& y) noexcept {
     auto spacePos = input.find(' ');
     if (spacePos == std::string_view::npos)

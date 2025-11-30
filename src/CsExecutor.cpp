@@ -61,10 +61,7 @@ bool CsExecutor::readGlobalVariables(std::string_view varsPath, UMapStringVar_t&
     std::string_view fileStringView((char*)fileData.data(), fileData.size());
     StringUtils::forEachLine(fileStringView, [&globalVars] (std::string_view line)
     {
-        std::size_t commentPos = line.find("//");
-        if (commentPos != std::string::npos) {
-            line = line.substr(0, commentPos);
-        }
+        line = StringUtils::eraseOneLineComment(line);
         line = StringUtils::trim(line);
         if (line.empty()) return;
 

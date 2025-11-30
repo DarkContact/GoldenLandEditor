@@ -37,7 +37,6 @@ enum class ParseSection {
 struct SEF_Person {
     TilePosition position;
     std::string techName;
-    std::string literaryName;
     int literaryNameIndex = -1;
     std::string direction; // Direction
     std::string routeType; // RouteType

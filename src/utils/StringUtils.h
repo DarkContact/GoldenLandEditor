@@ -23,6 +23,7 @@ public:
     static uint32_t toUInt(std::string_view input, uint32_t defaultValue = -1) noexcept;
     static double toDouble(std::string_view input, double defaultValue = -1.0) noexcept;
 
+    static std::string_view eraseOneLineComment(std::string_view line) noexcept;
     static bool parsePosition(std::string_view input, uint16_t& x, uint16_t& y) noexcept;
 
     static std::string_view extractQuotedValue(std::string_view line) noexcept;

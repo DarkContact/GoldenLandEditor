@@ -775,7 +775,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
         drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
         drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
 
-        std::string_view personName = level.data().sdbData.strings.empty() ? person.literaryName
+        std::string_view personName = level.data().sdbData.strings.empty() ? person.techName
                                                                            : level.data().sdbData.strings[person.literaryNameIndex];
 
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
