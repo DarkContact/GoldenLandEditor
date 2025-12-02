@@ -1,5 +1,6 @@
 #include "CsExecutor.h"
 
+#include <algorithm>
 #include <cassert>
 #include <format>
 
@@ -104,6 +105,7 @@ void CsExecutor::restart()
 {
     m_counter = 0;
     m_currentNodeIndex = 0;
+    m_currentStatus = kStart;
     m_funcs.clear();
 
     readScriptVariables();
@@ -136,13 +138,18 @@ std::vector<std::string> CsExecutor::variablesInfo() const {
 }
 
 std::vector<std::string> CsExecutor::funcsInfo() const {
-    return m_funcs;
+    std::vector<std::string> out;
+    for (auto func : m_funcs) {
+        out.emplace_back(csFuncToString(func));
+    }
+    return out;
 }
 
 bool CsExecutor::next()
 {
     // Защита от бесконечного выполнения
     if (m_counter >= CsExecutor::kStopCounter) {
+        m_currentStatus = kInfinity;
         return false;
     }
     ++m_counter;
@@ -181,8 +188,11 @@ bool CsExecutor::next()
     }
 
     if (currentNode.opcode == kJmp) {
-        if (currentNode.d == -1)
+        if (currentNode.d == -1) {
+            bool exists = std::any_of(m_funcs.cbegin(), m_funcs.cend(), [](int x) { return x == kD_Say; });
+            m_currentStatus = exists ? kWaitUser : kEnd;
             return false;
+        }
 
         m_currentNodeIndex = currentNode.c;
     } else if (currentNode.opcode == kAssign) {
@@ -209,6 +219,8 @@ bool CsExecutor::next()
 
         m_currentNodeIndex = currentNode.d;
     }
+
+    m_currentStatus = kContinue;
     return true;
 }
 
@@ -262,8 +274,12 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
 
 int CsExecutor::funcOpcode(const CS_Node& node)
 {
-    m_funcs.emplace_back(csFuncToString(node.value));
+    m_funcs.emplace_back(node.value);
     return 0; // Пока не реализовано, будет так
+}
+
+CsExecutor::ExecuteStatus CsExecutor::currentStatus() const {
+    return m_currentStatus;
 }
 
 UMapStringVar_t& CsExecutor::scriptVars() {

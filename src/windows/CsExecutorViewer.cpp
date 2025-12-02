@@ -55,10 +55,14 @@ void CsExecutorViewer::update(bool& showWindow,
 
         auto varsInfo = m_pExecutor->variablesInfo();
         std::sort(varsInfo.begin(), varsInfo.end());
-        ImGui::Text("%s", std::format("vars: {}", varsInfo).c_str());
+        ImGui::TextUnformatted(std::format("vars: {}", varsInfo).c_str());
 
         auto funcsInfo = m_pExecutor->funcsInfo();
-        ImGui::Text("%s", std::format("funcs: {}", funcsInfo).c_str());
+        ImGui::TextUnformatted(std::format("funcs: {}", funcsInfo).c_str());
+
+        ImGui::BeginDisabled(m_pExecutor->currentStatus() == CsExecutor::kEnd
+                             || m_pExecutor->currentStatus() == CsExecutor::kInfinity
+                             || m_pExecutor->currentStatus() == CsExecutor::kWaitUser);
 
         if (ImGui::Button("Step")) {
             m_pExecutor->next();
@@ -67,6 +71,8 @@ void CsExecutorViewer::update(bool& showWindow,
         if (ImGui::Button("Execute all")) {
             while(m_pExecutor->next());
         }
+        ImGui::EndDisabled();
+
         ImGui::SameLine();
         if (ImGui::Button("Restart")) {
             m_pExecutor->restart();
