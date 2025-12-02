@@ -35,12 +35,14 @@ void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, con
     } else if (opcode == kStringVarName) {
         StringUtils::formatToBuffer(additionInfo, "txt: {}", text);
     } else if (opcode == kFunc) {
-        char argsInfo[128];
+        constexpr int kArgsInfoSize = 128;
+        char argsInfo[kArgsInfoSize];
         argsInfo[0] = '\0';
+        size_t offset = 0;
         for (int j = 0; j < args.size(); j++) {
             int32_t idx = args[j];
             if (idx == -1) break;
-            StringUtils::formatToBuffer(argsInfo, "{} ", idx);
+            offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{} ", idx);
         }
         std::string_view funcStr = csFuncToString(value);
         StringUtils::formatToBuffer(additionInfo, "val: [{}], c: {}, d: {}, args: [{}]", funcStr, c, d, StringUtils::trimRight(argsInfo));
