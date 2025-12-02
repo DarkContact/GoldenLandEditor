@@ -107,6 +107,7 @@ void CsExecutor::restart()
     m_currentNodeIndex = 0;
     m_currentStatus = kStart;
     m_funcs.clear();
+    m_dialogFuncs.clear();
 
     readScriptVariables();
 }
@@ -139,14 +140,37 @@ std::vector<std::string> CsExecutor::variablesInfo() const {
 
 std::vector<std::string> CsExecutor::funcsInfo() const {
     std::vector<std::string> out;
-    for (auto func : m_funcs) {
-        out.emplace_back(csFuncToString(func));
+    for (const auto& func : m_funcs) {
+        out.emplace_back(csFuncToString(func.value));
     }
     return out;
 }
 
+std::array<int, 11> CsExecutor::dialogsData() const
+{
+    if (m_currentStatus != kWaitUser || m_dialogFuncs.empty()) return {-1};
+    assert(m_dialogFuncs.size() >= 2 && m_dialogFuncs.size() <= 11);
+
+    std::array<int, 11> result;
+    result.fill(-1);
+
+    const CS_Node& sayNode = m_dialogFuncs.front();
+    result[0] = m_nodes[sayNode.args.front()].value;
+    for (size_t i = 1; i < m_dialogFuncs.size(); ++i) {
+        const CS_Node& answerNode = m_dialogFuncs[i];
+        result[i] = m_nodes[answerNode.args.front()].value;
+    }
+    return result;
+}
+
 bool CsExecutor::next()
 {
+    if (m_currentStatus == kRestart) {
+        m_counter = 0;
+        m_currentNodeIndex = 0;
+        m_currentStatus = kContinue;
+    }
+
     // Защита от бесконечного выполнения
     if (m_counter >= CsExecutor::kStopCounter) {
         m_currentStatus = kInfinity;
@@ -189,7 +213,7 @@ bool CsExecutor::next()
 
     if (currentNode.opcode == kJmp) {
         if (currentNode.d == -1) {
-            bool exists = std::any_of(m_funcs.cbegin(), m_funcs.cend(), [](int x) { return x == kD_Say; });
+            bool exists = std::any_of(m_funcs.cbegin(), m_funcs.cend(), [](const CS_Node& node) { return (uint32_t)node.value == kD_Say; });
             m_currentStatus = exists ? kWaitUser : kEnd;
             return false;
         }
@@ -222,6 +246,22 @@ bool CsExecutor::next()
 
     m_currentStatus = kContinue;
     return true;
+}
+
+void CsExecutor::userInput(uint8_t answer) {
+    assert(!m_dialogFuncs.empty());
+    CS_Node sayNode = m_dialogFuncs[0];
+    assert((uint32_t)sayNode.value == kD_Say);
+
+    assert(answer < m_dialogFuncs.size());
+    CS_Node answerNode = m_dialogFuncs[answer];
+    assert((uint32_t)answerNode.value == kD_Answer);
+
+    m_scriptVars["LastPhrase"] = sayNode.args.front();
+    m_scriptVars["LastAnswer"] = answerNode.args.front();
+
+    m_dialogFuncs.clear();
+    m_currentStatus = kRestart;
 }
 
 bool CsExecutor::compareOpcode(const CS_Node& node) {
@@ -274,7 +314,10 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
 
 int CsExecutor::funcOpcode(const CS_Node& node)
 {
-    m_funcs.emplace_back(node.value);
+    m_funcs.emplace_back(node);
+    if ((uint32_t)node.value == kD_Say || (uint32_t)node.value == kD_Answer) {
+        m_dialogFuncs.emplace_back(node);
+    }
     return 0; // Пока не реализовано, будет так
 }
 

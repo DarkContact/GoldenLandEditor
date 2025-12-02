@@ -13,7 +13,8 @@ CsExecutorViewer::CsExecutorViewer() {
 void CsExecutorViewer::update(bool& showWindow,
                               bool& needUpdate,
                               std::span<const CS_Node> nodes,
-                              const UMapStringVar_t& globalVars)
+                              const UMapStringVar_t& globalVars,
+                              const SDB_Data& dialogsPhrases)
 {
     if (needUpdate) {
         m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
@@ -55,14 +56,16 @@ void CsExecutorViewer::update(bool& showWindow,
 
         auto varsInfo = m_pExecutor->variablesInfo();
         std::sort(varsInfo.begin(), varsInfo.end());
-        ImGui::TextUnformatted(std::format("vars: {}", varsInfo).c_str());
+        ImGui::TextWrapped("%s", std::format("vars: {}", varsInfo).c_str());
 
         auto funcsInfo = m_pExecutor->funcsInfo();
-        ImGui::TextUnformatted(std::format("funcs: {}", funcsInfo).c_str());
+        ImGui::TextWrapped("%s", std::format("funcs: {}", funcsInfo).c_str());
 
         ImGui::BeginDisabled(m_pExecutor->currentStatus() == CsExecutor::kEnd
                              || m_pExecutor->currentStatus() == CsExecutor::kInfinity
                              || m_pExecutor->currentStatus() == CsExecutor::kWaitUser);
+
+        ImGui::Separator();
 
         if (ImGui::Button("Step")) {
             m_pExecutor->next();
@@ -76,6 +79,27 @@ void CsExecutorViewer::update(bool& showWindow,
         ImGui::SameLine();
         if (ImGui::Button("Restart")) {
             m_pExecutor->restart();
+        }
+
+        if (m_pExecutor->currentStatus() == CsExecutor::kWaitUser) {
+            ImGui::SeparatorText("Dialog");
+
+            auto dialogData = m_pExecutor->dialogsData();
+
+            std::string sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
+            ImGui::TextWrapped("%s", sayPhrase.c_str());
+            for (int i = 1; i < 11; ++i) {
+                if (dialogData[i] == -1) break;
+
+                std::string answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
+                char intBuffer[4];
+                StringUtils::formatToBuffer(intBuffer, "{}", i);
+                if (ImGui::Button(intBuffer)) {
+                    m_pExecutor->userInput(i);
+                }
+                ImGui::SameLine();
+                ImGui::TextWrapped("%s", answerPhrase.c_str());
+            }
         }
 
         ImGui::End();

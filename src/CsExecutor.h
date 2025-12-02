@@ -23,20 +23,22 @@ public:
 
     enum ExecuteStatus {
         kStart,
+        kRestart,
         kContinue,
         kWaitUser,
         kEnd,
         kInfinity
     };
     bool next();
+    void userInput(uint8_t value);
 
     int currentNodeIndex() const;
     int counter() const;
     std::vector<std::string> variablesInfo() const;
     std::vector<std::string> funcsInfo() const;
+    std::array<int, 11> dialogsData() const;
 
     UMapStringVar_t& scriptVars();
-
     ExecuteStatus currentStatus() const;
 
 private:
@@ -48,7 +50,8 @@ private:
     std::span<const CS_Node> m_nodes;
     UMapStringVar_t m_globalVars;
     UMapStringVar_t m_scriptVars;
-    std::vector<uint32_t> m_funcs;
+    std::vector<CS_Node> m_funcs;
+    std::vector<CS_Node> m_dialogFuncs;
 
     int m_currentNodeIndex = 0;
     ExecuteStatus m_currentStatus = kStart;

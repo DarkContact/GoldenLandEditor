@@ -152,7 +152,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
         ImGui::End();
 
-        m_csExecutorViewer.update(m_showExecuteWindow, needUpdate, m_csData.nodes, m_globalVars);
+        m_csExecutorViewer.update(m_showExecuteWindow, needUpdate, m_csData.nodes, m_globalVars, m_sdbDialogs);
     }
 
     // Очистка
