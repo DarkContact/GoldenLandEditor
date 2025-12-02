@@ -7,7 +7,9 @@
 #include <format>
 #include <ranges>
 
-#include "SDL3/SDL_timer.h"
+#include <SDL3/SDL_timer.h>
+
+#include "utils/StringUtils.h"
 #include "Texture.h"
 
 struct TilePosition {
@@ -135,22 +137,22 @@ private:
 };
 
 template <>
-struct std::formatter<Variable_t> : std::formatter<std::string> {
+struct std::formatter<Variable_t> : std::formatter<std::string_view> {
     auto format(const Variable_t& v, std::format_context& ctx) const {
-        std::string out;
+        char buffer[1024];
 
-        std::visit([&](auto&& arg){
+        std::visit([&buffer](auto&& arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, int32_t>)
-                out = std::format("int32: {}", arg);
+                StringUtils::formatToBuffer(buffer, "int32: {}", arg);
             else if constexpr (std::is_same_v<T, uint32_t>)
-                out = std::format("uint32: {}", arg);
+                StringUtils::formatToBuffer(buffer, "uint32: {}", arg);
             else if constexpr (std::is_same_v<T, double>)
-                out = std::format("double: {}", arg);
+                StringUtils::formatToBuffer(buffer, "double: {}", arg);
             else if constexpr (std::is_same_v<T, std::string>)
-                out = std::format("string: \"{}\"", arg);
+                StringUtils::formatToBuffer(buffer, "string: \"{}\"", arg);
         }, v);
 
-        return std::formatter<std::string>::format(out, ctx);
+        return std::formatter<std::string_view>::format(std::string_view{buffer}, ctx);
     }
 };
