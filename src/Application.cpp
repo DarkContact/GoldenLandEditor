@@ -59,8 +59,16 @@ void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDire
 }
 
 Application::Application() {
+    Settings settings("settings.ini");
+    std::string fontFilepath = settings.readString(Setting::kFontFilepath);
+    int fontSize = settings.readInt(Setting::kFontSize, 13);
+    std::string rootDir = settings.readString(Setting::kRootDir);
+    if (!rootDir.empty()) {
+        m_rootDirContext.setRootDirectoryAndReload(rootDir);
+    }
+
     initSdl();
-    initImGui();
+    initImGui(fontFilepath, fontSize);
 }
 
 Application::~Application() {
@@ -108,32 +116,31 @@ void Application::initSdl() {
     SDL_ShowWindow(m_window);
 }
 
-void Application::initImGui() {
+void Application::initImGui(std::string_view fontFilepath, int fontSize) {
+    const char* imguiBranch =
 #ifdef IMGUI_HAS_DOCK
-    const char* imguiBranch = "docking";
+        "docking";
 #else
-    const char* imguiBranch = "master";
+        "master";
 #endif
 
     LogFmt("[INFO] ImGui Version: {} (branch: {})", IMGUI_VERSION, imguiBranch);
-    // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.IniFilename = NULL;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 
+    ImGui::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
-    // Setup scaling
-    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale);
-    style.FontScaleDpi = main_scale;
+    float mainScale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+    style.ScaleAllSizes(mainScale);
+    style.FontScaleDpi = mainScale;
 
     style.ScrollbarSize = 12.0f;
     style.ScrollbarRounding = 3.0f;
@@ -141,31 +148,17 @@ void Application::initImGui() {
     style.WindowTitleAlign.x = 0.5f;
     style.WindowTitleAlign.y = 0.75f;
 
-    // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
     ImGui_ImplSDLRenderer3_Init(m_renderer);
-}
 
-void Application::run() {
-    Settings settings("settings.ini");
-    std::string fontFilepath = settings.readString(Setting::kFontFilepath);
-    int fontSize = settings.readInt(Setting::kFontSize, 13);
-    std::string rootDir = settings.readString(Setting::kRootDir);
-    if (!rootDir.empty()) {
-        m_rootDirContext.setRootDirectoryAndReload(rootDir);
-    }
-
-    // Apply settings
-    ImGuiIO& io = ImGui::GetIO();
+    // Загрузка шрифта и его размера
     if (!fontFilepath.empty()) {
-        ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontFilepath.c_str(), fontSize);
+        ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontFilepath.data(), fontSize);
         io.FontDefault = newFont;
     }
-    ImGuiStyle& style = ImGui::GetStyle();
+
     style.FontSizeBase = fontSize;
     style._NextFrameFontSizeBase = style.FontSizeBase;
-    
-    mainLoop();
 }
 
 bool Application::hasActiveAnimations() const {

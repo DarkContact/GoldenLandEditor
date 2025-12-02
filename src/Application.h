@@ -24,13 +24,12 @@ public:
     Application(Application&&) = delete;
     Application& operator=(Application&&) = delete;
 
-    void run();
+    void mainLoop();
 
 private:
     void initSdl();
-    void initImGui();
+    void initImGui(std::string_view fontFilepath, int fontSize);
 
-    void mainLoop();
     bool processEvents(bool noWait);
     void render();
 

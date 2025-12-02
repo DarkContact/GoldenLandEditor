@@ -7,7 +7,7 @@
 int main(int, char**) {
     try {
         Application app;
-        app.run();
+        app.mainLoop();
     } catch (const std::exception& ex) {
         fprintf(stderr, "Exception: %s", ex.what());
         return -1;
