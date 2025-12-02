@@ -65,8 +65,6 @@ void CsExecutorViewer::update(bool& showWindow,
                              || m_pExecutor->currentStatus() == CsExecutor::kInfinity
                              || m_pExecutor->currentStatus() == CsExecutor::kWaitUser);
 
-        ImGui::Separator();
-
         if (ImGui::Button("Step")) {
             m_pExecutor->next();
         }
@@ -85,20 +83,21 @@ void CsExecutorViewer::update(bool& showWindow,
             ImGui::SeparatorText("Dialog");
 
             auto dialogData = m_pExecutor->dialogsData();
+            if (dialogData[0] != -1) {
+                std::string sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
+                ImGui::TextWrapped("%s", sayPhrase.c_str());
+                for (int i = 1; i < 11; ++i) {
+                    if (dialogData[i] == -1) break;
 
-            std::string sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
-            ImGui::TextWrapped("%s", sayPhrase.c_str());
-            for (int i = 1; i < 11; ++i) {
-                if (dialogData[i] == -1) break;
-
-                std::string answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
-                char intBuffer[4];
-                StringUtils::formatToBuffer(intBuffer, "{}", i);
-                if (ImGui::Button(intBuffer)) {
-                    m_pExecutor->userInput(i);
+                    std::string answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
+                    char intBuffer[4];
+                    StringUtils::formatToBuffer(intBuffer, "{}", i);
+                    if (ImGui::Button(intBuffer)) {
+                        m_pExecutor->userInput(i);
+                    }
+                    ImGui::SameLine();
+                    ImGui::TextWrapped("%s", answerPhrase.c_str());
                 }
-                ImGui::SameLine();
-                ImGui::TextWrapped("%s", answerPhrase.c_str());
             }
         }
 

@@ -165,12 +165,6 @@ std::array<int, 11> CsExecutor::dialogsData() const
 
 bool CsExecutor::next()
 {
-    if (m_currentStatus == kRestart) {
-        m_counter = 0;
-        m_currentNodeIndex = 0;
-        m_currentStatus = kContinue;
-    }
-
     // Защита от бесконечного выполнения
     if (m_counter >= CsExecutor::kStopCounter) {
         m_currentStatus = kInfinity;
@@ -257,11 +251,14 @@ void CsExecutor::userInput(uint8_t answer) {
     CS_Node answerNode = m_dialogFuncs[answer];
     assert((uint32_t)answerNode.value == kD_Answer);
 
-    m_scriptVars["LastPhrase"] = sayNode.args.front();
-    m_scriptVars["LastAnswer"] = answerNode.args.front();
+    m_scriptVars["LastPhrase"] = (uint32_t)m_nodes[sayNode.args.front()].value;
+    m_scriptVars["LastAnswer"] = (uint32_t)m_nodes[answerNode.args.front()].value;
 
     m_dialogFuncs.clear();
     m_currentStatus = kRestart;
+
+    m_counter = 0;
+    m_currentNodeIndex = 0;
 }
 
 bool CsExecutor::compareOpcode(const CS_Node& node) {
