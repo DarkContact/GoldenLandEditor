@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <format>
+#include <ranges>
 
 #include "SDL3/SDL_timer.h"
 #include "Texture.h"
@@ -88,32 +89,50 @@ struct StringViewEqual {
     }
 };
 
-template <>
-struct std::formatter<std::string> : std::formatter<std::string_view> {
-    auto format(const std::string& s, format_context& ctx) const {
-        return formatter<std::string_view>::format(s, ctx);
-    }
-};
+using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
+using UMapStringVar_t = std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual>;
 
-template <typename T>
-struct std::formatter<std::vector<T>> : std::formatter<T> {
-    auto format(const std::vector<T>& vec, auto& ctx) const {
+template <typename R>
+concept FormattableRange =
+    std::ranges::range<R> &&
+    !std::is_convertible_v<R, std::wstring_view> &&
+    !std::is_convertible_v<R, std::string_view>;
+
+template <FormattableRange R>
+struct std::formatter<R> {
+public:
+    constexpr auto parse(auto& ctx) {
+        return element_formatter.parse(ctx);
+    }
+
+    auto format(const R& range, auto& ctx) const {
         auto out = ctx.out();
         *out++ = '[';
 
-        for (size_t i = 0; i < vec.size(); ++i) {
-            out = std::formatter<T>::format(vec[i], ctx);
-            if (i + 1 != vec.size()) {
-                *out++ = ','; *out++ = ' ';
+        auto it = std::ranges::begin(range);
+        auto end = std::ranges::end(range);
+
+        if (it != end) {
+            out = element_formatter.format(*it, ctx);
+            ++it;
+
+            while (it != end) {
+                *out++ = ',';
+                *out++ = ' ';
+
+                out = element_formatter.format(*it, ctx);
+                ++it;
             }
         }
+
         *out++ = ']';
         return out;
     }
-};
 
-using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
-using UMapStringVar_t = std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual>;
+private:
+    using T = std::ranges::range_value_t<R>;
+    std::formatter<T> element_formatter;
+};
 
 template <>
 struct std::formatter<Variable_t> : std::formatter<std::string> {
