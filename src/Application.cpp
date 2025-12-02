@@ -28,27 +28,43 @@ namespace {
     std::atomic_bool backgroundWork = false;
 }
 
-void Application::RootDirectoryContext::setRootDirectory(std::string_view rootDirectory) {
+void Application::RootDirectoryContext::setRootDirectoryAndReload(std::string_view rootDirectory) {
+    backgroundWork = true;
+
     levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
     selectedLevelIndex = 0;
+
     showCsxWindow = false;
     showSdbWindow = false;
     showMdfWindow = false;
     showCsWindow = false;
-    m_rootDirectory = rootDirectory;
+
+    asyncLoadPaths(rootDirectory); // TODO: Запись rootDirectory в ini файл настроек
+}
+
+void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDirectory) {
+    backgroundWork = true;
+    this->m_rootDirectory = rootDirectory;
+    auto backgroundTask = [] (RootDirectoryContext* rootDirContext) {
+        Resources resources(rootDirContext->rootDirectory());
+        rootDirContext->singleLevelNames = resources.levelNames(LevelType::kSingle);
+        rootDirContext->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
+        rootDirContext->csxFiles = resources.csxFiles();
+        rootDirContext->sdbFiles = resources.sdbFiles();
+        rootDirContext->mdfFiles = resources.mdfFiles();
+        rootDirContext->csFiles = resources.csFiles();
+        backgroundWork = false;
+    };
+    m_loadPathFuture = std::async(std::launch::async, backgroundTask, this);
 }
 
 Application::Application() {
-    init();
+    initSdl();
+    initImGui();
 }
 
 Application::~Application() {
     shutdown();
-}
-
-void Application::init() {
-    initSdl();
-    initImGui();
 }
 
 void Application::initSdl() {
@@ -79,7 +95,7 @@ void Application::initSdl() {
                                           (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
     if (m_window == nullptr) {
         LogFmt("SDL_CreateWindow error: {}", SDL_GetError());
-        throw std::runtime_error("SDL_CreateWindow error");
+        throw std::runtime_error(std::format("SDL_CreateWindow error: {}", SDL_GetError()));
     }
     m_renderer = SDL_CreateRenderer(m_window, nullptr);
     if (m_renderer == nullptr) {
@@ -136,7 +152,7 @@ void Application::run() {
     int fontSize = settings.readInt(Setting::kFontSize, 13);
     std::string rootDir = settings.readString(Setting::kRootDir);
     if (!rootDir.empty()) {
-        m_rootDirContext.setRootDirectory(rootDir);
+        m_rootDirContext.setRootDirectoryAndReload(rootDir);
     }
 
     // Apply settings
@@ -149,23 +165,7 @@ void Application::run() {
     style.FontSizeBase = fontSize;
     style._NextFrameFontSizeBase = style.FontSizeBase;
     
-    loadResources();
     mainLoop();
-}
-
-void Application::loadResources() {
-    backgroundWork = true;
-    auto backgroundTask = [] (RootDirectoryContext& rootDirContext) {
-        Resources resources(rootDirContext.rootDirectory());
-        rootDirContext.singleLevelNames = resources.levelNames(LevelType::kSingle);
-        rootDirContext.multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
-        rootDirContext.csxFiles = resources.csxFiles();
-        rootDirContext.sdbFiles = resources.sdbFiles();
-        rootDirContext.mdfFiles = resources.mdfFiles();
-        rootDirContext.csFiles = resources.csFiles();
-        backgroundWork = false;
-    };
-    m_bgTaskFuture = std::async(std::launch::async, backgroundTask, std::ref(m_rootDirContext));
 }
 
 bool Application::hasActiveAnimations() const {
@@ -244,9 +244,7 @@ void Application::mainLoop() {
                             Application* app = static_cast<Application*>(userdata);
                             if (app->m_rootDirContext.rootDirectory() == *filelist) return;
 
-                            app->m_rootDirContext.setRootDirectory(*filelist);
-                            app->loadResources();
-                            // TODO: Запись rootDirectory в ini файл настроек
+                            app->m_rootDirContext.setRootDirectoryAndReload(*filelist);
                         }
                     }, this, m_window, m_rootDirContext.rootDirectory().data(), false);
                 }

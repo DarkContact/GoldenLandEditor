@@ -27,15 +27,14 @@ public:
     void run();
 
 private:
-    void init();
     void initSdl();
     void initImGui();
+
     void mainLoop();
     bool processEvents(bool noWait);
     void render();
-    void shutdown();
 
-    void loadResources();
+    void shutdown();
 
     bool hasActiveAnimations() const;
 
@@ -46,18 +45,23 @@ private:
         std::vector<std::string> sdbFiles;
         std::vector<std::string> mdfFiles;
         std::vector<std::string> csFiles;
+
         std::vector<Level> levels;
         int selectedLevelIndex = 0;
+
         bool showCsxWindow = false;
         bool showSdbWindow = false;
         bool showMdfWindow = false;
         bool showCsWindow = false;
 
         std::string_view rootDirectory() const { return m_rootDirectory; }
-        void setRootDirectory(std::string_view rootDirectory);
+        void setRootDirectoryAndReload(std::string_view rootDirectory);
 
     private:
+        void asyncLoadPaths(std::string_view rootDirectory);
+
         std::string m_rootDirectory;
+        std::future<void> m_loadPathFuture;
     };
 
     SDL_Window* m_window = nullptr;
@@ -70,10 +74,8 @@ private:
     MdfViewer m_mdfViewer;
     CsViewer m_csViewer;
     bool m_done = false;
-    std::future<void> m_bgTaskFuture;
 
     // Оптимизация обновления логики и отрисовки
-    // (не рисуем часто, когда ничего не происходит)
     static const int kWaitTimeoutMs = 250;
     static const int kRenderCooldownFrames = 10;
     int m_renderCooldown = 0;
