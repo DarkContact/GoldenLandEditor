@@ -34,3 +34,15 @@ const char* csOpcodeToString(int32_t opcode) noexcept
         default: return "unknown";
     }
 }
+
+OpcodeGroup csOpcodeToGroup(int32_t opcode) noexcept
+{
+    if (opcode >= 0 && opcode <= 2) {
+        return kLogical;
+    } else if (opcode >= 6 && opcode <= 11) {
+        return kComparison;
+    } else if (opcode >= 14 && opcode <= 18) {
+        return kArithmetic;
+    }
+    return kOther;
+}

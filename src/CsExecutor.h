@@ -27,8 +27,13 @@ public:
     std::vector<std::string> variablesInfo() const;
     std::vector<std::string> funcsInfo() const;
 
+    UMapStringVar_t& scriptVars();
+
 private:
     void readScriptVariables();
+
+    bool compareOpcode(const CS_Node& node);
+    int funcOpcode(const CS_Node& node);
 
     std::span<const CS_Node> m_nodes;
     UMapStringVar_t m_globalVars;

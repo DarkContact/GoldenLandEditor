@@ -22,6 +22,9 @@ target_sources(imgui
     ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
     ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.h
     ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+
+    ${IMGUI_DIR}/misc/cpp/imgui_stdlib.h
+    ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
 )
 
 target_include_directories(imgui

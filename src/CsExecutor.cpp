@@ -109,18 +109,15 @@ void CsExecutor::restart()
     readScriptVariables();
 }
 
-int CsExecutor::currentNodeIndex() const
-{
+int CsExecutor::currentNodeIndex() const {
     return m_currentNodeIndex;
 }
 
-int CsExecutor::counter() const
-{
+int CsExecutor::counter() const {
     return m_counter;
 }
 
-std::vector<std::string> CsExecutor::variablesInfo() const
-{
+std::vector<std::string> CsExecutor::variablesInfo() const {
     std::vector<std::string> out;
     out.reserve(m_scriptVars.size());
 
@@ -152,50 +149,34 @@ bool CsExecutor::next()
 
     const CS_Node& currentNode = m_nodes[m_currentNodeIndex];
 
-    if (currentNode.opcode >= 6 && currentNode.opcode <= 11) { // Операторы сравнения
+    OpcodeGroup group = csOpcodeToGroup(currentNode.opcode);
+    if (group == kLogical) {
         const CS_Node& lNode = m_nodes[currentNode.a];
-        Variable_t lValue;
-        if (lNode.opcode == kStringVarName) {
-            lValue = m_scriptVars[lNode.text];
-        } else if (lNode.opcode == kNumberLiteral) {
-            lValue = lNode.value;
-        } else {
-            assert(true);
+        const CS_Node& rNode = m_nodes[currentNode.b];
+        int isLeftValue = 0;
+        int isRightValue = 0;
+        if (csOpcodeToGroup(lNode.opcode) == kComparison) {
+            isLeftValue = compareOpcode(lNode);
+        } else if (lNode.opcode == kFunc) {
+            isLeftValue = funcOpcode(lNode);
         }
 
-        const CS_Node& rNode = m_nodes[currentNode.b];
-        Variable_t rValue;
-        if (rNode.opcode == kStringVarName) {
-            rValue = m_scriptVars[rNode.text];
-        } else if (rNode.opcode == kNumberLiteral) {
-            std::visit([&rValue, rNode](auto&& lv){
-                using T = std::decay_t<decltype(lv)>;
-                if constexpr (std::is_same_v<T, std::string>) {
-                    rValue = rNode.value;
-                } else {
-                    rValue = (T)rNode.value;
-                }
-            }, lValue);
-        } else {
-            assert(true);
+        if (csOpcodeToGroup(rNode.opcode) == kComparison) {
+            isRightValue = compareOpcode(rNode);
+        } else if (rNode.opcode == kFunc) {
+            isRightValue = funcOpcode(rNode);
         }
 
         bool isTrue = false;
-        if (currentNode.opcode == 6) {
-            isTrue = (lValue != rValue);
-        } else if (currentNode.opcode == 7) {
-            isTrue = (lValue == rValue);
-        } else if (currentNode.opcode == 8) {
-            isTrue = (lValue >= rValue);
-        } else if (currentNode.opcode == 9) {
-            isTrue = (lValue <= rValue);
-        } else if (currentNode.opcode == 10) {
-            isTrue = (lValue > rValue);
-        } else if (currentNode.opcode == 11) {
-            isTrue = (lValue < rValue);
+        if (currentNode.opcode == kLogicOr) {
+            isTrue = isLeftValue || isRightValue;
+        } else if (currentNode.opcode == kLogicAnd) {
+            isTrue = isLeftValue && isRightValue;
         }
-        //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
-
+        m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
+        LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(currentNode.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+    } else if (group == kComparison) {
+        bool isTrue = compareOpcode(currentNode);
         m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
     }
 
@@ -212,8 +193,7 @@ bool CsExecutor::next()
         } else if (rNode.opcode == kNumberLiteral) {
             rValue = (int)rNode.value; // TODO: Корректное приведение типов
         } else if (rNode.opcode == kFunc) {
-            m_funcs.emplace_back(csFuncToString(rNode.value));
-            rValue = 0; // Пока не реализовано, будет так
+            funcOpcode(rNode);
         } else {
             assert(true);
         }
@@ -225,7 +205,67 @@ bool CsExecutor::next()
             assert(true);
         }
 
+        LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+
         m_currentNodeIndex = currentNode.d;
     }
     return true;
+}
+
+bool CsExecutor::compareOpcode(const CS_Node& node) {
+    const CS_Node& lNode = m_nodes[node.a];
+    Variable_t lValue;
+    if (lNode.opcode == kStringVarName) {
+        lValue = m_scriptVars[lNode.text];
+    } else if (lNode.opcode == kNumberLiteral) {
+        lValue = lNode.value;
+    } else {
+        assert(true);
+    }
+
+    const CS_Node& rNode = m_nodes[node.b];
+    Variable_t rValue;
+    if (rNode.opcode == kStringVarName) {
+        rValue = m_scriptVars[rNode.text];
+    } else if (rNode.opcode == kNumberLiteral) {
+        std::visit([&rValue, rNode](auto&& lv){
+            using T = std::decay_t<decltype(lv)>;
+            if constexpr (std::is_same_v<T, std::string>) {
+                rValue = rNode.value;
+            } else {
+                rValue = (T)rNode.value;
+            }
+        }, lValue);
+    } else {
+        assert(true);
+    }
+
+    bool isTrue = false;
+    if (node.opcode == 6) {
+        isTrue = (lValue != rValue);
+    } else if (node.opcode == 7) {
+        isTrue = (lValue == rValue);
+    } else if (node.opcode == 8) {
+        isTrue = (lValue >= rValue);
+    } else if (node.opcode == 9) {
+        isTrue = (lValue <= rValue);
+    } else if (node.opcode == 10) {
+        isTrue = (lValue > rValue);
+    } else if (node.opcode == 11) {
+        isTrue = (lValue < rValue);
+    }
+    LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+    //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
+
+    return isTrue;
+}
+
+int CsExecutor::funcOpcode(const CS_Node& node)
+{
+    m_funcs.emplace_back(csFuncToString(node.value));
+    return 0; // Пока не реализовано, будет так
+}
+
+UMapStringVar_t& CsExecutor::scriptVars() {
+    return m_scriptVars;
 }

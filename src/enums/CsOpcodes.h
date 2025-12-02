@@ -3,7 +3,9 @@
 
 enum OpcodeType {
     kUnknown = -1,
-    // [0 - 20] Операторы
+    kLogicOr = 0,
+    kLogicXor = 1, // ??
+    kLogicAnd = 2,
     kNumberLiteral = 24,
     kNumberVarName = 21,
     kStringLiteral = 22,
@@ -13,4 +15,12 @@ enum OpcodeType {
     kAssign = 50
 };
 
+enum OpcodeGroup {
+    kLogical, // [0-2]
+    kComparison, // [6-11]
+    kArithmetic, // [14-18]
+    kOther
+};
+
 const char* csOpcodeToString(int32_t opcode) noexcept;
+OpcodeGroup csOpcodeToGroup(int32_t opcode) noexcept;
