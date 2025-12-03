@@ -48,11 +48,14 @@ private:
     bool compareOpcode(const CS_Node& node);
     int funcOpcode(const CS_Node& node);
 
+    int RS_GetPersonParameterI(std::string_view person, std::string_view param);
+
     std::span<const CS_Node> m_nodes;
     UMapStringVar_t m_globalVars;
     UMapStringVar_t m_scriptVars;
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
+    std::unordered_map<std::string, int, StringViewHash, StringViewEqual> m_heroStats;
 
     int m_currentNodeIndex = 0;
     ExecuteStatus m_currentStatus = kStart;

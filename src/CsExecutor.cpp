@@ -251,7 +251,7 @@ bool CsExecutor::next()
             } else if (rNode.opcode == kNumberLiteral) {
                 rValue = (int)rNode.value; // TODO: Корректное приведение типов
             } else if (rNode.opcode == kFunc) {
-                funcOpcode(rNode);
+                rValue = funcOpcode(rNode);
             } else {
                 assert(false);
             }
@@ -353,10 +353,28 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
 int CsExecutor::funcOpcode(const CS_Node& node)
 {
     m_funcs.emplace_back(node);
-    if ((uint32_t)node.value == kD_Say || (uint32_t)node.value == kD_Answer) {
+    uint32_t funcValue = static_cast<uint32_t>(node.value);
+    if (funcValue == kD_Say || funcValue == kD_Answer) {
         m_dialogFuncs.emplace_back(node);
     }
-    return 0; // Пока не реализовано, будет так
+
+    if (funcValue == kRS_GetPersonParameterI) {
+        std::string_view arg0 = m_nodes[node.args[0]].text;
+        std::string_view arg1 = m_nodes[node.args[1]].text;
+        return RS_GetPersonParameterI(arg0, arg1);
+    }
+
+    return 0;
+}
+
+int CsExecutor::RS_GetPersonParameterI(std::string_view person, std::string_view param) {
+    if (person == "Hero") {
+        auto it = m_heroStats.find(param);
+        if (it != m_heroStats.cend()) {
+            return it->second;
+        }
+    }
+    return 0;
 }
 
 CsExecutor::ExecuteStatus CsExecutor::currentStatus() const {
@@ -373,6 +391,7 @@ const char* CsExecutor::currentStatusString() const
         case kEnd: return "End";
         case kInfinity: return "Infinity";
     }
+    return "Unknown";
 }
 
 UMapStringVar_t& CsExecutor::scriptVars() {
