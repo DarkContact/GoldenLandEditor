@@ -67,11 +67,15 @@ void CsExecutorViewer::update(bool& showWindow,
         auto funcsInfo = m_pExecutor->funcsInfo();
         ImGui::TextWrapped("%s", std::format("funcs: {}", funcsInfo).c_str());
 
-        ImGui::BeginDisabled(m_pExecutor->currentStatus() == CsExecutor::kEnd
-                             || m_pExecutor->currentStatus() == CsExecutor::kInfinity
-                             || m_pExecutor->currentStatus() == CsExecutor::kWaitUser);
+        bool disabled = m_pExecutor->currentStatus() == CsExecutor::kEnd
+                        || m_pExecutor->currentStatus() == CsExecutor::kInfinity
+                        || m_pExecutor->currentStatus() == CsExecutor::kWaitUser;
+        ImGui::BeginDisabled(disabled);
 
-        if (ImGui::Button("Dialog")) {
+        bool dialogKeyOnce = !disabled
+                             && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_D, false)
+                             && ImGui::IsWindowFocused();
+        if (ImGui::Button("Dialog") || dialogKeyOnce) {
             m_isDialog = true;
             while(m_pExecutor->next());
         }
@@ -87,7 +91,9 @@ void CsExecutorViewer::update(bool& showWindow,
         ImGui::EndDisabled();
 
         ImGui::SameLine(0.0f, 36.0f);
-        if (ImGui::Button("Restart")) {
+        bool restartKeyOnce = ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_R, false)
+                              && ImGui::IsWindowFocused();
+        if (ImGui::Button("Restart") || restartKeyOnce) {
             m_pExecutor->restart();
             m_isDialog = false;
         }
@@ -97,22 +103,30 @@ void CsExecutorViewer::update(bool& showWindow,
             if (dialogData[0] != -1) {
                 ImGui::SeparatorText("Dialog");
 
-                std::string sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
-                ImGui::TextWrapped("%s", sayPhrase.c_str());
+                std::string_view sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
+                ImGui::TextWrapped("%s", sayPhrase.data());
                 for (int i = 1; i < 11; ++i) {
                     if (dialogData[i] == -1) break;
 
-                    std::string answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
-                    char intBuffer[4];
-                    StringUtils::formatToBuffer(intBuffer, "{}", i);
-                    if (ImGui::Button(intBuffer)) {
+                    char indexStr[3];
+                    StringUtils::formatToBuffer(indexStr, "{}", i);
+
+                    ImGuiKey key{ImGuiKey::ImGuiKey_0 + i}; // [ImGuiKey_1 ... ImGuiKey_9]
+                    if (i == 10) {
+                        key = ImGuiKey::ImGuiKey_0;
+                    }
+
+                    bool buttonKeyOnce = ImGui::IsKeyPressed(key, false)
+                                         && ImGui::IsWindowFocused();
+                    if (ImGui::Button(indexStr) || buttonKeyOnce) {
                         m_pExecutor->userInput(i);
                         if (m_isDialog) {
                             while(m_pExecutor->next());
                         }
                     }
                     ImGui::SameLine();
-                    ImGui::TextWrapped("%s", answerPhrase.c_str());
+                    std::string_view answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
+                    ImGui::TextWrapped("%s", answerPhrase.data());
                 }
             }
         }
