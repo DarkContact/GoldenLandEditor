@@ -184,12 +184,16 @@ bool CsExecutor::next()
             isLeftValue = compareOpcode(lNode);
         } else if (lNode.opcode == kFunc) {
             isLeftValue = funcOpcode(lNode);
+        } else {
+            assert(false);
         }
 
         if (csOpcodeToGroup(rNode.opcode) == kComparison) {
             isRightValue = compareOpcode(rNode);
         } else if (rNode.opcode == kFunc) {
             isRightValue = funcOpcode(rNode);
+        } else {
+            assert(false);
         }
 
         bool isTrue = false;
@@ -203,39 +207,50 @@ bool CsExecutor::next()
     } else if (group == kComparison) {
         bool isTrue = compareOpcode(currentNode);
         m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
-    }
+    } else {
 
-    if (currentNode.opcode == kJmp) {
-        if (currentNode.d == -1) {
-            bool exists = std::any_of(m_dialogFuncs.cbegin(), m_dialogFuncs.cend(), [](const CS_Node& node) { return (uint32_t)node.value == kD_Say; });
-            m_currentStatus = exists ? kWaitUser : kEnd;
-            return false;
-        }
+        if (currentNode.opcode == kJmp) {
+            if (currentNode.d == -1) {
+                bool exists = std::any_of(m_dialogFuncs.cbegin(), m_dialogFuncs.cend(), [](const CS_Node& node) { return (uint32_t)node.value == kD_Say; });
+                m_currentStatus = exists ? kWaitUser : kEnd;
+                return false;
+            }
 
-        m_currentNodeIndex = currentNode.c;
-    } else if (currentNode.opcode == kAssign) {
-        const CS_Node& rNode = m_nodes[currentNode.b];
-        Variable_t rValue;
-        if (rNode.opcode == kStringVarName) {
-            rValue = m_scriptVars[rNode.text];
-        } else if (rNode.opcode == kNumberLiteral) {
-            rValue = (int)rNode.value; // TODO: Корректное приведение типов
-        } else if (rNode.opcode == kFunc) {
-            funcOpcode(rNode);
+            m_currentNodeIndex = currentNode.c;
+        } else if (currentNode.opcode == kAssign) {
+            const CS_Node& rNode = m_nodes[currentNode.b];
+            Variable_t rValue;
+            if (rNode.opcode == kStringVarName) {
+                rValue = m_scriptVars[rNode.text];
+            } else if (rNode.opcode == kNumberLiteral) {
+                rValue = (int)rNode.value; // TODO: Корректное приведение типов
+            } else if (rNode.opcode == kFunc) {
+                funcOpcode(rNode);
+            } else {
+                assert(false);
+            }
+
+            const CS_Node& lNode = m_nodes[currentNode.a];
+            if (lNode.opcode == kStringVarName) {
+                m_scriptVars[lNode.text] = rValue;
+            } else {
+                assert(false);
+            }
+
+            LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+            m_currentNodeIndex = currentNode.d;
         } else {
-            assert(true);
+            if (currentNode.a == -1 || currentNode.b == -1) {
+                LogFmt("[currentNode.opcode: {}]", csOpcodeToString(currentNode.opcode));
+            } else {
+                const CS_Node& lNode = m_nodes[currentNode.a];
+                const CS_Node& rNode = m_nodes[currentNode.b];
+                LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}",
+                       csOpcodeToString(currentNode.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+            }
+            assert(false);
         }
 
-        const CS_Node& lNode = m_nodes[currentNode.a];
-        if (lNode.opcode == kStringVarName) {
-            m_scriptVars[lNode.text] = rValue;
-        } else {
-            assert(true);
-        }
-
-        LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
-
-        m_currentNodeIndex = currentNode.d;
     }
 
     m_currentStatus = kContinue;
