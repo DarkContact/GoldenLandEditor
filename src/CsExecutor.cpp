@@ -140,8 +140,34 @@ std::vector<std::string> CsExecutor::variablesInfo() const {
 
 std::vector<std::string> CsExecutor::funcsInfo() const {
     std::vector<std::string> out;
+    out.reserve(m_funcs.size());
+    char buffer[768];
     for (const auto& func : m_funcs) {
-        out.emplace_back(csFuncToString(func.value));
+        constexpr int kArgsInfoSize = 512;
+        char argsInfo[kArgsInfoSize];
+        argsInfo[0] = '\0';
+        size_t offset = 0;
+        for (int j = 0; j < func.args.size(); j++) {
+            int32_t idx = func.args[j];
+            if (idx == -1) break;
+
+            const CS_Node node = m_nodes[idx];
+            if (node.opcode == kStringLiteral) {
+                offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.text);
+            } else if (node.opcode == kNumberLiteral) {
+                offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.value);
+            } else {
+                LogFmt("[currentNode.opcode: {}]", csOpcodeToString(node.opcode));
+                assert(false);
+            }
+        }
+
+        auto argsInfoTrimmed = StringUtils::trimRight(argsInfo);
+        if (argsInfoTrimmed.ends_with(',')) {
+            argsInfoTrimmed.remove_suffix(1);
+        }
+        size_t bufferSize = StringUtils::formatToBuffer(buffer, "{}({})", csFuncToString(func.value), argsInfoTrimmed);
+        out.emplace_back(std::string{buffer, bufferSize});
     }
     return out;
 }
