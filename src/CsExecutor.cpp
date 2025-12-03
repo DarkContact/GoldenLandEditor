@@ -207,7 +207,7 @@ bool CsExecutor::next()
 
     if (currentNode.opcode == kJmp) {
         if (currentNode.d == -1) {
-            bool exists = std::any_of(m_funcs.cbegin(), m_funcs.cend(), [](const CS_Node& node) { return (uint32_t)node.value == kD_Say; });
+            bool exists = std::any_of(m_dialogFuncs.cbegin(), m_dialogFuncs.cend(), [](const CS_Node& node) { return (uint32_t)node.value == kD_Say; });
             m_currentStatus = exists ? kWaitUser : kEnd;
             return false;
         }
@@ -320,6 +320,18 @@ int CsExecutor::funcOpcode(const CS_Node& node)
 
 CsExecutor::ExecuteStatus CsExecutor::currentStatus() const {
     return m_currentStatus;
+}
+
+const char* CsExecutor::currentStatusString() const
+{
+    switch (m_currentStatus) {
+        case kStart: return "Start";
+        case kRestart: return "Restart";
+        case kContinue: return "Continue";
+        case kWaitUser: return "WaitUser";
+        case kEnd: return "End";
+        case kInfinity: return "Infinity";
+    }
 }
 
 UMapStringVar_t& CsExecutor::scriptVars() {

@@ -40,6 +40,7 @@ public:
 
     UMapStringVar_t& scriptVars();
     ExecuteStatus currentStatus() const;
+    const char* currentStatusString() const;
 
 private:
     void readScriptVariables();

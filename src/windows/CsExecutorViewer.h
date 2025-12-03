@@ -17,6 +17,8 @@ public:
                 std::span<const CS_Node> nodes,
                 const UMapStringVar_t& globalVars,
                 const SDB_Data& dialogsPhrases);
+
 private:
     std::unique_ptr<CsExecutor> m_pExecutor = nullptr;
+    bool m_isDialog = false;
 };

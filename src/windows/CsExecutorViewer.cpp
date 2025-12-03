@@ -18,6 +18,7 @@ void CsExecutorViewer::update(bool& showWindow,
 {
     if (needUpdate) {
         m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
+        m_isDialog = false;
         needUpdate = false;
     }
 
@@ -49,10 +50,11 @@ void CsExecutorViewer::update(bool& showWindow,
         char nodeInfoBuffer[4096];
         nodes[nodeIndex].toStringBuffer(nodeInfoBuffer, false);
 
-        ImGui::Text("[i:%d] %s (step:%d)",
+        ImGui::Text("[i:%d] %s (step: %d) (status: %s)",
                     nodeIndex,
                     nodeInfoBuffer,
-                    m_pExecutor->counter());
+                    m_pExecutor->counter(),
+                    m_pExecutor->currentStatusString());
 
         auto varsInfo = m_pExecutor->variablesInfo();
         std::sort(varsInfo.begin(), varsInfo.end());
@@ -65,6 +67,11 @@ void CsExecutorViewer::update(bool& showWindow,
                              || m_pExecutor->currentStatus() == CsExecutor::kInfinity
                              || m_pExecutor->currentStatus() == CsExecutor::kWaitUser);
 
+        if (ImGui::Button("Dialog")) {
+            m_isDialog = true;
+            while(m_pExecutor->next());
+        }
+        ImGui::SameLine();
         if (ImGui::Button("Step")) {
             m_pExecutor->next();
         }
@@ -72,18 +79,20 @@ void CsExecutorViewer::update(bool& showWindow,
         if (ImGui::Button("Execute all")) {
             while(m_pExecutor->next());
         }
+
         ImGui::EndDisabled();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0.0f, 36.0f);
         if (ImGui::Button("Restart")) {
             m_pExecutor->restart();
+            m_isDialog = false;
         }
 
         if (m_pExecutor->currentStatus() == CsExecutor::kWaitUser) {
-            ImGui::SeparatorText("Dialog");
-
             auto dialogData = m_pExecutor->dialogsData();
             if (dialogData[0] != -1) {
+                ImGui::SeparatorText("Dialog");
+
                 std::string sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
                 ImGui::TextWrapped("%s", sayPhrase.c_str());
                 for (int i = 1; i < 11; ++i) {
@@ -94,6 +103,9 @@ void CsExecutorViewer::update(bool& showWindow,
                     StringUtils::formatToBuffer(intBuffer, "{}", i);
                     if (ImGui::Button(intBuffer)) {
                         m_pExecutor->userInput(i);
+                        if (m_isDialog) {
+                            while(m_pExecutor->next());
+                        }
                     }
                     ImGui::SameLine();
                     ImGui::TextWrapped("%s", answerPhrase.c_str());
