@@ -94,9 +94,11 @@ void CsExecutorViewer::update(bool& showWindow,
         bool restartKeyOnce = ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_R, false)
                               && ImGui::IsWindowFocused();
         if (ImGui::Button("Restart") || restartKeyOnce) {
-            m_pExecutor->restart();
+            m_pExecutor->restart(m_onlyDialogRestart);
             m_isDialog = false;
         }
+        ImGui::SameLine();
+        ImGui::Checkbox("Reset only LastPhrase & LastAnswer", &m_onlyDialogRestart);
 
         if (m_pExecutor->currentStatus() == CsExecutor::kWaitUser) {
             auto dialogData = m_pExecutor->dialogsData();

@@ -101,7 +101,7 @@ void CsExecutor::readScriptVariables()
     }
 }
 
-void CsExecutor::restart()
+void CsExecutor::restart(bool onlyDialogRestart)
 {
     m_counter = 0;
     m_currentNodeIndex = 0;
@@ -109,7 +109,12 @@ void CsExecutor::restart()
     m_funcs.clear();
     m_dialogFuncs.clear();
 
-    readScriptVariables();
+    if (onlyDialogRestart) {
+        m_scriptVars["LastPhrase"] = 0u;
+        m_scriptVars["LastAnswer"] = 0u;
+    } else {
+        readScriptVariables();
+    }
 }
 
 int CsExecutor::currentNodeIndex() const {
@@ -156,6 +161,8 @@ std::vector<std::string> CsExecutor::funcsInfo() const {
                 offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.text);
             } else if (node.opcode == kNumberLiteral) {
                 offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.value);
+            } else if (node.opcode == kStringVarName) {
+                offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", m_scriptVars.at(node.text));
             } else {
                 LogFmt("[currentNode.opcode: {}]", csOpcodeToString(node.opcode));
                 assert(false);
@@ -202,34 +209,8 @@ bool CsExecutor::next()
 
     OpcodeGroup group = csOpcodeToGroup(currentNode.opcode);
     if (group == kLogical) {
-        const CS_Node& lNode = m_nodes[currentNode.a];
-        const CS_Node& rNode = m_nodes[currentNode.b];
-        int isLeftValue = 0;
-        int isRightValue = 0;
-        if (csOpcodeToGroup(lNode.opcode) == kComparison) {
-            isLeftValue = compareOpcode(lNode);
-        } else if (lNode.opcode == kFunc) {
-            isLeftValue = funcOpcode(lNode);
-        } else {
-            assert(false);
-        }
-
-        if (csOpcodeToGroup(rNode.opcode) == kComparison) {
-            isRightValue = compareOpcode(rNode);
-        } else if (rNode.opcode == kFunc) {
-            isRightValue = funcOpcode(rNode);
-        } else {
-            assert(false);
-        }
-
-        bool isTrue = false;
-        if (currentNode.opcode == kLogicOr) {
-            isTrue = isLeftValue || isRightValue;
-        } else if (currentNode.opcode == kLogicAnd) {
-            isTrue = isLeftValue && isRightValue;
-        }
+        bool isTrue = logicalOpcode(currentNode);
         m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
-        LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(currentNode.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
     } else if (group == kComparison) {
         bool isTrue = compareOpcode(currentNode);
         m_currentNodeIndex = isTrue ? currentNode.c : currentNode.d;
@@ -253,6 +234,7 @@ bool CsExecutor::next()
             } else if (rNode.opcode == kFunc) {
                 rValue = funcOpcode(rNode);
             } else {
+                LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
                 assert(false);
             }
 
@@ -260,6 +242,7 @@ bool CsExecutor::next()
             if (lNode.opcode == kStringVarName) {
                 m_scriptVars[lNode.text] = rValue;
             } else {
+                LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
                 assert(false);
             }
 
@@ -302,6 +285,46 @@ void CsExecutor::userInput(uint8_t answer) {
     m_currentNodeIndex = 0;
 }
 
+bool CsExecutor::logicalOpcode(const CS_Node& node) {
+    const CS_Node& lNode = m_nodes[node.a];
+    const CS_Node& rNode = m_nodes[node.b];
+    int isLeftValue = 0;
+    int isRightValue = 0;
+    if (csOpcodeToGroup(lNode.opcode) == kComparison) {
+        isLeftValue = compareOpcode(lNode);
+    } else if (csOpcodeToGroup(lNode.opcode) == kLogical) {
+        isLeftValue = logicalOpcode(lNode);
+    } else if (lNode.opcode == kFunc) {
+        isLeftValue = funcOpcode(lNode);
+    } else {
+        LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
+        assert(false);
+    }
+
+    if (csOpcodeToGroup(rNode.opcode) == kComparison) {
+        isRightValue = compareOpcode(rNode);
+    } else if (csOpcodeToGroup(rNode.opcode) == kLogical) {
+        isRightValue = logicalOpcode(rNode);
+    } else if (rNode.opcode == kFunc) {
+        isRightValue = funcOpcode(rNode);
+    } else {
+        LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
+        assert(false);
+    }
+
+    bool isTrue = false;
+    if (node.opcode == kLogicOr) {
+        isTrue = isLeftValue || isRightValue;
+    } else if (node.opcode == kLogicAnd) {
+        isTrue = isLeftValue && isRightValue;
+    } else {
+        assert(false);
+    }
+    LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+    //LogFmt("isLeftValue: {}, isRightValue: {}, isTrue: {}", isLeftValue, isRightValue, isTrue);
+    return isTrue;
+}
+
 bool CsExecutor::compareOpcode(const CS_Node& node) {
     const CS_Node& lNode = m_nodes[node.a];
     Variable_t lValue;
@@ -310,7 +333,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     } else if (lNode.opcode == kNumberLiteral) {
         lValue = lNode.value;
     } else {
-        assert(true);
+        LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
+        assert(false);
     }
 
     const CS_Node& rNode = m_nodes[node.b];
@@ -327,7 +351,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
             }
         }, lValue);
     } else {
-        assert(true);
+        LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
+        assert(false);
     }
 
     bool isTrue = false;
@@ -346,7 +371,6 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     }
     LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
     //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
-
     return isTrue;
 }
 

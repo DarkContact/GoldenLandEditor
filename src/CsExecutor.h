@@ -19,7 +19,7 @@ public:
 
     static bool readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error);
 
-    void restart();
+    void restart(bool onlyDialogRestart = false);
 
     enum ExecuteStatus {
         kStart,
@@ -45,6 +45,7 @@ public:
 private:
     void readScriptVariables();
 
+    bool logicalOpcode(const CS_Node& node);
     bool compareOpcode(const CS_Node& node);
     int funcOpcode(const CS_Node& node);
 
