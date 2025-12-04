@@ -105,7 +105,10 @@ void CsExecutorViewer::update(bool& showWindow,
             if (dialogData[0] != -1) {
                 ImGui::SeparatorText("Dialog");
 
-                std::string_view sayPhrase = dialogsPhrases.strings.at(dialogData[0]);
+                std::string_view sayPhrase = "[NOT FOUND!]";
+                if (auto it = dialogsPhrases.strings.find(dialogData[0]); it != dialogsPhrases.strings.cend()) {
+                    sayPhrase = it->second;
+                }
                 ImGui::TextWrapped("%s", sayPhrase.data());
                 for (int i = 1; i < 11; ++i) {
                     if (dialogData[i] == -1) break;
@@ -127,7 +130,10 @@ void CsExecutorViewer::update(bool& showWindow,
                         }
                     }
                     ImGui::SameLine();
-                    std::string_view answerPhrase = dialogsPhrases.strings.at(dialogData[i]);
+                    std::string_view answerPhrase = "[NOT FOUND!]";
+                    if (auto it = dialogsPhrases.strings.find(dialogData[i]); it != dialogsPhrases.strings.cend()) {
+                        answerPhrase = it->second;
+                    }
                     ImGui::TextWrapped("%s", answerPhrase.data());
                 }
             }
