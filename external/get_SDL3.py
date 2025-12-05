@@ -4,7 +4,7 @@ import shutil
 import zipfile
 import urllib.request
 
-VERSION = "3.2.26"
+VERSION = "3.2.28"
 
 def get_compiler_from_args():
     if len(sys.argv) > 1:
