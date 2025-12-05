@@ -193,6 +193,15 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                                 ImGui::EndTooltip();
                             }
                         }
+
+                        ImGui::PushID(id);
+                        if (ImGui::BeginPopupContextItem("text context menu")) {
+                            if (ImGui::MenuItem("Copy")) {
+                                ImGui::SetClipboardText(text.data());
+                            }
+                            ImGui::EndPopup();
+                        }
+                        ImGui::PopID();
                     };
 
                     bool useClipping = m_sameHeightForRow || m_showFormattedSymbols;
