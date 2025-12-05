@@ -5,11 +5,10 @@
 #include <format>
 #include <array>
 
-#include "SDL3/SDL_iostream.h"
-#include "SDL3/SDL_timer.h"
+#include <SDL3/SDL_iostream.h>
+#include <SDL3/SDL_timer.h>
 
 #include "utils/TracyProfiler.h"
-#include "utils/DebugLog.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
