@@ -27,6 +27,6 @@ private:
     std::vector<int> m_filteredKeys;
     bool m_sameHeightForRow = true;
     bool m_onceWhenClose = true;
-    bool m_showFormattedSymbols = false;
+    bool m_showFormattedSymbols = true;
     bool m_filterNeedsUpdate = false;
 };

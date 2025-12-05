@@ -157,6 +157,7 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
 
                     auto tableFormat = [this, &visibleText, kVisibleTextSize] (int id) {
                         ImGui::TableNextRow();
+
                         ImGui::TableNextColumn();
                         ImGui::Text("%d", id);
 
@@ -168,6 +169,30 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
                         }
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(text.data(), text.data() + text.size());
+
+                        if (ImGui::IsItemHovered()) { // TODO: Доработать область наведения на всю строку
+                            ImVec4 hoverColor = ImGui::GetStyleColorVec4(ImGuiCol_HeaderHovered);
+                            for (int col = 0; col < 2; ++col) {
+                                ImGui::TableSetColumnIndex(col);
+                                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::ColorConvertFloat4ToU32(hoverColor));
+                            }
+
+                            if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) { // TODO: Показывать тултип только когда текст действительно не вмещается на экран
+                                ImGui::BeginTooltip();
+
+                                std::string_view fullText = m_sdbRecords.strings[id];
+                                bool longText = fullText.size() > 6000;
+
+                                ImGui::PushTextWrapPos(longText ? 800.0f : 600.0f);
+                                ImGui::PushFont(NULL, longText ? (ImGui::GetStyle().FontSizeBase - 1.0f)
+                                                               : 0.0f);
+                                ImGui::TextUnformatted(fullText.data(), fullText.data() + fullText.size());
+                                ImGui::PopFont();
+                                ImGui::PopTextWrapPos();
+
+                                ImGui::EndTooltip();
+                            }
+                        }
                     };
 
                     bool useClipping = m_sameHeightForRow || m_showFormattedSymbols;
