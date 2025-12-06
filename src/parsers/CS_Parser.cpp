@@ -15,6 +15,7 @@ using namespace IoUtils;
 
 void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, const std::map<int, std::string>& sdbDialogStrings) const {
     char additionInfo[3584];
+    additionInfo[0] = '\0';
     if (opcode >= 0 && opcode <= 20) {
         StringUtils::formatToBuffer(additionInfo, "a: {}, b: {}, c: {}, d: {}", a, b, c, d);
     } else if (opcode == kNumberLiteral || opcode == kNumberVarName) {
@@ -53,6 +54,38 @@ void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, con
     }
 
     StringUtils::formatToBuffer(buffer, "Opcode: {} [{}] | {}", opcode, csOpcodeToString(opcode), additionInfo);
+}
+
+void CS_Data::insertNodes(size_t pos, std::span<const CS_Node> newNodes) {
+    assert(pos < nodes.size());
+    assert(!newNodes.empty());
+
+    nodes.insert(nodes.begin() + pos, newNodes.begin(), newNodes.end());
+
+    const size_t insertSize = newNodes.size();
+    auto fixIndex = [pos, insertSize](int32_t& index) {
+        if (index >= static_cast<int32_t>(pos))
+            index += static_cast<int32_t>(insertSize);
+    };
+
+    auto fixNode = [&fixIndex](CS_Node& n) {
+        fixIndex(n.a);
+        fixIndex(n.b);
+        fixIndex(n.c);
+        fixIndex(n.d);
+
+        for (auto& arg : n.args)
+            fixIndex(arg);
+    };
+
+    // Обновление до вставки
+    for (size_t i = 0; i < pos; ++i)
+        fixNode(nodes[i]);
+
+    // Обновление после вставки
+    const size_t start = pos + newNodes.size();
+    for (size_t i = start; i < nodes.size(); ++i)
+        fixNode(nodes[i]);
 }
 
 bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error)

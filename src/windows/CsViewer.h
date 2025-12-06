@@ -15,6 +15,7 @@ public:
     CsViewer();
 
     void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
+    void injectPlaySoundFunc(size_t insertPos, std::string_view soundFile);
 
 private:
     int m_selectedIndex = -1;

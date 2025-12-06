@@ -15,6 +15,7 @@ struct CS_Node {
     std::array<int32_t, 9> args = {-1, -1, -1,
                                    -1, -1, -1,
                                    -1, -1, -1};
+
     std::string text;
     double value = -1.0;
 
@@ -23,6 +24,8 @@ struct CS_Node {
 
 struct CS_Data {
     std::vector<CS_Node> nodes;
+
+    void insertNodes(size_t pos, std::span<const CS_Node> newNodes);
 };
 
 class CS_Parser {

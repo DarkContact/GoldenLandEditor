@@ -57,6 +57,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     std::string csPath = std::format("{}/{}", rootDirectory, csFiles[i]);
                     CS_Parser::parse(csPath, m_csData, &m_csError);
+                    // injectPlaySoundFunc(737, "kotar\\zdravstvuj_rasskazhi.ogg");
+                    // CS_Parser::save(std::format("{}.new", csPath), m_csData, &m_csError);
 
                     // Заполнение данных для фильтрации функций
                     m_funcNodes.resize(m_csData.nodes.size(), false);
@@ -174,4 +176,31 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         m_onceWhenOpen = false;
         m_onceWhenClose = true;
     }
+}
+
+void CsViewer::injectPlaySoundFunc(size_t insertPos, std::string_view soundFile)
+{
+    CS_Node assign;
+    assign.opcode = kAssign;
+    assign.a = insertPos + 1;
+    assign.b = insertPos + 2;
+    assign.c = assign.d = insertPos + 4;
+
+    CS_Node strVar;
+    strVar.opcode = kStringVarName;
+    strVar.text = "result";
+
+    CS_Node func;
+    func.opcode = kFunc;
+    func.value = kD_PlaySound;
+    func.args[0] = insertPos + 3;
+
+    CS_Node strLit;
+    strLit.opcode = kStringLiteral;
+    strLit.text = std::string(soundFile);
+
+    std::array<CS_Node, 4> playSoundNodes = {assign, strVar, func, strLit};
+    m_csData.insertNodes(insertPos, playSoundNodes);
+
+    m_csData.nodes[insertPos - 4].c = m_csData.nodes[insertPos - 4].d = insertPos;
 }
