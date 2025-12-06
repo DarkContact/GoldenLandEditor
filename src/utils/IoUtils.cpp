@@ -137,7 +137,7 @@ void writeFloat(std::vector<uint8_t>& buffer, float value) {
 void writeDouble(std::vector<uint8_t>& buffer, double value) {
     uint8_t bytes[8];
     std::memcpy(bytes, &value, sizeof(double));
-    buffer.insert(buffer.end(), bytes, bytes + 48);
+    buffer.insert(buffer.end(), bytes, bytes + 8);
 }
 
 } // IoUtils

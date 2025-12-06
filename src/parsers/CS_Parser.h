@@ -30,5 +30,6 @@ public:
     CS_Parser() = delete;
 
     static bool parse(std::string_view csPath, CS_Data& data, std::string* error);
+    static bool save(std::string_view csPath, const CS_Data& data, std::string* error);
 };
 

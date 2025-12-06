@@ -71,7 +71,7 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
         CS_Node node;
 
         node.opcode = readInt32(fileData, offset);
-        if (node.opcode >= 0 && node.opcode <= 20) {
+        if (node.opcode >= 0 && node.opcode <= 20 || node.opcode == kAssign) {
             node.a = readInt32(fileData, offset);
             node.b = readInt32(fileData, offset);
             node.c = readInt32(fileData, offset);
@@ -94,11 +94,6 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
         } else if (node.opcode == kJmp) {
             node.c = readInt32(fileData, offset);
             node.d = readInt32(fileData, offset);
-        } else if (node.opcode == kAssign) {
-            node.a = readInt32(fileData, offset);
-            node.b = readInt32(fileData, offset);
-            node.c = readInt32(fileData, offset);
-            node.d = readInt32(fileData, offset);
         }
 
         data.nodes.push_back(std::move(node));
@@ -106,4 +101,44 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
     assert(offset == fileSize);
 
     return true;
+}
+
+bool CS_Parser::save(std::string_view csPath, const CS_Data& data, std::string* error)
+{
+    Tracy_ZoneScoped;
+
+    std::vector<uint8_t> saveData;
+    writeUInt32(saveData, 0); // Пока не знаем размер, запишем в конце
+    for (const auto& node : data.nodes) {
+        writeInt32(saveData, node.opcode);
+        if (node.opcode >= 0 && node.opcode <= 20 || node.opcode == kAssign) {
+            writeInt32(saveData, node.a);
+            writeInt32(saveData, node.b);
+            writeInt32(saveData, node.c);
+            writeInt32(saveData, node.d);
+        } else if (node.opcode == kNumberVarName || node.opcode == kNumberLiteral) {
+            writeDouble(saveData, node.value);
+        } else if (node.opcode == kStringVarName || node.opcode == kStringLiteral) {
+            writeCString(saveData, node.text);
+        } else if (node.opcode == kFunc) {
+            writeInt32(saveData, node.c);
+            writeInt32(saveData, node.d);
+            writeDouble(saveData, node.value);
+
+            for (auto arg : node.args) {
+                writeInt32(saveData, arg);
+                if (arg == -1)
+                    break;
+            }
+        } else if (node.opcode == kJmp) {
+            writeInt32(saveData, node.c);
+            writeInt32(saveData, node.d);
+        }
+    }
+
+    // Пишем размер
+    uint32_t size = static_cast<uint32_t>(saveData.size());
+    std::memcpy(saveData.data(), &size, sizeof(uint32_t));
+
+    return FileUtils::saveFile(csPath, saveData, error);
 }
