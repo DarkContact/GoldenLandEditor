@@ -46,8 +46,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
             ImGui::BeginChild("file list");
             for (int i = 0; i < static_cast<int>(csFiles.size()); ++i)
             {
-                if (m_textFilterFile.PassFilter(csFiles[i].c_str())
-                    && ImGui::Selectable(csFiles[i].c_str(), m_selectedIndex == i))
+                std::string_view csFile = csFiles[i];
+                if (m_textFilterFile.PassFilter(csFile.data())
+                    && ImGui::Selectable(csFile.data(), m_selectedIndex == i))
                 {
                     m_selectedIndex = i;
 
@@ -55,10 +56,29 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     m_csData.nodes.clear();
                     m_funcNodes.clear();
 
-                    std::string csPath = std::format("{}/{}", rootDirectory, csFiles[i]);
+                    std::string csPath = std::format("{}/{}", rootDirectory, csFile);
                     CS_Parser::parse(csPath, m_csData, &m_csError);
-                    // injectPlaySoundFunc(737, "kotar\\zdravstvuj_rasskazhi.ogg");
-                    // CS_Parser::save(std::format("{}.new", csPath), m_csData, &m_csError);
+
+                    // std::set<size_t> uniquePhrases;
+                    // for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
+                    //     const CS_Node& node = m_csData.nodes[i];
+                    //     if (node.opcode == kFunc && (uint32_t)node.value == kD_Say) {
+                    //         auto personName = StringUtils::filename(csFile);
+                    //         personName = personName.substr(0, personName.size() - 7); // Удаляем .age.cs
+                    //         const CS_Node& phraseNode = m_csData.nodes[node.args[0]];
+                    //         int phraseIndex = phraseNode.value;
+                    //         auto soundFile = std::format("{}\\phrase_{}.ogg", personName, phraseIndex);
+                    //         injectPlaySoundFunc(i + 2, soundFile);
+
+                    //         if (!uniquePhrases.contains(phraseIndex)) {
+                    //             LogFmt("phrase_{}: {}", phraseIndex, m_sdbDialogs.strings.at(phraseIndex));
+                    //             uniquePhrases.insert(phraseIndex);
+                    //         }
+                    //     }
+                    // }
+
+                    // if (!CS_Parser::save(std::format("C:/Games/Холодные Небеса/{}", csFile), m_csData, &m_csError))
+                    //     LogFmt("CS_Parser::save error: {}", m_csError);
 
                     // Заполнение данных для фильтрации функций
                     m_funcNodes.resize(m_csData.nodes.size(), false);
