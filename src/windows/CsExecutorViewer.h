@@ -24,5 +24,5 @@ public:
 private:
     std::unique_ptr<CsExecutor> m_pExecutor = nullptr;
     bool m_isDialog = false;
-    bool m_onlyDialogRestart = false;
+    bool m_resetAllVariables = false;
 };

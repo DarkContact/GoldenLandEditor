@@ -101,7 +101,7 @@ void CsExecutor::readScriptVariables()
     }
 }
 
-void CsExecutor::restart(bool onlyDialogRestart)
+void CsExecutor::restart(bool resetAll)
 {
     m_counter = 0;
     m_currentNodeIndex = 0;
@@ -109,11 +109,12 @@ void CsExecutor::restart(bool onlyDialogRestart)
     m_funcs.clear();
     m_dialogFuncs.clear();
 
-    if (onlyDialogRestart) {
+    if (resetAll) {
+        readScriptVariables();
+    } else {
+        // Необходимо для корректной работы диалогов
         m_scriptVars["LastPhrase"] = 0u;
         m_scriptVars["LastAnswer"] = 0u;
-    } else {
-        readScriptVariables();
     }
 }
 

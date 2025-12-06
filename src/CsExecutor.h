@@ -20,7 +20,7 @@ public:
 
     static bool readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error);
 
-    void restart(bool onlyDialogRestart = false);
+    void restart(bool resetAll);
 
     enum ExecuteStatus {
         kStart,
