@@ -206,6 +206,7 @@ bool CsExecutor::next()
     ++m_counter;
 
     const CS_Node& currentNode = m_nodes[m_currentNodeIndex];
+    m_executedNodeIndexes.insert(m_currentNodeIndex);
 
     OpcodeGroup group = csOpcodeToGroup(currentNode.opcode);
     if (group == kLogical) {
@@ -247,6 +248,8 @@ bool CsExecutor::next()
             }
 
             LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+            m_executedNodeIndexes.insert(currentNode.a);
+            m_executedNodeIndexes.insert(currentNode.b);
             m_currentNodeIndex = currentNode.d;
         } else {
             if (currentNode.a == -1 || currentNode.b == -1) {
@@ -279,8 +282,8 @@ void CsExecutor::userInput(uint8_t answer) {
     m_scriptVars["LastAnswer"] = (uint32_t)m_nodes[answerNode.args.front()].value;
 
     m_dialogFuncs.clear();
-    m_currentStatus = kRestart;
 
+    m_currentStatus = kRestart;
     m_counter = 0;
     m_currentNodeIndex = 0;
 }
@@ -322,6 +325,8 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
     }
     LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
     //LogFmt("isLeftValue: {}, isRightValue: {}, isTrue: {}", isLeftValue, isRightValue, isTrue);
+    m_executedNodeIndexes.insert(node.a);
+    m_executedNodeIndexes.insert(node.b);
     return isTrue;
 }
 
@@ -371,6 +376,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     }
     LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
     //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
+    m_executedNodeIndexes.insert(node.a);
+    m_executedNodeIndexes.insert(node.b);
     return isTrue;
 }
 
@@ -388,6 +395,10 @@ int CsExecutor::funcOpcode(const CS_Node& node)
         return RS_GetPersonParameterI(arg0, arg1);
     }
 
+    for (auto arg : node.args) {
+        if (arg == -1) break;
+        m_executedNodeIndexes.insert(arg);
+    }
     return 0;
 }
 
@@ -416,6 +427,14 @@ const char* CsExecutor::currentStatusString() const
         case kInfinity: return "Infinity";
     }
     return "Unknown";
+}
+
+bool CsExecutor::isNodeExecuted(int index) const {
+    return m_executedNodeIndexes.contains(index);
+}
+
+int CsExecutor::executedPercent() const {
+    return ((float)m_executedNodeIndexes.size() / (float)m_nodes.size()) * 100.0f;
 }
 
 UMapStringVar_t& CsExecutor::scriptVars() {

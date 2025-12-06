@@ -142,3 +142,19 @@ void CsExecutorViewer::update(bool& showWindow,
         ImGui::End();
     }
 }
+
+bool CsExecutorViewer::isNodeExecuted(int index) const
+{
+    if (m_pExecutor) {
+        return m_pExecutor->isNodeExecuted(index);
+    }
+    return false;
+}
+
+int CsExecutorViewer::executedPercent() const
+{
+    if (m_pExecutor) {
+        return m_pExecutor->executedPercent();
+    }
+    return 0;
+}

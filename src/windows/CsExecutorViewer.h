@@ -18,6 +18,9 @@ public:
                 const UMapStringVar_t& globalVars,
                 const SDB_Data& dialogsPhrases);
 
+    bool isNodeExecuted(int index) const;
+    int executedPercent() const;
+
 private:
     std::unique_ptr<CsExecutor> m_pExecutor = nullptr;
     bool m_isDialog = false;

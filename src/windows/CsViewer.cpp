@@ -124,8 +124,11 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                         || !m_showOnlyFunctions) {
                         if (m_textFilterString.PassFilter(nodeInfoBuffer)) {
                             bool isFunc = node.opcode == kFunc;
-                            ImGui::TextColored(isFunc ? m_funcTextColor
-                                                      : style.Colors[ImGuiCol_Text], "[i:%zu] %s", i, nodeInfoBuffer);
+                            bool isExec = m_csExecutorViewer.isNodeExecuted(i);
+                            ImVec4 textColor = isExec ? m_execTextColor
+                                                      : (isFunc ? m_funcTextColor
+                                                                : style.Colors[ImGuiCol_Text]);
+                            ImGui::TextColored(textColor, "[i:%zu] %s", i, nodeInfoBuffer);
                         }
                     }
                 }
@@ -147,6 +150,9 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
             }
             ImGui::EndDisabled();
         }
+
+        ImGui::SameLine();
+        ImGui::Text("Executed: %d%%", m_csExecutorViewer.executedPercent());
 
         ImGui::EndChild();
 

@@ -2,6 +2,7 @@
 #include <string_view>
 #include <vector>
 #include <span>
+#include <set>
 
 #include "parsers/CS_Parser.h"
 #include "Types.h"
@@ -42,6 +43,9 @@ public:
     ExecuteStatus currentStatus() const;
     const char* currentStatusString() const;
 
+    bool isNodeExecuted(int index) const;
+    int executedPercent() const;
+
 private:
     void readScriptVariables();
 
@@ -56,11 +60,12 @@ private:
     UMapStringVar_t m_scriptVars;
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
-    std::unordered_map<std::string, int, StringViewHash, StringViewEqual> m_heroStats;
+
+    std::unordered_map<std::string, int, StringViewHash, StringViewEqual> m_heroStats; // TODO: Нужна реализация
+    std::set<int> m_executedNodeIndexes;
 
     int m_currentNodeIndex = 0;
     ExecuteStatus m_currentStatus = kStart;
-
-    int m_counter = 0;
     static constexpr int kStopCounter = 10000;
+    int m_counter = 0;
 };
