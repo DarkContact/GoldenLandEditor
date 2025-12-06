@@ -126,7 +126,7 @@ std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     return result;
 }
 
-void StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept {
+size_t StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept {
     assert(!buffer.empty());
 
     size_t pos = 0;
@@ -141,6 +141,7 @@ void StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<ch
         pos += len;
     }
     buffer[pos] = '\0';
+    return pos;
 }
 
 std::string_view StringUtils::filename(std::string_view path) noexcept

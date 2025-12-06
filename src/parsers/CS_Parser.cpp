@@ -31,7 +31,7 @@ void CS_Node::toStringBuffer(std::span<char> buffer, bool showDialogPhrases, con
     } else if (opcode == kStringLiteral) {
         char varLiteral[320];
         StringUtils::decodeWin1251ToUtf8Buffer(text, varLiteral);
-        StringUtils::formatToBuffer(additionInfo, "txt: {}", varLiteral);
+        StringUtils::formatToBuffer(additionInfo, "txt: \"{}\"", varLiteral);
     } else if (opcode == kStringVarName) {
         StringUtils::formatToBuffer(additionInfo, "txt: {}", text);
     } else if (opcode == kFunc) {

@@ -159,7 +159,9 @@ std::vector<std::string> CsExecutor::funcsInfo() const {
 
             const CS_Node node = m_nodes[idx];
             if (node.opcode == kStringLiteral) {
-                offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.text);
+                char varLiteral[320];
+                StringUtils::decodeWin1251ToUtf8Buffer(node.text, varLiteral);
+                offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "\"{}\", ", varLiteral);
             } else if (node.opcode == kNumberLiteral) {
                 offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", node.value);
             } else if (node.opcode == kStringVarName) {
