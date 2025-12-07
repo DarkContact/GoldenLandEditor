@@ -263,6 +263,13 @@ void Application::mainLoop() {
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
         }
 
+        // NOTE: Для генерации озвучки
+        // static bool csViewerOnce = false;
+        // if (!backgroundWork && !csViewerOnce) {
+        //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+        //     csViewerOnce = true;
+        // }
+
         if (showLevelsWindow && !m_rootDirContext.singleLevelNames.empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
                                                   m_rootDirContext.singleLevelNames,

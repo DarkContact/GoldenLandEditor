@@ -15,9 +15,11 @@ public:
     CsViewer();
 
     void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
-    void injectPlaySoundFunc(size_t insertPos, std::string_view soundFile);
+    void injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
 
 private:
+    void injectPlaySoundFunc(size_t insertPos, std::string_view soundFile);
+
     int m_selectedIndex = -1;
     ImGuiTextFilter m_textFilterFile;
     ImGuiTextFilter m_textFilterString;

@@ -5,6 +5,7 @@
 #include "enums/CsFunctions.h"
 #include "enums/CsOpcodes.h"
 #include "utils/DebugLog.h"
+#include "utils/FileUtils.h"
 #include "utils/TracyProfiler.h"
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
@@ -58,27 +59,6 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
                     std::string csPath = std::format("{}/{}", rootDirectory, csFile);
                     CS_Parser::parse(csPath, m_csData, &m_csError);
-
-                    // std::set<size_t> uniquePhrases;
-                    // for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
-                    //     const CS_Node& node = m_csData.nodes[i];
-                    //     if (node.opcode == kFunc && (uint32_t)node.value == kD_Say) {
-                    //         auto personName = StringUtils::filename(csFile);
-                    //         personName = personName.substr(0, personName.size() - 7); // Удаляем .age.cs
-                    //         const CS_Node& phraseNode = m_csData.nodes[node.args[0]];
-                    //         int phraseIndex = phraseNode.value;
-                    //         auto soundFile = std::format("{}\\phrase_{}.ogg", personName, phraseIndex);
-                    //         injectPlaySoundFunc(i + 2, soundFile);
-
-                    //         if (!uniquePhrases.contains(phraseIndex)) {
-                    //             LogFmt("phrase_{}: {}", phraseIndex, m_sdbDialogs.strings.at(phraseIndex));
-                    //             uniquePhrases.insert(phraseIndex);
-                    //         }
-                    //     }
-                    // }
-
-                    // if (!CS_Parser::save(std::format("C:/Games/Холодные Небеса/{}", csFile), m_csData, &m_csError))
-                    //     LogFmt("CS_Parser::save error: {}", m_csError);
 
                     // Заполнение данных для фильтрации функций
                     m_funcNodes.resize(m_csData.nodes.size(), false);
@@ -196,6 +176,62 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         m_onceWhenOpen = false;
         m_onceWhenClose = true;
     }
+}
+
+void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
+{
+    if (saveRootDirectory == rootDirectory) return;
+
+    std::string error;
+    std::string sdbPath = std::format("{}/sdb/dialogs/dialogsphrases.sdb", rootDirectory);
+    SDB_Data sdbDialogs;
+    if (!SDB_Parser::parse(sdbPath, sdbDialogs, &error))
+        LogFmt("Load dialogsphrases.sdb error: {}", error);
+
+    std::string_view prefix = "scripts\\dialogs\\";
+    std::string_view suffix = ".age.cs";
+
+    std::string phrases;
+    for (std::string_view csFile : csFiles) {
+        CS_Data csData;
+
+        std::string csPath = std::format("{}/{}", rootDirectory, csFile);
+
+        auto personName = csFile.substr(0, csFile.size() - suffix.size()); // Удаляем .age.cs
+        personName = personName.substr(prefix.size(), personName.size()); // Удаляем префикс
+        if (!CS_Parser::parse(csPath, csData, &error))
+            LogFmt("CS_Parser::parse error: {}", error);
+
+        std::set<size_t> uniquePhrases;
+        phrases += std::format("// {}\n", personName);
+        for (size_t i = 0; i < csData.nodes.size(); ++i) {
+            const CS_Node& node = csData.nodes[i];
+            if (node.opcode == kFunc && (uint32_t)node.value == kD_Say) {
+                const CS_Node& phraseNode = csData.nodes[node.args[0]];
+                int phraseIndex = phraseNode.value;
+                // auto soundFile = std::format("{}\\phrase_{}.ogg", personName, phraseIndex);
+                // injectPlaySoundFunc(i + 2, soundFile);
+
+                if (!uniquePhrases.contains(phraseIndex)) {
+                    std::string_view sayPhrase = "[NOT FOUND!]";
+                    if (auto it = sdbDialogs.strings.find(phraseIndex); it != sdbDialogs.strings.cend()) {
+                        sayPhrase = it->second;
+                    }
+
+                    phrases += std::format("phrase_{}: {}\n", phraseIndex, sayPhrase);
+                    uniquePhrases.insert(phraseIndex);
+                }
+            }
+        }
+        phrases += "\n";
+
+        // if (!CS_Parser::save(std::format("{}/{}", saveRootDirectory, csFile), csData, &error))
+        //     LogFmt("CS_Parser::save error: {}", error);
+    }
+
+    std::span<const uint8_t> fileData(reinterpret_cast<const uint8_t*>(phrases.data()), phrases.size());
+    if (!FileUtils::saveFile(std::format("{}/phrases.txt", saveRootDirectory), fileData, &error))
+        LogFmt("FileUtils::saveFile error: {}", error);
 }
 
 void CsViewer::injectPlaySoundFunc(size_t insertPos, std::string_view soundFile)
