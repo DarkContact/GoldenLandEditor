@@ -1,5 +1,6 @@
 #include "CsViewer.h"
 
+#include <filesystem>
 #include <format>
 
 #include "enums/CsFunctions.h"
@@ -203,14 +204,15 @@ void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirect
             LogFmt("CS_Parser::parse error: {}", error);
 
         std::set<size_t> uniquePhrases;
-        phrases += std::format("// {}\n", personName);
+        bool havePhrases = false;
+        std::string csPhrases;
         for (size_t i = 0; i < csData.nodes.size(); ++i) {
             const CS_Node& node = csData.nodes[i];
             if (node.opcode == kFunc && (uint32_t)node.value == kD_Say) {
                 const CS_Node& phraseNode = csData.nodes[node.args[0]];
                 int phraseIndex = phraseNode.value;
-                // auto soundFile = std::format("{}\\phrase_{}.ogg", personName, phraseIndex);
-                // injectPlaySoundFunc(i + 2, soundFile);
+                auto soundFile = std::format("{}\\phrase_{}.ogg", personName, phraseIndex);
+                injectPlaySoundFunc(csData, i + 2, soundFile);
 
                 if (!uniquePhrases.contains(phraseIndex)) {
                     std::string_view sayPhrase = "[NOT FOUND!]";
@@ -218,15 +220,22 @@ void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirect
                         sayPhrase = it->second;
                     }
 
-                    phrases += std::format("phrase_{}: {}\n", phraseIndex, sayPhrase);
+                    csPhrases += std::format("phrase_{}: {}\n", phraseIndex, sayPhrase);
                     uniquePhrases.insert(phraseIndex);
+                    havePhrases = true;
                 }
             }
         }
-        phrases += "\n";
+        if (havePhrases) {
+            csPhrases = std::format("// {}\n", personName) + csPhrases + "\n";
+            phrases += csPhrases;
+        }
 
-        // if (!CS_Parser::save(std::format("{}/{}", saveRootDirectory, csFile), csData, &error))
-        //     LogFmt("CS_Parser::save error: {}", error);
+        auto saveCsFileString = std::format("{}/{}", saveRootDirectory, csFile);
+        std::filesystem::path saveCsFilePath(StringUtils::toUtf8View(saveCsFileString));
+        std::filesystem::create_directories(saveCsFilePath.parent_path());
+        if (!CS_Parser::save(StringUtils::fromUtf8View(saveCsFilePath.u8string()), csData, &error))
+            LogFmt("CS_Parser::save error: {}", error);
     }
 
     std::span<const uint8_t> fileData(reinterpret_cast<const uint8_t*>(phrases.data()), phrases.size());
@@ -234,7 +243,7 @@ void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirect
         LogFmt("FileUtils::saveFile error: {}", error);
 }
 
-void CsViewer::injectPlaySoundFunc(size_t insertPos, std::string_view soundFile)
+void CsViewer::injectPlaySoundFunc(CS_Data& csData, size_t insertPos, std::string_view soundFile)
 {
     CS_Node assign;
     assign.opcode = kAssign;
@@ -256,7 +265,7 @@ void CsViewer::injectPlaySoundFunc(size_t insertPos, std::string_view soundFile)
     strLit.text = std::string(soundFile);
 
     std::array<CS_Node, 4> playSoundNodes = {assign, strVar, func, strLit};
-    m_csData.insertNodes(insertPos, playSoundNodes);
+    csData.insertNodes(insertPos, playSoundNodes);
 
-    m_csData.nodes[insertPos - 4].c = m_csData.nodes[insertPos - 4].d = insertPos;
+    csData.nodes[insertPos - 4].c = csData.nodes[insertPos - 4].d = insertPos;
 }

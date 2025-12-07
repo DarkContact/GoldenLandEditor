@@ -151,6 +151,10 @@ std::string_view StringUtils::filename(std::string_view path) noexcept
                                            : path.substr(pos + 1);
 }
 
-std::u8string_view StringUtils::utf8View(std::string_view input) noexcept {
+std::u8string_view StringUtils::toUtf8View(std::string_view input) noexcept {
     return {(char8_t*)input.data(), input.size()};
+}
+
+std::string_view StringUtils::fromUtf8View(std::u8string_view input) noexcept {
+    return {(char*)input.data(), input.size()};
 }

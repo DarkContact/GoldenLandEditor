@@ -47,7 +47,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, levelData.minimap);
 
     std::string laoPath = levelLao(rootDirectory, levelData.sefData.pack);
-    if (std::filesystem::exists(StringUtils::utf8View(laoPath))) {
+    if (std::filesystem::exists(StringUtils::toUtf8View(laoPath))) {
         std::string laoError;
         levelData.laoData = LAO_Parser::parse(laoPath, &laoError);
         if (!levelData.laoData) {
@@ -60,8 +60,8 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     int animationLaoCount = levelData.laoData ? levelData.laoData->infos.size() : 0;
     int animationFilesCount = 0;
     std::string levelAnimationDirPath = levelAnimationDir(rootDirectory, levelData.sefData.pack);
-    if (std::filesystem::exists(StringUtils::utf8View(levelAnimationDirPath))) {
-        animationFilesCount = std::distance(std::filesystem::directory_iterator(StringUtils::utf8View(levelAnimationDirPath)),
+    if (std::filesystem::exists(StringUtils::toUtf8View(levelAnimationDirPath))) {
+        animationFilesCount = std::distance(std::filesystem::directory_iterator(StringUtils::toUtf8View(levelAnimationDirPath)),
                                             std::filesystem::directory_iterator{});
     }
     bool animationOk = animationDescCount == animationLaoCount && animationLaoCount == animationFilesCount;

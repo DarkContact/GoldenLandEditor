@@ -57,10 +57,10 @@ std::vector<std::string> Resources::levelNames(LevelType type) const
     std::vector<std::string> results;
     try {
         auto dir = std::format("{}/levels/{}", m_rootDirectory, levelTypeToString(type));
-        if (!fs::exists(StringUtils::utf8View(dir)))
+        if (!fs::exists(StringUtils::toUtf8View(dir)))
             return results;
 
-        for (const auto& entry : fs::directory_iterator(StringUtils::utf8View(dir))) {
+        for (const auto& entry : fs::directory_iterator(StringUtils::toUtf8View(dir))) {
             results.push_back(entry.path().filename().string());
         }
     } catch (const fs::filesystem_error& ex) {
@@ -92,12 +92,12 @@ std::vector<std::string> Resources::csFiles() const
 std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {
     std::vector<std::string> files;
     for (int index : indices) {
-        auto dir = StringUtils::utf8View(m_mainDirectories[index]);
+        auto dir = StringUtils::toUtf8View(m_mainDirectories[index]);
         if (!fs::is_directory(dir)) continue;
 
         for (const auto& entry : fs::recursive_directory_iterator(dir)) { // TODO: Добавить версию с fs::directory_iterator
             if (entry.path().extension() == extension) {
-                files.push_back(entry.path().lexically_relative(StringUtils::utf8View(m_rootDirectory)).string());
+                files.push_back(entry.path().lexically_relative(StringUtils::toUtf8View(m_rootDirectory)).string());
             }
         }
     }
@@ -111,13 +111,13 @@ std::vector<std::string> Resources::filesWithExtensionAsync(std::initializer_lis
     // Запускаем асинхронные задачи для каждой директории
     for (int index : indices) {
         futures.push_back(std::async(std::launch::async, [this, index, extension]() {
-            auto dir = StringUtils::utf8View(m_mainDirectories[index]);
+            auto dir = StringUtils::toUtf8View(m_mainDirectories[index]);
             std::vector<std::string> localFiles;
             if (!fs::is_directory(dir)) return localFiles;
 
             for (const auto& entry : fs::recursive_directory_iterator(dir)) {
                 if (entry.path().extension() == extension) {
-                    localFiles.push_back(entry.path().lexically_relative(StringUtils::utf8View(m_rootDirectory)).string());
+                    localFiles.push_back(entry.path().lexically_relative(StringUtils::toUtf8View(m_rootDirectory)).string());
                 }
             }
             return localFiles;

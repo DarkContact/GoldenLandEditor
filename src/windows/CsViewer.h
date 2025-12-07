@@ -18,7 +18,7 @@ public:
     void injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
 
 private:
-    void injectPlaySoundFunc(size_t insertPos, std::string_view soundFile);
+    void injectPlaySoundFunc(CS_Data& csData, size_t insertPos, std::string_view soundFile);
 
     int m_selectedIndex = -1;
     ImGuiTextFilter m_textFilterFile;

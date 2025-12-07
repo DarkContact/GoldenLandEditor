@@ -34,7 +34,8 @@ public:
     static void forEachLine(std::string_view buffer, Callback&& callback) noexcept;
 
     static std::string_view filename(std::string_view path) noexcept;
-    static std::u8string_view utf8View(std::string_view input) noexcept;
+    static std::u8string_view toUtf8View(std::string_view input) noexcept;
+    static std::string_view fromUtf8View(std::u8string_view input) noexcept;
 
     template <typename... Args>
     static size_t formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
