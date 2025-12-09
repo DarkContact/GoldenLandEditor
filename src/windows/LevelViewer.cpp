@@ -58,6 +58,9 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             if (ImGui::MenuItem("Sounds", "S", level.data().imgui.showSounds)) {
                 level.data().imgui.showSounds = !level.data().imgui.showSounds;
             }
+            if (ImGui::MenuItem("Triggers", "Alt", level.data().imgui.showTriggers)) {
+                level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+            }
             ImGui::EndMenu();
         }
 
@@ -143,6 +146,9 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_S, false)) {
             level.data().imgui.showSounds = !level.data().imgui.showSounds;
         }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiMod_Alt, false)) {
+            level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+        }
 
         ImGuiIO& io = ImGui::GetIO();
         if (level.data().imgui.showMapTiles) {
@@ -194,6 +200,9 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     }
     if (level.data().imgui.showSounds) {
         drawSounds(level, startPos);
+    }
+    if (level.data().imgui.showTriggers) {
+        drawTriggers(level, startPos);
     }
     if (level.data().imgui.showMapTiles) {
         drawMapTiles(level, startPos);
@@ -1011,5 +1020,46 @@ void LevelViewer::drawSounds(Level& level, ImVec2 drawPosition)
 
         drawList->AddRectFilled(position, {position.x + Level::chunkWidth, position.y + Level::chunkHeight}, IM_COL32(255, 255, 255, fullAlpha ? 192 : 64));
         drawList->AddRect(position, {position.x + Level::chunkWidth, position.y + Level::chunkHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+    }
+}
+
+void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
+{
+    Tracy_ZoneScoped;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImRect windowClipRect = ImGui::GetCurrentWindow()->ClipRect;
+
+    for (const LevelTrigger& trigger : level.data().triggers) {
+        ImVec2 triggerPosition{drawPosition.x + trigger.description.position.x,
+                               drawPosition.y + trigger.description.position.y};
+        ImRect triggerBox = {triggerPosition, {triggerPosition.x + trigger.texture->w, triggerPosition.y + trigger.texture->h}};
+
+        if (!windowClipRect.Overlaps(triggerBox)) { continue; }
+
+        ImGui::SetCursorScreenPos(triggerPosition);
+
+        //SDL_SetTextureBlendMode(trigger.texture.get(), SDL_BLENDMODE_ADD);
+        ImVec4 tintColor{1, 1, 1, 64.0f / 255.0f};
+        ImGui::ImageWithBg((ImTextureID)trigger.texture.get(),
+                           ImVec2(trigger.texture->w, trigger.texture->h),
+                           ImVec2(0, 0), ImVec2(1, 1), {0, 0, 0, 0}, tintColor);
+
+        if (leftMouseDownOnLevel(level) &&
+            triggerBox.Contains(ImGui::GetMousePos())) {
+
+            drawList->AddRect(triggerBox.Min, triggerBox.Max, IM_COL32(255, 228, 0, 192));
+
+            ImGuiWidgets::SetTooltipStacked("[TRIGGER]\n"
+                                            "Name: %s\n"
+                                            "Position: %dx%d\n"
+                                            "Index: %u\n"
+                                            "Size: %dx%d\n"
+                                            "Params: %u %u",
+                                            trigger.description.name.c_str(),
+                                            trigger.description.position.x, trigger.description.position.y,
+                                            trigger.description.number,
+                                            trigger.texture->w, trigger.texture->h,
+                                            trigger.description.param1, trigger.description.param2);
+        }
     }
 }

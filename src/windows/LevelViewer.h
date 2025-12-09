@@ -33,4 +33,5 @@ private:
     void drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine);
     void drawAnimations(Level& level, ImVec2 drawPosition);
     void drawSounds(Level& level, ImVec2 drawPosition);
+    void drawTriggers(Level& level, ImVec2 drawPosition);
 };
