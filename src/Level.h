@@ -75,6 +75,14 @@ struct LevelAnimation : public BaseAnimation {
     LVL_Description& description;  // Из lvlData
 };
 
+struct LevelTrigger {
+    LevelTrigger(LVL_Description& description) :
+        description(description) {}
+
+    LVL_Description& description;  // Из lvlData
+    Texture texture;
+};
+
 struct LevelData {
     std::string name;
     LevelType type;
@@ -86,7 +94,7 @@ struct LevelData {
     SDB_Data sdbData;
     std::optional<LAO_Data> laoData;
     std::vector<LevelAnimation> animations;
-    std::vector<Texture> triggers;
+    std::vector<LevelTrigger> triggers;
     LevelImgui imgui;
 };
 
