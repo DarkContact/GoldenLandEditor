@@ -69,8 +69,8 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         LogFmt("Animation counts mismatch (animationDescCount: {}, animationLaoCount: {}, animationFilesCount: {})", animationDescCount, animationLaoCount, animationFilesCount);
     }
 
-    int minimalSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
-    std::span<LVL_Description> animationDescriptionView(levelData.lvlData.animationDescriptions.data(), minimalSize);
+    int minimalAnimationSize = std::min(std::min(animationDescCount, animationLaoCount), animationFilesCount);
+    std::span<LVL_Description> animationDescriptionView(levelData.lvlData.animationDescriptions.data(), minimalAnimationSize);
 
     // Отсортируем описание анимаций
     if (animationDescCount >= 2) {
@@ -81,7 +81,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
                   });
     }
 
-    for (int i = 0; i < minimalSize; ++i) {
+    for (int i = 0; i < minimalAnimationSize; ++i) {
         std::string levelAnimationPath = levelAnimation(rootDirectory, levelData.sefData.pack, i);
         LevelAnimation animation(levelData.lvlData.animationDescriptions.at(i));
         animation.delayMs = levelData.laoData->infos[i].delay;
@@ -90,6 +90,41 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
             return {};
         }
         levelData.animations.push_back(std::move(animation));
+    }
+
+    // Загрузка тригеров
+    int triggerDescCount = levelData.lvlData.triggerDescriptions.size();
+    int triggerFilesCount = 0;
+    std::string levelTriggerDirPath = levelTriggerDir(rootDirectory, levelData.sefData.pack);
+    if (std::filesystem::exists(StringUtils::toUtf8View(levelTriggerDirPath))) {
+        triggerFilesCount = std::distance(std::filesystem::directory_iterator(StringUtils::toUtf8View(levelTriggerDirPath)),
+                                            std::filesystem::directory_iterator{});
+    }
+    bool triggersOk = triggerFilesCount == triggerDescCount;
+    if (!triggersOk) {
+        LogFmt("Trigger counts mismatch (triggerDescCount: {}, triggerFilesCount: {})", triggerDescCount, triggerFilesCount);
+    }
+
+    int minimalTriggerSize = std::min(triggerDescCount, triggerFilesCount);
+    std::span<LVL_Description> triggerDescriptionView(levelData.lvlData.triggerDescriptions.data(), minimalTriggerSize);
+
+    // Отсортируем описание триггеров
+    if (animationDescCount >= 2) {
+        std::sort(triggerDescriptionView.begin(),
+                  triggerDescriptionView.end(),
+                  [] (const LVL_Description& left, const LVL_Description& right) {
+                      return left.number < right.number;
+                  });
+    }
+
+    for (int i = 0; i < minimalTriggerSize; ++i) {
+        std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, i);
+        Texture trigger;
+        if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, trigger, error)) {
+            LogFmt("Loading texture for trigger failed. {}", *error);
+            return {};
+        }
+        levelData.triggers.push_back(std::move(trigger));
     }
 
     return std::make_optional(std::move(levelObj));
@@ -158,4 +193,14 @@ std::string Level::levelAnimationDir(std::string_view rootDirectory, std::string
 std::string Level::levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index)
 {
     return std::format("{}/levels/pack/{}/bitmaps/animated/anim_{}.csx", rootDirectory, levelPack, index);
+}
+
+std::string Level::levelTriggerDir(std::string_view rootDirectory, std::string_view levelPack)
+{
+    return std::format("{}/levels/pack/{}/bitmaps/triggers", rootDirectory, levelPack);
+}
+
+std::string Level::levelTrigger(std::string_view rootDirectory, std::string_view levelPack, int index)
+{
+    return std::format("{}/levels/pack/{}/bitmaps/triggers/trigger_{}.csx", rootDirectory, levelPack, index);
 }

@@ -86,6 +86,7 @@ struct LevelData {
     SDB_Data sdbData;
     std::optional<LAO_Data> laoData;
     std::vector<LevelAnimation> animations;
+    std::vector<Texture> triggers;
     LevelImgui imgui;
 };
 
@@ -128,6 +129,8 @@ private:
     static std::string levelLao(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelAnimationDir(std::string_view rootDirectory, std::string_view levelPack);
     static std::string levelAnimation(std::string_view rootDirectory, std::string_view levelPack, int index);
+    static std::string levelTriggerDir(std::string_view rootDirectory, std::string_view levelPack);
+    static std::string levelTrigger(std::string_view rootDirectory, std::string_view levelPack, int index);
 
     LevelData m_data;
 };
