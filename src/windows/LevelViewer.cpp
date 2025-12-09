@@ -785,7 +785,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
         drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
 
         std::string_view personName = level.data().sdbData.strings.empty() ? person.techName
-                                                                           : level.data().sdbData.strings[person.literaryNameIndex];
+                                                                           : level.data().sdbData.strings.at(person.literaryNameIndex);
 
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
         const ImVec2 textSize = ImGui::CalcTextSize(personName.data());
@@ -1030,16 +1030,26 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
     ImRect windowClipRect = ImGui::GetCurrentWindow()->ClipRect;
 
     for (const LevelTrigger& trigger : level.data().triggers) {
-        ImVec2 triggerPosition{drawPosition.x + trigger.description.position.x,
-                               drawPosition.y + trigger.description.position.y};
+        ImVec2 triggerPosition{drawPosition.x + trigger.lvlDescription.position.x,
+                               drawPosition.y + trigger.lvlDescription.position.y};
         ImRect triggerBox = {triggerPosition, {triggerPosition.x + trigger.texture->w, triggerPosition.y + trigger.texture->h}};
 
         if (!windowClipRect.Overlaps(triggerBox)) { continue; }
 
         ImGui::SetCursorScreenPos(triggerPosition);
 
-        //SDL_SetTextureBlendMode(trigger.texture.get(), SDL_BLENDMODE_ADD);
-        ImVec4 tintColor{1, 1, 1, 64.0f / 255.0f};
+        int alpha = 64;
+        int blendMode = SDL_BLENDMODE_BLEND;
+        if (trigger.sefDescription) {
+            bool isTransition = trigger.sefDescription->get().isTransition.value_or(false);
+            if (isTransition) {
+                alpha = 255;
+                blendMode = SDL_BLENDMODE_ADD;
+            }
+        }
+
+        SDL_SetTextureBlendMode(trigger.texture.get(), blendMode);
+        ImVec4 tintColor{1, 1, 1, alpha / 255.0f};
         ImGui::ImageWithBg((ImTextureID)trigger.texture.get(),
                            ImVec2(trigger.texture->w, trigger.texture->h),
                            ImVec2(0, 0), ImVec2(1, 1), {0, 0, 0, 0}, tintColor);
@@ -1049,17 +1059,24 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 
             drawList->AddRect(triggerBox.Min, triggerBox.Max, IM_COL32(255, 228, 0, 192));
 
+            std::string_view triggerName = "[NONE]";
+            if (!level.data().sdbData.strings.empty() && trigger.sefDescription) {
+                triggerName = level.data().sdbData.strings.at(trigger.sefDescription->get().literaryNameIndex);
+            }
+
             ImGuiWidgets::SetTooltipStacked("[TRIGGER]\n"
                                             "Name: %s\n"
+                                            "LitName: %s\n"
                                             "Position: %dx%d\n"
                                             "Index: %u\n"
                                             "Size: %dx%d\n"
                                             "Params: %u %u",
-                                            trigger.description.name.c_str(),
-                                            trigger.description.position.x, trigger.description.position.y,
-                                            trigger.description.number,
+                                            trigger.lvlDescription.name.c_str(),
+                                            triggerName.data(),
+                                            trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
+                                            trigger.lvlDescription.number,
                                             trigger.texture->w, trigger.texture->h,
-                                            trigger.description.param1, trigger.description.param2);
+                                            trigger.lvlDescription.param1, trigger.lvlDescription.param2);
         }
     }
 }

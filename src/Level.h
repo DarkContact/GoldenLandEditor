@@ -78,9 +78,10 @@ struct LevelAnimation : public BaseAnimation {
 
 struct LevelTrigger {
     LevelTrigger(LVL_Description& description) :
-        description(description) {}
+        lvlDescription(description) {}
 
-    LVL_Description& description;  // Из lvlData
+    LVL_Description& lvlDescription;  // Из lvlData
+    std::optional<std::reference_wrapper<SEF_Trigger>> sefDescription;
     Texture texture;
 };
 

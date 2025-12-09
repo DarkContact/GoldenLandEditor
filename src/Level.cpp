@@ -108,7 +108,17 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
 
     for (int i = 0; i < levelData.lvlData.triggerDescriptions.size(); ++i) {
         LevelTrigger trigger(levelData.lvlData.triggerDescriptions.at(i));
-        std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, trigger.description.number);
+
+        if (auto it = std::find_if(levelData.sefData.triggers.begin(),
+                                   levelData.sefData.triggers.end(),
+                                   [&trigger](const SEF_Trigger& sefTrigger) {
+                                        return sefTrigger.techName == trigger.lvlDescription.name;
+                                   });
+            it != levelData.sefData.triggers.cend())
+        {
+            trigger.sefDescription = *it;
+        }
+        std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, trigger.lvlDescription.number);
         if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, trigger.texture, error)) {
             LogFmt("Loading texture for trigger failed. {}", *error);
             return {};
