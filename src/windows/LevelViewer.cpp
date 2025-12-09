@@ -1040,8 +1040,13 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 
         int alpha = 64;
         int blendMode = SDL_BLENDMODE_BLEND;
+        bool isTransition = false;
+        bool isVisible = false;
+        bool isActive = false;
         if (trigger.sefDescription) {
-            bool isTransition = trigger.sefDescription->get().isTransition.value_or(false);
+            isTransition = trigger.sefDescription->get().isTransition.value_or(false);
+            isVisible = trigger.sefDescription->get().isVisible.value_or(true);
+            isActive = trigger.sefDescription->get().isActive;
             if (isTransition) {
                 alpha = 255;
                 blendMode = SDL_BLENDMODE_ADD;
@@ -1070,13 +1075,19 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
                                             "Position: %dx%d\n"
                                             "Index: %u\n"
                                             "Size: %dx%d\n"
-                                            "Params: %u %u",
+                                            "Params: %u %u\n"
+                                            "IsTransition: %d\n"
+                                            "IsVisible: %d\n"
+                                            "IsActive: %d",
                                             trigger.lvlDescription.name.c_str(),
                                             triggerName.data(),
                                             trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
                                             trigger.lvlDescription.number,
                                             trigger.texture->w, trigger.texture->h,
-                                            trigger.lvlDescription.param1, trigger.lvlDescription.param2);
+                                            trigger.lvlDescription.param1, trigger.lvlDescription.param2,
+                                            isTransition,
+                                            isVisible,
+                                            isActive);
         }
     }
 }

@@ -72,6 +72,7 @@ struct SEF_Door {
     int literaryNameOpenIndex = -1;
     int literaryNameCloseIndex = -1;
     std::string cellsName;
+    std::optional<std::string> scriptName;
     std::optional<bool> isOpened;
 };
 

@@ -119,6 +119,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
             trigger.sefDescription = *it;
         }
         std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, trigger.lvlDescription.number);
+        // TODO: Сделать загрузку через cache, т.к. на уровне может быть несколько одинаковых текстур тригеров
         if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, trigger.texture, error)) {
             LogFmt("Loading texture for trigger failed. {}", *error);
             return {};

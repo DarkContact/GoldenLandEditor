@@ -251,6 +251,8 @@ void SEF_Parser::parseDoorLine(std::string_view rawLine, SEF_Data& data)
             currentDoor.cellsName = StringUtils::extractQuotedValue(value);
         } else if (key == "is_opened") {
             currentDoor.isOpened = StringUtils::toInt(value, 0);
+        } else if (key == "script_name") {
+            currentDoor.scriptName = StringUtils::extractQuotedValue(value);
         } else {
             LogFmt("Unknown key: {} (value: {})", key, value);
         }
