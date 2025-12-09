@@ -181,6 +181,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
 void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {
+    assert(saveRootDirectory != rootDirectory);
+    assert(std::filesystem::exists(StringUtils::toUtf8View(saveRootDirectory)));
     if (saveRootDirectory == rootDirectory) return;
 
     std::string error;
@@ -220,6 +222,11 @@ void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirect
                         sayPhrase = it->second;
                     }
 
+                    sayPhrase = StringUtils::trim(sayPhrase);
+                    if (sayPhrase.starts_with('*') && sayPhrase.ends_with('*')) {
+                        continue;
+                    }
+
                     csPhrases += std::format("phrase_{}: {}\n", phraseIndex, sayPhrase);
                     uniquePhrases.insert(phraseIndex);
                     havePhrases = true;
@@ -227,7 +234,7 @@ void CsViewer::injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirect
             }
         }
         if (havePhrases) {
-            csPhrases = std::format("// {}\n", personName) + csPhrases + "\n";
+            csPhrases = std::format("person: {}\n", personName) + csPhrases + "\n";
             phrases += csPhrases;
         }
 
