@@ -1,3 +1,5 @@
+## Таблица всех функций и переменных
+
 | Name                         | Type | Flags | Описание                                                           |
 |------------------------------|------|-------|--------------------------------------------------------------------|
 | add_ally                     | func | --S-- |                                                                    |
@@ -90,7 +92,7 @@
 | fetch_questbaselines         | func | -HS-N |                                                                    |
 | fetch_sounds                 | func | -HS-N |                                                                    |
 | fetch_sync_svars             | func | -HS-N |                                                                    |
-| fire_start                   | func | --S-- | Выполнить скрипт `Data\Test.scr`                                   |
+| fire_start                   | func | --S-- | Выполнить скрипт `Data\Test.scr`. Скрипт не видит чужие переменные |
 | fire_stop                    | func | --S-- |                                                                    |
 | game_load                    | func | ----- |                                                                    |
 | game_save                    | func | --S-- |                                                                    |
@@ -266,3 +268,10 @@
 | vk_up_arrow                  | var  | -H-C- |                                                                    |
 | vk_weapon_toggle             | var  | -H-C- |                                                                    |
 | zombie_time                  | var  | -H-C- |                                                                    |
+
+## Описание флагов
+- C - Cheats. Могут быть использованы только после установки sv_cheats 1
+- H - Host ?
+- S - Server ?
+- C - Const. Переменная read-only, возможно задать значение только через .ini файл 
+- N
