@@ -1,6 +1,7 @@
 #include "CS_Parser.h"
 
 #include <format>
+#include <cstring>
 #include <cassert>
 
 #include "enums/CsFunctions.h"

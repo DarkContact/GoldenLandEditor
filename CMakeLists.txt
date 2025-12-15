@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-# Гарантируем пересборку CMake при изменении файла
+# Гарантируем пересборку CMake при изменении файла версии
 set(VERSION_FILE "${CMAKE_SOURCE_DIR}/VERSION")
 set_property(DIRECTORY PROPERTY CMAKE_CONFIGURE_DEPENDS "${VERSION_FILE}")
 
@@ -18,6 +18,7 @@ option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
 
+# SDL3 Hint
 if(WIN32)
     if(MINGW OR CYGWIN)
         set(SDL3_SEARCH_HINT "${CMAKE_SOURCE_DIR}/external/SDL3_MinGW/cmake")
@@ -117,11 +118,25 @@ set_source_files_properties(
     "${CMAKE_SOURCE_DIR}/VERSION"
     PROPERTIES HEADER_FILE_ONLY TRUE
 )
+
 set_source_files_properties(
     src/Application.cpp
     PROPERTIES COMPILE_DEFINITIONS
     GOLDENLAND_VERSION_STRING="${PROJECT_VERSION}"
 )
+
+# Файлы ресурсов
+if(WIN32)
+    set(ICON_PATH "${CMAKE_SOURCE_DIR}/resources/icon.ico")
+
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/resources/resources.rc.in"
+        "${CMAKE_BINARY_DIR}/resources.rc"
+        @ONLY
+    )
+    target_sources(GoldenLandEditor PRIVATE "${CMAKE_BINARY_DIR}/resources.rc")
+endif()
+
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)
@@ -142,7 +157,6 @@ if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
         set_property(TARGET imgui PROPERTY MSVC_RUNTIME_LIBRARY ${STATIC_OPTIONS})
     endif()
 endif()
-
 
 if(GOLDENLAND_ENABLE_TRACY)
     include(FetchContent)

@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <charconv>
+#include <cstring>
 #include <cassert>
 
 using namespace std::literals::string_view_literals;
@@ -137,7 +138,7 @@ size_t StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<
         // Проверка на достаточность места
         assert(pos + len <= buffer.size() - 1);
 
-        memcpy(buffer.data() + pos, utf8View.data(), len);
+        std::memcpy(buffer.data() + pos, utf8View.data(), len);
         pos += len;
     }
     buffer[pos] = '\0';
