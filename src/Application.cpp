@@ -12,6 +12,7 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 #include "Resources.h"
+#include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
 #include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
@@ -150,6 +151,11 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
 
     ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
     ImGui_ImplSDLRenderer3_Init(m_renderer);
+
+    // Встраиваемый шрифт
+    ImFontConfig embeddedFontConfig;
+    embeddedFontConfig.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF((void*)carlito_ttf, carlito_ttf_size, 0.0f, &embeddedFontConfig);
 
     // Загрузка шрифта и его размера
     if (!fontFilepath.empty()) {
