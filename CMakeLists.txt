@@ -86,7 +86,6 @@ add_executable(GoldenLandEditor WIN32
     src/parsers/MDF_Parser.cpp
     src/windows/MdfViewer.h
     src/windows/MdfViewer.cpp
-    src/files/BgMdfFile.h
     src/utils/IoUtils.h
     src/utils/IoUtils.cpp
     src/utils/AnimationCachedLoader.h
@@ -125,18 +124,22 @@ set_source_files_properties(
     GOLDENLAND_VERSION_STRING="${PROJECT_VERSION}"
 )
 
-# Файлы ресурсов
+# Файлы ресурсов для Windows
 if(WIN32)
-    set(ICON_PATH "${CMAKE_SOURCE_DIR}/resources/icon.ico")
+    set(ICON_PATH "${CMAKE_SOURCE_DIR}/resources/win/icon.ico")
 
     configure_file(
-        "${CMAKE_SOURCE_DIR}/resources/resources.rc.in"
+        "${CMAKE_SOURCE_DIR}/resources/win/resources.rc.in"
         "${CMAKE_BINARY_DIR}/resources.rc"
         @ONLY
     )
     target_sources(GoldenLandEditor PRIVATE "${CMAKE_BINARY_DIR}/resources.rc")
 endif()
 
+# Встроенные ресурсы
+include(resources/EmbeddedResources.cmake)
+add_embedded_resources(resources_lib "${CMAKE_SOURCE_DIR}/resources/embedded" "embedded_resources.h")
+target_link_libraries(GoldenLandEditor PRIVATE resources_lib)
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)

@@ -5,7 +5,7 @@
 
 #include <SDL3/SDL_render.h>
 
-#include "files/BgMdfFile.h"
+#include "embedded_resources.h"
 #include "parsers/MDF_Parser.h"
 #include "utils/AnimationCachedLoader.h"
 #include "utils/TextureLoader.h"
@@ -85,7 +85,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
         if (!m_onceWhenOpen) {
             std::string error;
-            if (!TextureLoader::loadTextureFromMemory({bg_mdf, bg_mdf_size}, renderer, m_bgTexture, &error))
+            if (!TextureLoader::loadTextureFromMemory({mdf_bg_jpg, mdf_bg_jpg_size}, renderer, m_bgTexture, &error))
                 LogFmt("Load bgTexture error: {}", error);
             m_onceWhenOpen = true;
         }
