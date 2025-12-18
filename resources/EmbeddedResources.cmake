@@ -1,7 +1,10 @@
 function(add_embedded_resources LIBRARY_NAME RESOURCE_DIR HEADER_NAME)
     # 1. Собираем утилиту, если она еще не создана
     if(NOT TARGET bin2c_tool)
-        add_executable(bin2c_tool "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bin2c.cpp")
+        add_executable(bin2c_tool EXCLUDE_FROM_ALL "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bin2c.cpp")
+        set_target_properties(bin2c_tool PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tools"
+        )
     endif()
 
     # 2. Ищем файлы
