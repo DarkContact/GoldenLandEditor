@@ -56,6 +56,8 @@ private:
         std::string_view rootDirectory() const { return m_rootDirectory; }
         void setRootDirectoryAndReload(std::string_view rootDirectory);
 
+        bool isEmptyContext() const;
+
     private:
         void asyncLoadPaths(std::string_view rootDirectory);
 

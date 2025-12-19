@@ -43,6 +43,18 @@ void Application::RootDirectoryContext::setRootDirectoryAndReload(std::string_vi
     asyncLoadPaths(rootDirectory); // TODO: Запись rootDirectory в ini файл настроек
 }
 
+bool Application::RootDirectoryContext::isEmptyContext() const {
+    bool emptyResources =
+            singleLevelNames.empty() &&
+            multiplayerLevelNames.empty() &&
+            csxFiles.empty() &&
+            sdbFiles.empty() &&
+            mdfFiles.empty() &&
+            csFiles.empty();
+
+    return m_rootDirectory.empty() || emptyResources;
+}
+
 void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDirectory) {
     backgroundWork = true;
     this->m_rootDirectory = rootDirectory;
@@ -183,7 +195,11 @@ bool Application::hasActiveAnimations() const {
 }
 
 void Application::mainLoop() {
+    ImGuiIO& io = ImGui::GetIO();
     std::string uiError;
+
+    bool showLevelsWindow = false;
+    bool showSettingsWindow = false;
 
     while (!m_done)
     {
@@ -194,10 +210,7 @@ void Application::mainLoop() {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiID mainDockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-
-        static bool showSettingsWindow = false;
-        static bool showLevelsWindow = false;
+        ImGuiID mainDockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());  
 
         bool loaderWindow = backgroundWork.load();
         ImGuiWidgets::Loader("Loading...", loaderWindow);
@@ -205,21 +218,28 @@ void Application::mainLoop() {
 
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Levels")) {
-                    showLevelsWindow = !m_rootDirContext.singleLevelNames.empty();
+                ImGui::BeginDisabled(m_rootDirContext.isEmptyContext());
+
+                bool levelsDisabled = m_rootDirContext.singleLevelNames.empty()
+                                      && m_rootDirContext.multiplayerLevelNames.empty();
+                if (ImGui::MenuItem("Levels", NULL, false, !levelsDisabled)) {
+                    showLevelsWindow = true;
                 }
-                if (ImGui::MenuItem("CSX Viewer")) {
-                    m_rootDirContext.showCsxWindow = !m_rootDirContext.csxFiles.empty();
+                ImGui::Separator();
+                if (ImGui::MenuItem("CSX Viewer", NULL, false, !m_rootDirContext.csxFiles.empty())) {
+                    m_rootDirContext.showCsxWindow = true;
                 }
-                if (ImGui::MenuItem("SDB Viewer")) {
-                    m_rootDirContext.showSdbWindow = !m_rootDirContext.sdbFiles.empty();
+                if (ImGui::MenuItem("SDB Viewer", NULL, false, !m_rootDirContext.sdbFiles.empty())) {
+                    m_rootDirContext.showSdbWindow = true;
                 }
-                if (ImGui::MenuItem("MDF Viewer")) {
-                    m_rootDirContext.showMdfWindow = !m_rootDirContext.mdfFiles.empty();
+                if (ImGui::MenuItem("MDF Viewer", NULL, false, !m_rootDirContext.mdfFiles.empty())) {
+                    m_rootDirContext.showMdfWindow = true;
                 }
-                if (ImGui::MenuItem("CS Viewer")) {
-                    m_rootDirContext.showCsWindow = !m_rootDirContext.csFiles.empty();
+                if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles.empty())) {
+                    m_rootDirContext.showCsWindow = true;
                 }
+
+                ImGui::EndDisabled();
                 ImGui::EndMenu();
             }
 
@@ -255,10 +275,32 @@ void Application::mainLoop() {
             ImGui::EndMainMenuBar();
         }
 
-        if (showSettingsWindow) {
-            FontSettings::update(showSettingsWindow);
-        }
         if (!backgroundWork) {
+            if (m_rootDirContext.isEmptyContext()) {
+                ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
+                    | ImGuiWindowFlags_AlwaysAutoResize
+                    | ImGuiWindowFlags_NoSavedSettings
+                    | ImGuiWindowFlags_NoFocusOnAppearing
+                    | ImGuiWindowFlags_NoNav
+                    | ImGuiWindowFlags_NoMove;
+
+                ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+                ImGui::SetNextWindowBgAlpha(0.75f);
+                if (ImGui::Begin("##WarningEmptyRootContext", nullptr, windowFlags))
+                {
+                    ImGui::Text("Root folder not specified!\n"
+                                "Root folder is a directory with unpacked game resources\n"
+                                "(levels, scripts, etc.)\n"
+                                "\n"
+                                "Set it via 'Settings -> Root folder'\n"
+                                "\n"
+                                "or edit settings.ini:\n"
+                                "[resources]\n"
+                                "root_dir = <path_to_root_folder>");
+                }
+                ImGui::End();
+            }
+
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles);
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
@@ -267,6 +309,10 @@ void Application::mainLoop() {
             m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles);
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+
+            if (showSettingsWindow) {
+                FontSettings::update(showSettingsWindow);
+            }
         }
 
         // NOTE: Для генерации озвучки
@@ -278,9 +324,9 @@ void Application::mainLoop() {
 
         if (showLevelsWindow && !m_rootDirContext.singleLevelNames.empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
-                                                  m_rootDirContext.singleLevelNames,
-                                                  m_rootDirContext.multiplayerLevelNames,
-                                                  m_rootDirContext.selectedLevelIndex); result.selected) {
+                                                   m_rootDirContext.singleLevelNames,
+                                                   m_rootDirContext.multiplayerLevelNames,
+                                                   m_rootDirContext.selectedLevelIndex); result.selected) {
                 bool alreadyLoaded = false;
                 for (const auto& level : m_rootDirContext.levels) {
                     if (level.data().name == result.loadedLevelName && level.data().type == result.loadedLevelType) {
