@@ -74,7 +74,7 @@ void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDire
 Application::Application() {
     Settings settings("settings.ini");
     std::string fontFilepath = settings.readString(Setting::kFontFilepath);
-    int fontSize = settings.readInt(Setting::kFontSize, 13);
+    int fontSize = settings.readInt(Setting::kFontSize, 16);
     std::string rootDir = settings.readString(Setting::kRootDir);
     if (!rootDir.empty()) {
         m_rootDirContext.setRootDirectoryAndReload(rootDir);
