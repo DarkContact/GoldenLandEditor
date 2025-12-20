@@ -112,8 +112,8 @@ void Application::initSdl() {
     // Create window with SDL_Renderer graphics context
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-    m_window = SDL_CreateWindow(std::format("Goldenland Editor v{}", GOLDENLAND_VERSION_STRING).c_str(),
-                                          (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
+    m_window = SDL_CreateWindow(std::format("GoldenLand Editor v{}", GOLDENLAND_VERSION_STRING).c_str(),
+                                (int)(1024 * main_scale), (int)(768 * main_scale), window_flags);
     if (m_window == nullptr) {
         LogFmt("SDL_CreateWindow error: {}", SDL_GetError());
         throw std::runtime_error(std::format("SDL_CreateWindow error: {}", SDL_GetError()));
@@ -197,9 +197,19 @@ bool Application::hasActiveAnimations() const {
 void Application::mainLoop() {
     ImGuiIO& io = ImGui::GetIO();
     std::string uiError;
+    std::string aboutMessage = std::format("GoldenLand Editor v{}\n\n"
+                                           "3rdParty libraries\n"
+                                           "SDL: v{}.{}.{}\n"
+                                           "ImGui: v{}",
+                                           GOLDENLAND_VERSION_STRING,
+                                           SDL_VERSIONNUM_MAJOR(SDL_GetVersion()),
+                                           SDL_VERSIONNUM_MINOR(SDL_GetVersion()),
+                                           SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
+                                           IMGUI_VERSION);
 
     bool showLevelsWindow = false;
     bool showSettingsWindow = false;
+    bool showAboutWindow = false;
 
     while (!m_done)
     {
@@ -244,7 +254,7 @@ void Application::mainLoop() {
             }
 
             if (ImGui::BeginMenu("Settings")) {
-                if (ImGui::MenuItem("Root folder")) {
+                if (ImGui::MenuItem("Root folder...")) {
                     // TODO: Сделать модальное окно с отображением текущей директории
                     SDL_ShowOpenFolderDialog([] (void* userdata, const char* const* filelist, int filter) {
                         if (!filelist) {
@@ -272,6 +282,15 @@ void Application::mainLoop() {
                 }
                 ImGui::EndMenu();
             }
+
+            if (ImGui::BeginMenu("Help")) {
+                if (ImGui::MenuItem("About")) {
+                    showAboutWindow = true;
+                }
+
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMainMenuBar();
         }
 
@@ -312,6 +331,13 @@ void Application::mainLoop() {
 
             if (showSettingsWindow) {
                 FontSettings::update(showSettingsWindow);
+            }
+
+            if (showAboutWindow) {
+                showAboutWindow = ImGuiWidgets::ShowMessageModalEx("About", [&aboutMessage] () {
+                    ImGui::TextLinkOpenURL("GitHub repository", "https://github.com/DarkContact/GoldenLandEditor");
+                    ImGui::Text("%s", aboutMessage.c_str());
+                });
             }
         }
 

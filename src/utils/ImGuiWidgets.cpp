@@ -79,6 +79,41 @@ void ImGuiWidgets::ShowMessageModal(std::string_view title, std::string& message
     }
 }
 
+bool ImGuiWidgets::ShowMessageModalEx(std::string_view title, const std::function<void()>& callback)
+{
+    assert(!title.empty());
+    assert(callback);
+
+    ImGuiIO& io = ImGui::GetIO();
+    static bool isShow = false;
+
+    if (!isShow) {
+        ImGui::OpenPopup(title.data());
+        isShow = true;
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal(title.data(), &isShow, ImGuiWindowFlags_AlwaysAutoResize)) {
+        callback();
+
+        // Центрируем кнопку "OK"
+        float buttonWidth = 60.0f;
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        float offset = (availableWidth - buttonWidth) * 0.5f;
+        if (offset > 0.0f)
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
+
+        if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
+            ImGui::CloseCurrentPopup();
+            isShow = false;
+        }
+
+        ImGui::EndPopup();
+    }
+
+    return isShow;
+}
+
 void SetTooltipVStacked(const char* fmt, va_list args) {
     if (!ImGui::BeginTooltipEx(ImGuiTooltipFlags_None, ImGuiWindowFlags_None))
         return;
