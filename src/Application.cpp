@@ -197,15 +197,18 @@ bool Application::hasActiveAnimations() const {
 void Application::mainLoop() {
     ImGuiIO& io = ImGui::GetIO();
     std::string uiError;
-    std::string aboutMessage = std::format("GoldenLand Editor v{}\n\n"
-                                           "3rdParty libraries\n"
-                                           "SDL: v{}.{}.{}\n"
-                                           "ImGui: v{}",
-                                           GOLDENLAND_VERSION_STRING,
+    std::string aboutMessage = std::format("\n"
+                                           "3rd-party libraries:\n"
+                                           "SDL v{}.{}.{}\n"
+                                           "ImGui v{}\n"
+                                           "\n"
+                                           "GoldenLand Editor v{}\n"
+                                           "© DarkContact 2025\n",
                                            SDL_VERSIONNUM_MAJOR(SDL_GetVersion()),
                                            SDL_VERSIONNUM_MINOR(SDL_GetVersion()),
                                            SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
-                                           IMGUI_VERSION);
+                                           IMGUI_VERSION,
+                                           GOLDENLAND_VERSION_STRING);
 
     bool showLevelsWindow = false;
     bool showSettingsWindow = false;
@@ -336,7 +339,7 @@ void Application::mainLoop() {
             if (showAboutWindow) {
                 showAboutWindow = ImGuiWidgets::ShowMessageModalEx("About", [&aboutMessage] () {
                     ImGui::TextLinkOpenURL("GitHub repository", "https://github.com/DarkContact/GoldenLandEditor");
-                    ImGui::Text("%s", aboutMessage.c_str());
+                    ImGui::TextUnformatted(aboutMessage.data(), aboutMessage.data() + aboutMessage.size());
                 });
             }
         }
