@@ -23,7 +23,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    bool isWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    bool isWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::PopStyleVar();
 
     if (!isWindowVisible) {
@@ -173,6 +173,21 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             if (io.KeyShift && ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_3, false)) {
                 level.data().imgui.cellGroupMode = CellGroupMode::OnlyLvl;
             }
+        }
+
+        // TODO: Добавить плавности
+        const float scrollStep = 8.0f;
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_LeftArrow)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() - scrollStep);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_RightArrow)) {
+            ImGui::SetScrollX(ImGui::GetScrollX() + scrollStep);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow)) {
+            ImGui::SetScrollY(ImGui::GetScrollY() - scrollStep);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) {
+            ImGui::SetScrollY(ImGui::GetScrollY() + scrollStep);
         }
     }
 
