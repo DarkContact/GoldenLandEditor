@@ -5,16 +5,21 @@
 #include <filesystem>
 
 #include "imgui.h"
+
 #include "utils/ImGuiWidgets.h"
+#include "utils/DebugLog.h"
 
 void FontSettings::update(bool& showWindow)
 {
+    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
+
     static int fontSize = style.FontSizeBase;
     static int selectedFontIndex = 0;
     static std::vector<std::string> fontNames;
     static std::vector<std::string> fontPaths;
     static bool fontsLoaded = false;
+    static ImFont* selectedFont = io.Fonts->Fonts.front();
 
     // Загружаем шрифты из системной папки Windows
     if (!fontsLoaded) {
@@ -26,8 +31,6 @@ void FontSettings::update(bool& showWindow)
         }
         fontsLoaded = true;
     }
-    ImGuiIO& io = ImGui::GetIO();
-    static ImFont* selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
 
     if (showWindow)
         ImGui::OpenPopup("Font Settings"); // FIXME: Вызывать 1 раз
@@ -42,7 +45,7 @@ void FontSettings::update(bool& showWindow)
                 selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
             }
 
-            ImGui::SliderInt("Size", &fontSize, 8, 32, "%d", ImGuiSliderFlags_ClampOnInput);
+            ImGui::SliderInt("Size", &fontSize, 8, 24, "%d", ImGuiSliderFlags_ClampOnInput);
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
             if (ImGui::Button("Apply")) {
@@ -53,7 +56,7 @@ void FontSettings::update(bool& showWindow)
                 if (newFont) {
                     io.FontDefault = newFont;
                 } else {
-                    printf("Failed to load font: %s", fontPaths[selectedFontIndex].c_str());
+                    LogFmt("Failed to load font: {}", fontPaths[selectedFontIndex]);
                 }
             }
             ImGui::PopStyleVar();

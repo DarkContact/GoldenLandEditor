@@ -257,7 +257,7 @@ void Application::mainLoop() {
             }
 
             if (ImGui::BeginMenu("Settings")) {
-                if (ImGui::MenuItem("Root folder...")) {
+                if (ImGui::MenuItem("Set root folder...")) {
                     // TODO: Сделать модальное окно с отображением текущей директории
                     SDL_ShowOpenFolderDialog([] (void* userdata, const char* const* filelist, int filter) {
                         if (!filelist) {
@@ -280,7 +280,7 @@ void Application::mainLoop() {
                         }
                     }, this, m_window, m_rootDirContext.rootDirectory().data(), false);
                 }
-                if (ImGui::MenuItem("Fonts")) {
+                if (ImGui::MenuItem("Font settings")) {
                     showSettingsWindow = true;
                 }
                 ImGui::EndMenu();
@@ -314,9 +314,9 @@ void Application::mainLoop() {
                                 "Root folder is a directory with unpacked game resources\n"
                                 "(levels, scripts, etc.)\n"
                                 "\n"
-                                "Set it via 'Settings -> Root folder'\n"
+                                "Set it via 'Settings -> Set root folder...'\n"
                                 "\n"
-                                "or edit settings.ini:\n"
+                                "Or edit settings.ini:\n"
                                 "[resources]\n"
                                 "root_dir = <path_to_root_folder>");
                 }
