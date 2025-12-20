@@ -1,6 +1,6 @@
 # GoldenLandEditor
 Редактор уровней для игр Златогорье 2 и Холодные небеса (GoldenLand 2, ColdHeaven)
-![preview](https://github.com/user-attachments/assets/d5f2b0d5-69cc-4ddb-a876-13e9e90073c7)
+![preview](https://github.com/user-attachments/assets/a1d2fd5b-1936-4750-8d73-91d54235f7b6)
 
 ## Возможности
 - Просмотр уровней
