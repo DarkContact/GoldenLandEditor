@@ -1,13 +1,13 @@
 #include "FontSettings.h"
 
-#include <vector>
-#include <string>
-#include <filesystem>
+// #include <vector>
+// #include <string>
+// #include <filesystem>
 
 #include "imgui.h"
 
-#include "utils/ImGuiWidgets.h"
-#include "utils/DebugLog.h"
+// #include "utils/ImGuiWidgets.h"
+// #include "utils/DebugLog.h"
 
 void FontSettings::update(bool& showWindow)
 {
@@ -15,22 +15,22 @@ void FontSettings::update(bool& showWindow)
     ImGuiStyle& style = ImGui::GetStyle();
 
     static int fontSize = style.FontSizeBase;
-    static int selectedFontIndex = 0;
-    static std::vector<std::string> fontNames;
-    static std::vector<std::string> fontPaths;
+    // static int selectedFontIndex = 0;
+    // static std::vector<std::string> fontNames;
+    // static std::vector<std::string> fontPaths;
     static bool fontsLoaded = false;
     static ImFont* selectedFont = io.Fonts->Fonts.front();
 
     // Загружаем шрифты из системной папки Windows
-    if (!fontsLoaded) {
-        for (const auto& entry : std::filesystem::directory_iterator("C:/Windows/Fonts")) {
-            if (entry.path().extension() == ".ttf") {
-                fontPaths.push_back(entry.path().string());
-                fontNames.push_back(entry.path().stem().string());
-            }
-        }
-        fontsLoaded = true;
-    }
+    // if (!fontsLoaded) {
+    //     for (const auto& entry : std::filesystem::directory_iterator("C:/Windows/Fonts")) {
+    //         if (entry.path().extension() == ".ttf") {
+    //             fontPaths.push_back(entry.path().string());
+    //             fontNames.push_back(entry.path().stem().string());
+    //         }
+    //     }
+    //     fontsLoaded = true;
+    // }
 
     if (showWindow)
         ImGui::OpenPopup("Font Settings"); // FIXME: Вызывать 1 раз
@@ -40,24 +40,24 @@ void FontSettings::update(bool& showWindow)
 
     if (ImGui::BeginPopupModal("Font Settings", &showWindow, ImGuiWindowFlags_NoResize)) {
 
-        if (!fontNames.empty()) {
-            if (ImGuiWidgets::ComboBoxWithIndex("Font", fontNames, selectedFontIndex)) {
-                selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
-            }
+        //if (!fontNames.empty()) {
+            // if (ImGuiWidgets::ComboBoxWithIndex("Font", fontNames, selectedFontIndex)) {
+            //     selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
+            // }
 
-            ImGui::SliderInt("Size", &fontSize, 8, 24, "%d", ImGuiSliderFlags_ClampOnInput);
+            ImGui::SliderInt("Size", &fontSize, 12, 18, "%d", ImGuiSliderFlags_ClampOnInput);
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
             if (ImGui::Button("Apply")) {
                 style.FontSizeBase = fontSize;
                 style._NextFrameFontSizeBase = style.FontSizeBase;
 
-                ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
-                if (newFont) {
-                    io.FontDefault = newFont;
-                } else {
-                    LogFmt("Failed to load font: {}", fontPaths[selectedFontIndex]);
-                }
+                // ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
+                // if (newFont) {
+                //     io.FontDefault = newFont;
+                // } else {
+                //     LogFmt("Failed to load font: {}", fontPaths[selectedFontIndex]);
+                // }
             }
             ImGui::PopStyleVar();
 
@@ -73,7 +73,7 @@ void FontSettings::update(bool& showWindow)
 
                 ImGui::End();
             }
-        }
+        //}
 
         ImGui::EndPopup();
     }
