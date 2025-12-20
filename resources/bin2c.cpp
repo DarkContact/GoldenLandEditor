@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     }
 
     out << "\n};\n";
-    out << "extern const uint32_t " << var_name << "_size = " << static_cast<uint32_t>(total_count) << ";\n";
+    out << "extern const uint32_t " << var_name << "_size = " << total_count << ";\n";
 
     return 0;
 }
