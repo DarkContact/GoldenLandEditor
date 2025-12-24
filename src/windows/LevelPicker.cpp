@@ -1,13 +1,13 @@
 #include "LevelPicker.h"
 
 #include "imgui.h"
-#include "utils/ImGuiWidgets.h"
 
 LevelPickerResult LevelPicker::update(bool& showWindow,
                                       const std::vector<std::string>& singleLevelNames,
                                       const std::vector<std::string>& multiLevelNames,
                                       int& selectedLevelIndex)
 {
+    const ImGuiIO& io = ImGui::GetIO();
     LevelPickerResult result;
 
     if (showWindow && !m_onceWhenOpen) {
@@ -15,7 +15,6 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
         m_onceWhenOpen = true;
     }
 
-    ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
                             ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
@@ -35,17 +34,29 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
             m_type = LevelType::kSingle;
         }
 
-        ImGuiWidgets::ComboBoxWithIndex("Levels",
-                                        (m_type == LevelType::kSingle) ? singleLevelNames : multiLevelNames,
-                                        selectedLevelIndex);
+        const std::vector<std::string>& levelNames = (m_type == LevelType::kSingle) ? singleLevelNames
+                                                                                    : multiLevelNames;
+        std::string_view currentLevelName = levelNames[selectedLevelIndex];
+
+        if (ImGui::BeginCombo("Levels", currentLevelName.data())) {
+            for (int i = 0; i < static_cast<int>(levelNames.size()); ++i) {
+                bool isSelected = (i == selectedLevelIndex);
+                if (ImGui::Selectable(levelNames[i].c_str(), isSelected)) {
+                    selectedLevelIndex = i;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
 
         if (ImGui::Button("Load")) {
             showWindow = false;
 
             result.selected = true;
             result.loadedLevelType = m_type;
-            result.loadedLevelName = (m_type == LevelType::kSingle) ? singleLevelNames[selectedLevelIndex]
-                                                                    : multiLevelNames[selectedLevelIndex];
+            result.loadedLevelName = currentLevelName;
         }
 
         ImGui::EndPopup();
