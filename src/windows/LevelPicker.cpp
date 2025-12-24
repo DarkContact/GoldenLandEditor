@@ -39,21 +39,17 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
 
         const std::vector<std::string>& levelNames = (m_type == LevelType::kSingle) ? singleLevelNames
                                                                                     : multiLevelNames;
-        std::string_view currentLevelName = levelNames[selectedLevelIndex];
 
-        if (ImGui::BeginCombo("Levels", currentLevelName.data())) {
+        char currentLevelNameBuffer[256];
+        std::string_view currentLevelName = levelNames[selectedLevelIndex];
+        writeLevelHumanNameToBuffer(levelHumanNamesDict, currentLevelName, currentLevelNameBuffer);
+
+        if (ImGui::BeginCombo("Levels", currentLevelNameBuffer)) {
             char levelNameBuffer[256];
             for (int i = 0; i < static_cast<int>(levelNames.size()); ++i) {
                 bool isSelected = (i == selectedLevelIndex);
 
-                std::string_view levelName = levelNames[i];
-                if (auto it = levelHumanNamesDict.find(levelName); it != levelHumanNamesDict.cend()) {
-                    std::string_view levelNameHuman = it->second;
-                    StringUtils::formatToBuffer(levelNameBuffer, "{} [{}]", levelName, levelNameHuman);
-                } else {
-                    StringUtils::formatToBuffer(levelNameBuffer, "{}", levelName);
-                }
-
+                writeLevelHumanNameToBuffer(levelHumanNamesDict, levelNames[i], levelNameBuffer);
                 if (ImGui::Selectable(levelNameBuffer, isSelected)) {
                     selectedLevelIndex = i;
                 }
@@ -80,4 +76,16 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
     }
 
     return result;
+}
+
+void LevelPicker::writeLevelHumanNameToBuffer(const StringHashTable<std::string>& levelHumanNamesDict,
+                                              std::string_view levelName,
+                                              std::span<char> outLevelNameBuffer)
+{
+    if (auto it = levelHumanNamesDict.find(levelName); it != levelHumanNamesDict.cend()) {
+        std::string_view levelNameHuman = it->second;
+        StringUtils::formatToBuffer(outLevelNameBuffer, "{} [{}]", levelName, levelNameHuman);
+    } else {
+        StringUtils::formatToBuffer(outLevelNameBuffer, "{}", levelName);
+    }
 }

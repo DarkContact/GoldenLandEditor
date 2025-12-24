@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <span>
 
 #include "Types.h"
 
@@ -17,6 +18,10 @@ public:
                              const std::vector<std::string>& multiLevelNames,
                              const StringHashTable<std::string>& levelHumanNamesDict,
                              int& selectedLevelIndex);
+
+    void writeLevelHumanNameToBuffer(const StringHashTable<std::string>& levelHumanNamesDict,
+                                     std::string_view levelName,
+                                     std::span<char> outLevelNameBuffer);
 
 private:
     bool m_onceWhenOpen = false;
