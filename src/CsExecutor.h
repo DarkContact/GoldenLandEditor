@@ -61,7 +61,7 @@ private:
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
 
-    std::unordered_map<std::string, int, StringViewHash, StringViewEqual> m_heroStats; // TODO: Нужна реализация
+    StringHashTable<int> m_heroStats; // TODO: Нужна реализация
     std::set<int> m_executedNodeIndexes;
 
     int m_currentNodeIndex = 0;

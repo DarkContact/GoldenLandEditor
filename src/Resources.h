@@ -12,6 +12,7 @@ public:
     Resources(std::string_view rootDirectory);
 
     std::vector<std::string> levelNames(LevelType type) const;
+    StringHashTable<std::string> levelHumanNameDictionary() const;
 
     std::vector<std::string> sdbFiles() const;
     std::vector<std::string> csxFiles() const;

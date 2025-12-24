@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_map>
 #include <string_view>
 #include <vector>
 #include <span>
@@ -24,6 +23,6 @@ public:
     void clear();
 
 private:
-    std::unordered_map<std::string, std::vector<Texture>, StringViewHash, StringViewEqual> m_cache;
+    StringHashTable<std::vector<Texture>> m_cache;
 };
 

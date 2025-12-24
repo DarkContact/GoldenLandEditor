@@ -4,6 +4,8 @@
 #include <format>
 #include <future>
 
+#include "parsers/SDB_Parser.h"
+
 #include "utils/DebugLog.h"
 #include "utils/StringUtils.h"
 #include "utils/TracyProfiler.h"
@@ -67,6 +69,54 @@ std::vector<std::string> Resources::levelNames(LevelType type) const
         LogFmt("Filesystem error: {}", ex.what());
     }
     return results;
+}
+
+StringHashTable<std::string> Resources::levelHumanNameDictionary() const
+{
+    std::string error;
+
+    SDB_Data techNames;
+    if (!SDB_Parser::parse(std::format("{}/globalmap/gm_loc_tech.sdb", m_mainDirectories[Sdb]), techNames, &error))
+        LogFmt("gm_loc_tech.sdb error: {}", error);
+
+    SDB_Data visNames;
+    if (!SDB_Parser::parse(std::format("{}/globalmap/gm_reg_vis.sdb", m_mainDirectories[Sdb]), visNames, &error))
+        LogFmt("gm_reg_vis.sdb error: {}", error);
+
+    SDB_Data litNames;
+    if (!SDB_Parser::parse(std::format("{}/globalmap/gm_loc_lit.sdb", m_mainDirectories[Sdb]), litNames, &error))
+        LogFmt("gm_loc_lit.sdb error: {}", error);
+
+    StringHashTable<std::string> result;
+    for (const auto& [key, value] : techNames.strings) {
+        auto techName = StringUtils::trimRight(value);
+        if (techName.empty()) continue;
+
+        // Если есть кириллица
+        if (static_cast<unsigned char>(techName[0]) >= 128) continue;
+
+        std::string_view visName = visNames.strings[key];
+        std::string_view litName = litNames.strings[key];
+        if (visName == "Item inserting") {
+            visName = {};
+        }
+        if (litName == "Item inserting") {
+            litName = {};
+        }
+
+
+        std::string humanName;
+        if (litName.empty()) {
+            humanName = std::format("{}", visName);
+        } else if (visName.empty()) {
+            humanName = std::format("{}", litName);
+        } else {
+            humanName = std::format("{} ({})", visName, litName);
+        }
+        result.emplace(techName, humanName);
+    }
+
+    return result;
 }
 
 std::vector<std::string> Resources::sdbFiles() const
