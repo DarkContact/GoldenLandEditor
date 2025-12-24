@@ -2,9 +2,12 @@
 
 #include "imgui.h"
 
+#include "utils/StringUtils.h"
+
 LevelPickerResult LevelPicker::update(bool& showWindow,
                                       const std::vector<std::string>& singleLevelNames,
                                       const std::vector<std::string>& multiLevelNames,
+                                      const StringHashTable<std::string>& levelHumanNamesDict,
                                       int& selectedLevelIndex)
 {
     const ImGuiIO& io = ImGui::GetIO();
@@ -39,9 +42,19 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
         std::string_view currentLevelName = levelNames[selectedLevelIndex];
 
         if (ImGui::BeginCombo("Levels", currentLevelName.data())) {
+            char levelNameBuffer[256];
             for (int i = 0; i < static_cast<int>(levelNames.size()); ++i) {
                 bool isSelected = (i == selectedLevelIndex);
-                if (ImGui::Selectable(levelNames[i].c_str(), isSelected)) {
+
+                std::string_view levelName = levelNames[i];
+                if (auto it = levelHumanNamesDict.find(levelName); it != levelHumanNamesDict.cend()) {
+                    std::string_view levelNameHuman = it->second;
+                    StringUtils::formatToBuffer(levelNameBuffer, "{} [{}]", levelName, levelNameHuman);
+                } else {
+                    StringUtils::formatToBuffer(levelNameBuffer, "{}", levelName);
+                }
+
+                if (ImGui::Selectable(levelNameBuffer, isSelected)) {
                     selectedLevelIndex = i;
                 }
                 if (isSelected) {

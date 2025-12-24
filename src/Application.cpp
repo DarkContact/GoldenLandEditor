@@ -62,10 +62,13 @@ void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDire
         Resources resources(rootDirContext->rootDirectory());
         rootDirContext->singleLevelNames = resources.levelNames(LevelType::kSingle);
         rootDirContext->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
+        rootDirContext->levelHumanNamesDict = resources.levelHumanNameDictionary();
+
         rootDirContext->csxFiles = resources.csxFiles();
         rootDirContext->sdbFiles = resources.sdbFiles();
         rootDirContext->mdfFiles = resources.mdfFiles();
         rootDirContext->csFiles = resources.csFiles();
+
         backgroundWork = false;
     };
     m_loadPathFuture = std::async(std::launch::async, backgroundTask, this);
@@ -355,6 +358,7 @@ void Application::mainLoop() {
             if (auto result = m_levelPicker.update(showLevelsWindow,
                                                    m_rootDirContext.singleLevelNames,
                                                    m_rootDirContext.multiplayerLevelNames,
+                                                   m_rootDirContext.levelHumanNamesDict,
                                                    m_rootDirContext.selectedLevelIndex); result.selected) {
                 bool alreadyLoaded = false;
                 for (const auto& level : m_rootDirContext.levels) {

@@ -15,6 +15,7 @@ public:
     LevelPickerResult update(bool& showWindow,
                              const std::vector<std::string>& singleLevelNames,
                              const std::vector<std::string>& multiLevelNames,
+                             const StringHashTable<std::string>& levelHumanNamesDict,
                              int& selectedLevelIndex);
 
 private:

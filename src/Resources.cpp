@@ -90,10 +90,12 @@ StringHashTable<std::string> Resources::levelHumanNameDictionary() const
     StringHashTable<std::string> result;
     for (const auto& [key, value] : techNames.strings) {
         auto techName = StringUtils::trimRight(value);
-        if (techName.empty()) continue;
+        if (techName.empty())
+            continue;
 
         // Если есть кириллица
-        if (static_cast<unsigned char>(techName[0]) >= 128) continue;
+        if (static_cast<unsigned char>(techName[0]) >= 128)
+            continue;
 
         std::string_view visName = visNames.strings[key];
         std::string_view litName = litNames.strings[key];
@@ -113,7 +115,13 @@ StringHashTable<std::string> Resources::levelHumanNameDictionary() const
         } else {
             humanName = std::format("{} ({})", visName, litName);
         }
-        result.emplace(techName, humanName);
+
+        if (humanName.empty())
+            continue;
+
+        std::string techNameLower(techName);
+        StringUtils::toLowerAscii(techNameLower, techNameLower);
+        result.emplace(techNameLower, humanName);
     }
 
     return result;

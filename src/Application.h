@@ -40,6 +40,8 @@ private:
     struct RootDirectoryContext {
         std::vector<std::string> singleLevelNames;
         std::vector<std::string> multiplayerLevelNames;
+        StringHashTable<std::string> levelHumanNamesDict;
+
         std::vector<std::string> csxFiles;
         std::vector<std::string> sdbFiles;
         std::vector<std::string> mdfFiles;
