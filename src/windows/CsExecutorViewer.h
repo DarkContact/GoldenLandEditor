@@ -1,6 +1,7 @@
 #pragma once
-#include <span>
+#include <string_view>
 #include <memory>
+#include <span>
 
 #include "Types.h"
 #include "parsers/CS_Parser.h"
@@ -14,6 +15,7 @@ public:
 
     void update(bool& showWindow,
                 bool& needUpdate,
+                std::string_view title,
                 std::span<const CS_Node> nodes,
                 const UMapStringVar_t& globalVars,
                 const SDB_Data& dialogsPhrases);

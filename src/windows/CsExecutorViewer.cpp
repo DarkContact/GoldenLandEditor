@@ -12,6 +12,7 @@ CsExecutorViewer::CsExecutorViewer() {
 
 void CsExecutorViewer::update(bool& showWindow,
                               bool& needUpdate,
+                              std::string_view title,
                               std::span<const CS_Node> nodes,
                               const UMapStringVar_t& globalVars,
                               const SDB_Data& dialogsPhrases)
@@ -24,7 +25,7 @@ void CsExecutorViewer::update(bool& showWindow,
 
     if (showWindow && m_pExecutor) {
         ImGui::SetNextWindowSize({600, 500}, ImGuiCond_FirstUseEver);
-        ImGui::Begin("CS Executor", &showWindow, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::Begin(title.data(), &showWindow, ImGuiWindowFlags_HorizontalScrollbar);
 
         if (ImGui::CollapsingHeader("Variables", ImGuiTreeNodeFlags_DefaultOpen))
         {

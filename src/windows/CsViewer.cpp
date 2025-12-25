@@ -161,7 +161,14 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
         ImGui::End();
 
-        m_csExecutorViewer.update(m_showExecuteWindow, needUpdate, m_csData.nodes, m_globalVars, m_sdbDialogs);
+        if (m_selectedIndex >= 0) {
+            m_csExecutorViewer.update(m_showExecuteWindow,
+                                      needUpdate,
+                                      csFiles[m_selectedIndex],
+                                      m_csData.nodes,
+                                      m_globalVars,
+                                      m_sdbDialogs);
+        }
     }
 
     // Очистка
@@ -174,6 +181,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         m_sdbDialogs = {};
         m_globalVars.clear();
         m_funcNodes.clear();
+        m_showExecuteWindow = false;
         m_onceWhenOpen = false;
         m_onceWhenClose = true;
     }
