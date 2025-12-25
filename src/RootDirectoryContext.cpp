@@ -18,12 +18,12 @@ void RootDirectoryContext::setRootDirectoryAndReload(std::string_view rootDirect
 
 bool RootDirectoryContext::isEmptyContext() const {
     bool emptyResources =
-            singleLevelNames.empty() &&
-            multiplayerLevelNames.empty() &&
-            csxFiles.empty() &&
-            sdbFiles.empty() &&
-            mdfFiles.empty() &&
-            csFiles.empty();
+            m_singleLevelNames.empty() &&
+            m_multiplayerLevelNames.empty() &&
+            m_csxFiles.empty() &&
+            m_sdbFiles.empty() &&
+            m_mdfFiles.empty() &&
+            m_csFiles.empty();
 
     return m_rootDirectory.empty() || emptyResources;
 }
@@ -33,14 +33,14 @@ void RootDirectoryContext::asyncLoadPaths(std::string_view rootDirectory) {
     this->m_rootDirectory = rootDirectory;
     auto backgroundTask = [] (RootDirectoryContext* context) {
         Resources resources(context->rootDirectory());
-        context->singleLevelNames = resources.levelNames(LevelType::kSingle);
-        context->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
-        context->levelHumanNamesDict = resources.levelHumanNameDictionary();
+        context->m_singleLevelNames = resources.levelNames(LevelType::kSingle);
+        context->m_multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
+        context->m_levelHumanNamesDict = resources.levelHumanNameDictionary();
 
-        context->csxFiles = resources.csxFiles();
-        context->sdbFiles = resources.sdbFiles();
-        context->mdfFiles = resources.mdfFiles();
-        context->csFiles = resources.csFiles();
+        context->m_csxFiles = resources.csxFiles();
+        context->m_sdbFiles = resources.sdbFiles();
+        context->m_mdfFiles = resources.mdfFiles();
+        context->m_csFiles = resources.csFiles();
 
         context->m_isLoading = false;
     };

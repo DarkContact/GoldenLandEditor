@@ -178,22 +178,22 @@ void Application::mainLoop() {
             if (ImGui::BeginMenu("File")) {
                 ImGui::BeginDisabled(m_rootDirContext.isEmptyContext());
 
-                bool levelsDisabled = m_rootDirContext.singleLevelNames.empty()
-                                      && m_rootDirContext.multiplayerLevelNames.empty();
+                bool levelsDisabled = m_rootDirContext.singleLevelNames().empty()
+                                      && m_rootDirContext.multiplayerLevelNames().empty();
                 if (ImGui::MenuItem("Levels", NULL, false, !levelsDisabled)) {
                     showLevelsWindow = true;
                 }
                 ImGui::Separator();
-                if (ImGui::MenuItem("CSX Viewer", NULL, false, !m_rootDirContext.csxFiles.empty())) {
+                if (ImGui::MenuItem("CSX Viewer", NULL, false, !m_rootDirContext.csxFiles().empty())) {
                     m_rootDirContext.showCsxWindow = true;
                 }
-                if (ImGui::MenuItem("SDB Viewer", NULL, false, !m_rootDirContext.sdbFiles.empty())) {
+                if (ImGui::MenuItem("SDB Viewer", NULL, false, !m_rootDirContext.sdbFiles().empty())) {
                     m_rootDirContext.showSdbWindow = true;
                 }
-                if (ImGui::MenuItem("MDF Viewer", NULL, false, !m_rootDirContext.mdfFiles.empty())) {
+                if (ImGui::MenuItem("MDF Viewer", NULL, false, !m_rootDirContext.mdfFiles().empty())) {
                     m_rootDirContext.showMdfWindow = true;
                 }
-                if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles.empty())) {
+                if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles().empty())) {
                     m_rootDirContext.showCsWindow = true;
                 }
 
@@ -269,13 +269,13 @@ void Application::mainLoop() {
             }
 
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles);
+            m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles);
+            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles);
+            m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles());
 
             if (showSettingsWindow) {
                 m_fontSettings->update(showSettingsWindow);
@@ -292,15 +292,15 @@ void Application::mainLoop() {
         // NOTE: Для генерации озвучки
         // static bool csViewerOnce = false;
         // if (!m_rootDirContext.isBusy() && !csViewerOnce) {
-        //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+        //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles());
         //     csViewerOnce = true;
         // }
 
-        if (showLevelsWindow && !m_rootDirContext.singleLevelNames.empty()) {
+        if (showLevelsWindow && !m_rootDirContext.singleLevelNames().empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
-                                                   m_rootDirContext.singleLevelNames,
-                                                   m_rootDirContext.multiplayerLevelNames,
-                                                   m_rootDirContext.levelHumanNamesDict,
+                                                   m_rootDirContext.singleLevelNames(),
+                                                   m_rootDirContext.multiplayerLevelNames(),
+                                                   m_rootDirContext.levelHumanNamesDict(),
                                                    m_rootDirContext.selectedLevelIndex); result.selected) {
                 bool alreadyLoaded = false;
                 for (const auto& level : m_rootDirContext.levels) {
