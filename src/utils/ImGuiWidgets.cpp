@@ -31,15 +31,18 @@ bool ImGuiWidgets::ComboBoxWithIndex(std::string_view label, const std::vector<s
 void ImGuiWidgets::Loader(std::string_view label, bool& showWindow)
 {
     ImGuiIO& io = ImGui::GetIO();
+    auto title = "Loading";
 
-    if (showWindow)
-        ImGui::OpenPopup("Loading"); // FIXME: Вызывать 1 раз
+    if ( showWindow && !ImGui::IsPopupOpen(title) ) {
+        ImGui::OpenPopup(title);
+    }
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal("Loading", &showWindow, ImGuiWindowFlags_AlwaysAutoResize |
-                                                           ImGuiWindowFlags_NoDecoration |
-                                                           ImGuiWindowFlags_NoInputs |
-                                                           ImGuiWindowFlags_NoNav)) {
+    if (ImGui::BeginPopupModal(title, &showWindow, ImGuiWindowFlags_AlwaysAutoResize |
+                                                   ImGuiWindowFlags_NoDecoration |
+                                                   ImGuiWindowFlags_NoInputs |
+                                                   ImGuiWindowFlags_NoNav))
+    {
         ImGui::ProgressBar(-0.75f * (float)ImGui::GetTime(), ImVec2(0.0f, 0.0f), label.data());
         ImGui::EndPopup();
     }

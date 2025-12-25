@@ -4,6 +4,12 @@
 
 #include "utils/StringUtils.h"
 
+LevelPicker::LevelPicker() :
+    m_title("Level picker")
+{
+
+}
+
 LevelPickerResult LevelPicker::update(bool& showWindow,
                                       const std::vector<std::string>& singleLevelNames,
                                       const std::vector<std::string>& multiLevelNames,
@@ -13,15 +19,14 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
     const ImGuiIO& io = ImGui::GetIO();
     LevelPickerResult result;
 
-    if (showWindow && !m_onceWhenOpen) {
-        ImGui::OpenPopup("Level picker");
-        m_onceWhenOpen = true;
+    if ( showWindow && !ImGui::IsPopupOpen(m_title.data()) ) {
+        ImGui::OpenPopup(m_title.data());
     }
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
                             ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
-    if (ImGui::BeginPopupModal("Level picker", &showWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal(m_title.data(), &showWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         if (!multiLevelNames.empty()) {
             if (ImGui::RadioButton("Single", m_type == LevelType::kSingle)) {
@@ -69,10 +74,6 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
         }
 
         ImGui::EndPopup();
-    }
-
-    if (!showWindow) {
-        m_onceWhenOpen = false;
     }
 
     return result;

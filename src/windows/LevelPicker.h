@@ -1,6 +1,7 @@
 #pragma once
-#include <vector>
+#include <string_view>
 #include <string>
+#include <vector>
 #include <span>
 
 #include "Types.h"
@@ -13,6 +14,8 @@ struct LevelPickerResult {
 
 class LevelPicker {
 public:
+    LevelPicker();
+
     LevelPickerResult update(bool& showWindow,
                              const std::vector<std::string>& singleLevelNames,
                              const std::vector<std::string>& multiLevelNames,
@@ -24,6 +27,6 @@ public:
                                      std::span<char> outLevelNameBuffer);
 
 private:
-    bool m_onceWhenOpen = false;
+    std::string_view m_title;
     LevelType m_type = LevelType::kSingle;
 };
