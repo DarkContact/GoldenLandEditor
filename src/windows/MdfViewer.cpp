@@ -67,9 +67,7 @@ std::string MdfViewer::mdfInfoString(const MDF_Data& data) {
     return result;
 }
 
-MdfViewer::MdfViewer() {
-
-}
+MdfViewer::MdfViewer() {}
 
 bool MdfViewer::isAnimating() const {
     return m_playAnimation && !m_animationLayers.empty();

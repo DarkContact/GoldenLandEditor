@@ -14,14 +14,6 @@
 #include "Resources.h"
 #include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
-#include "windows/FontSettings.h"
-#include "windows/LevelPicker.h"
-#include "windows/LevelViewer.h"
-#include "windows/CsxViewer.h"
-#include "windows/SdbViewer.h"
-#include "windows/MdfViewer.h"
-#include "windows/CsViewer.h"
-
 #include "utils/TracyProfiler.h"
 #include "utils/DebugLog.h"
 
@@ -85,6 +77,8 @@ Application::Application() {
 
     initSdl();
     initImGui(fontFilepath, fontSize);
+
+    m_fontSettings = std::make_optional<FontSettings>();
 }
 
 Application::~Application() {
@@ -336,7 +330,7 @@ void Application::mainLoop() {
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
 
             if (showSettingsWindow) {
-                FontSettings::update(showSettingsWindow);
+                m_fontSettings->update(showSettingsWindow);
             }
 
             if (showAboutWindow) {

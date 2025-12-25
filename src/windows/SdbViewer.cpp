@@ -6,9 +6,7 @@
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
-SdbViewer::SdbViewer() {
-
-}
+SdbViewer::SdbViewer() {}
 
 size_t makeVisibleSymbols(std::string_view sv, std::span<char> out) {
     size_t writePos = 0;

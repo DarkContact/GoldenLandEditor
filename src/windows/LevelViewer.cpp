@@ -12,9 +12,7 @@
 #include "utils/TracyProfiler.h"
 
 
-LevelViewer::LevelViewer() {
-
-}
+LevelViewer::LevelViewer() {}
 
 void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
 {

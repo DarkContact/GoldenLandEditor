@@ -8,9 +8,7 @@
 
 #include "utils/StringUtils.h"
 
-CsExecutorViewer::CsExecutorViewer() {
-
-}
+CsExecutorViewer::CsExecutorViewer() {}
 
 void CsExecutorViewer::update(bool& showWindow,
                               bool& needUpdate,

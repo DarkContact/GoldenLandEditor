@@ -1,9 +1,11 @@
 #pragma once
+#include <optional>
 #include <vector>
 #include <string>
 #include <future>
 
 #include "Level.h"
+#include "windows/FontSettings.h"
 #include "windows/LevelPicker.h"
 #include "windows/LevelViewer.h"
 #include "windows/CsxViewer.h"
@@ -70,12 +72,15 @@ private:
     SDL_Window* m_window = nullptr;
     SDL_Renderer* m_renderer = nullptr;
     RootDirectoryContext m_rootDirContext;
+
+    std::optional<FontSettings> m_fontSettings;
     LevelPicker m_levelPicker;
     LevelViewer m_levelViewer;
     CsxViewer m_csxViewer;
     SdbViewer m_sdbViewer;
     MdfViewer m_mdfViewer;
     CsViewer m_csViewer;
+
     bool m_done = false;
 
     // Оптимизация обновления логики и отрисовки

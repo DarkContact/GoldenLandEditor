@@ -14,9 +14,7 @@
 #include "CsExecutor.h"
 #include "CsExecutorViewer.h"
 
-CsViewer::CsViewer() {
-
-}
+CsViewer::CsViewer() {}
 
 void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
 {

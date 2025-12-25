@@ -9,17 +9,23 @@
 // #include "utils/ImGuiWidgets.h"
 // #include "utils/DebugLog.h"
 
+FontSettings::FontSettings() :
+    m_title("Font Settings"),
+    m_fontSize(ImGui::GetStyle().FontSizeBase)
+{
+
+}
+
 void FontSettings::update(bool& showWindow)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    static int fontSize = style.FontSizeBase;
     // static int selectedFontIndex = 0;
     // static std::vector<std::string> fontNames;
     // static std::vector<std::string> fontPaths;
-    static bool fontsLoaded = false;
-    static ImFont* selectedFont = io.Fonts->Fonts.front();
+    // static bool fontsLoaded = false;
+    ImFont* selectedFont = io.Fonts->Fonts.front();
 
     // Загружаем шрифты из системной папки Windows
     // if (!fontsLoaded) {
@@ -32,24 +38,25 @@ void FontSettings::update(bool& showWindow)
     //     fontsLoaded = true;
     // }
 
-    if (showWindow)
-        ImGui::OpenPopup("Font Settings"); // FIXME: Вызывать 1 раз
+    if ( showWindow && !ImGui::IsPopupOpen(m_title.data()) ) {
+        ImGui::OpenPopup(m_title.data());
+    }
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x * 0.3f, 0.0f), ImGuiCond_Always);
 
-    if (ImGui::BeginPopupModal("Font Settings", &showWindow, ImGuiWindowFlags_NoResize)) {
+    if (ImGui::BeginPopupModal(m_title.data(), &showWindow, ImGuiWindowFlags_NoResize)) {
 
         //if (!fontNames.empty()) {
             // if (ImGuiWidgets::ComboBoxWithIndex("Font", fontNames, selectedFontIndex)) {
             //     selectedFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
             // }
 
-            ImGui::SliderInt("Size", &fontSize, 12, 18, "%d", ImGuiSliderFlags_ClampOnInput);
+            ImGui::SliderInt("Size", &m_fontSize, 12, 18, "%d", ImGuiSliderFlags_ClampOnInput);
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
             if (ImGui::Button("Apply")) {
-                style.FontSizeBase = fontSize;
+                style.FontSizeBase = m_fontSize;
                 style._NextFrameFontSizeBase = style.FontSizeBase;
 
                 // ImFont* newFont = io.Fonts->AddFontFromFileTTF(fontPaths[selectedFontIndex].c_str(), fontSize);
@@ -66,7 +73,7 @@ void FontSettings::update(bool& showWindow)
 
                 ImGui::Begin("Font Preview", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-                    ImGui::PushFont(selectedFont, fontSize);
+                    ImGui::PushFont(selectedFont, m_fontSize);
                     ImGui::Text("The quick brown fox jumps over the lazy dog. 1234567890");
                     ImGui::Text("Съешь же ещё этих мягких французских булок, да выпей чаю.");
                     ImGui::PopFont();
