@@ -1,8 +1,5 @@
 #include "Application.h"
-#include "Settings.h"
 
-#include <atomic>
-#include <future>
 #include <format>
 
 #include <SDL3/SDL.h>
@@ -11,60 +8,11 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "Resources.h"
+#include "Settings.h"
 #include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
 #include "utils/TracyProfiler.h"
 #include "utils/DebugLog.h"
-
-namespace {
-    std::atomic_bool backgroundWork = false;
-}
-
-void Application::RootDirectoryContext::setRootDirectoryAndReload(std::string_view rootDirectory) {
-    backgroundWork = true;
-
-    levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
-    selectedLevelIndex = 0;
-
-    showCsxWindow = false;
-    showSdbWindow = false;
-    showMdfWindow = false;
-    showCsWindow = false;
-
-    asyncLoadPaths(rootDirectory); // TODO: Запись rootDirectory в ini файл настроек
-}
-
-bool Application::RootDirectoryContext::isEmptyContext() const {
-    bool emptyResources =
-            singleLevelNames.empty() &&
-            multiplayerLevelNames.empty() &&
-            csxFiles.empty() &&
-            sdbFiles.empty() &&
-            mdfFiles.empty() &&
-            csFiles.empty();
-
-    return m_rootDirectory.empty() || emptyResources;
-}
-
-void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDirectory) {
-    backgroundWork = true;
-    this->m_rootDirectory = rootDirectory;
-    auto backgroundTask = [] (RootDirectoryContext* rootDirContext) {
-        Resources resources(rootDirContext->rootDirectory());
-        rootDirContext->singleLevelNames = resources.levelNames(LevelType::kSingle);
-        rootDirContext->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
-        rootDirContext->levelHumanNamesDict = resources.levelHumanNameDictionary();
-
-        rootDirContext->csxFiles = resources.csxFiles();
-        rootDirContext->sdbFiles = resources.sdbFiles();
-        rootDirContext->mdfFiles = resources.mdfFiles();
-        rootDirContext->csFiles = resources.csFiles();
-
-        backgroundWork = false;
-    };
-    m_loadPathFuture = std::async(std::launch::async, backgroundTask, this);
-}
 
 Application::Application() {
     Settings settings("settings.ini");
@@ -177,7 +125,7 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
 }
 
 bool Application::hasActiveAnimations() const {
-    if (backgroundWork) {
+    if (m_rootDirContext.isLoading()) {
         return true;
     }
     if (m_mdfViewer.isAnimating()) {
@@ -222,7 +170,7 @@ void Application::mainLoop() {
 
         ImGuiID mainDockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());  
 
-        bool loaderWindow = backgroundWork.load();
+        bool loaderWindow = m_rootDirContext.isLoading();
         ImGuiWidgets::Loader("Loading...", loaderWindow);
         ImGuiWidgets::ShowMessageModal("Error", uiError);
 
@@ -294,7 +242,7 @@ void Application::mainLoop() {
             ImGui::EndMainMenuBar();
         }
 
-        if (!backgroundWork) {
+        if (!m_rootDirContext.isLoading()) {
             if (m_rootDirContext.isEmptyContext()) {
                 ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
                     | ImGuiWindowFlags_AlwaysAutoResize
@@ -343,7 +291,7 @@ void Application::mainLoop() {
 
         // NOTE: Для генерации озвучки
         // static bool csViewerOnce = false;
-        // if (!backgroundWork && !csViewerOnce) {
+        // if (!m_rootDirContext.isBusy() && !csViewerOnce) {
         //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
         //     csViewerOnce = true;
         // }
@@ -377,7 +325,7 @@ void Application::mainLoop() {
             }
         }
 
-        if (!backgroundWork) {
+        if (!m_rootDirContext.isLoading()) {
             for (auto it = m_rootDirContext.levels.begin(); it != m_rootDirContext.levels.end();) {
                 bool openLevel = true;
                 Level& level = *it;
