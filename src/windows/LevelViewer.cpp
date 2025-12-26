@@ -250,6 +250,11 @@ bool LevelViewer::isAnimating(const Level& level) const
     return showLevelAnimation || showMinimapAnimation;
 }
 
+bool LevelViewer::isVisibleInWindow(const ImRect& rect) const
+{
+    return ImGui::GetCurrentWindow()->ClipRect.Overlaps(rect);
+}
+
 ImVec2 LevelViewer::computeMinimapSize(const Level& level, bool hasMinimap) {
     if (hasMinimap) {
         return ImVec2(level.data().minimap->w,
@@ -784,28 +789,32 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
                         drawPosition.y + person.position.y * Level::tileHeight);
 
         bool fullAlpha = true;
-        ImVec2 mousePos = ImGui::GetMousePos();
+        ImRect personBox = {position, {position.x + Level::tileWidth, position.y + Level::tileHeight}};
         if (leftMouseDownOnLevel(level) &&
-            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
-            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+            personBox.Contains(ImGui::GetMousePos()))
         {
             ImGuiWidgets::SetTooltipStacked("[PERSON]\n%s", personInfo(person).c_str());
         } else if (leftMouseDownOnLevel(level)) {
             fullAlpha = false;
         }
 
-        drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
-        drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        if (isVisibleInWindow(personBox)) {
+            drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
+            drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        }
 
         std::string_view personName = level.data().sdbData.strings.empty() ? person.techName
                                                                            : level.data().sdbData.strings.at(person.literaryNameIndex);
 
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
         const ImVec2 textSize = ImGui::CalcTextSize(personName.data());
-        drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+        ImRect textBox = {textPos, {textPos.x + textSize.x, textPos.y + textSize.y}};
 
-        ImGui::SetCursorScreenPos(textPos);
-        ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", personName.data());
+        if (isVisibleInWindow(textBox)) {
+            drawList->AddRectFilled(textBox.Min, textBox.Max, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+            ImGui::SetCursorScreenPos(textPos);
+            ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", personName.data());
+        }
     }
 }
 
@@ -818,10 +827,9 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
                         drawPosition.y + pointEnt.position.y * Level::tileHeight);
 
         bool fullAlpha = true;
-        ImVec2 mousePos = ImGui::GetMousePos();
+        ImRect pointBox = {position, {position.x + Level::tileWidth, position.y + Level::tileHeight}};
         if (leftMouseDownOnLevel(level) &&
-            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
-            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+            pointBox.Contains(ImGui::GetMousePos()))
         {
             ImGuiWidgets::SetTooltipStacked("[POINT ENTRANCE]\n"
                                             "Name: %s\n"
@@ -834,15 +842,20 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
             fullAlpha = false;
         }
 
-        drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(204, 153, 204, fullAlpha ? 192 : 64));
-        drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        if (isVisibleInWindow(pointBox)) {
+            drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(204, 153, 204, fullAlpha ? 192 : 64));
+            drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
+        }
 
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
         const ImVec2 textSize = ImGui::CalcTextSize(pointEnt.techName.c_str());
-        drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+        ImRect textBox = {textPos, {textPos.x + textSize.x, textPos.y + textSize.y}};
 
-        ImGui::SetCursorScreenPos(textPos);
-        ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.8f, fullAlpha ? 1.0f : 0.4f), "%s", pointEnt.techName.c_str());
+        if (isVisibleInWindow(textBox)) {
+            drawList->AddRectFilled(textPos, {textPos.x + textSize.x, textPos.y + textSize.y}, IM_COL32(0, 0, 0, fullAlpha ? 164 : 48));
+            ImGui::SetCursorScreenPos(textPos);
+            ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.8f, fullAlpha ? 1.0f : 0.4f), "%s", pointEnt.techName.c_str());
+        }
     }
 }
 
@@ -904,7 +917,19 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
 
             centers.push_back({position.x + Level::tileWidth / 2.0f, position.y + Level::tileHeight / 2.0f});
         }
-        drawList->AddPolyline(centers.data(), centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 36) : 64), 0, 2.0f);
+
+        ImRect polylineRect(centers[0], centers[0]);
+        for (const ImVec2& p : centers) {
+            polylineRect.Min = ImMin(polylineRect.Min, p);
+            polylineRect.Max = ImMax(polylineRect.Max, p);
+        }
+
+        const float thickness = 2.0f;
+        polylineRect.Expand(thickness);
+
+        if (isVisibleInWindow(polylineRect)) {
+            drawList->AddPolyline(centers.data(), centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 36) : 64), 0, thickness);
+        }
     }
 
     for (int cellIndex = 0; cellIndex < group.cells.size(); ++cellIndex) {
@@ -913,12 +938,13 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
         ImVec2 position(drawPosition.x + cellPosition.x * Level::tileWidth,
                         drawPosition.y + cellPosition.y * Level::tileHeight);
 
-        ImVec2 mousePos = ImGui::GetMousePos();
+        ImRect cellBox = {position, {position.x + Level::tileWidth, position.y + Level::tileHeight}};
+        if (!isVisibleInWindow(cellBox)) continue;
+
         if (!imgui.minimapHovered &&
             ImGui::IsWindowFocused() &&
             ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-            mousePos.x >= position.x && mousePos.x < (position.x + Level::tileWidth) &&
-            mousePos.y >= position.y && mousePos.y < (position.y + Level::tileHeight))
+            cellBox.Contains(ImGui::GetMousePos()))
         {
             ImGuiWidgets::SetTooltipStacked("[CELL GROUP]\n"
                                             "Name: %s\n"
@@ -942,7 +968,6 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImRect windowClipRect = ImGui::GetCurrentWindow()->ClipRect;
     bool hasVisibleAnimations = false;
 
     uint64_t nowMs = SDL_GetTicks();
@@ -956,7 +981,7 @@ void LevelViewer::drawAnimations(Level& level, ImVec2 drawPosition)
         const Texture& texture = animation.currentTexture();
         ImRect animationBox = {animationPosition, {animationPosition.x + texture->w, animationPosition.y + texture->h}};
 
-        if (!windowClipRect.Overlaps(animationBox)) { continue; }
+        if (!isVisibleInWindow(animationBox)) { continue; }
 
         hasVisibleAnimations = true;
         ImGui::SetCursorScreenPos(animationPosition);
@@ -995,12 +1020,13 @@ void LevelViewer::drawSounds(Level& level, ImVec2 drawPosition)
     for (const ExtraSound& sound : level.data().lvlData.sounds.otherSounds) {
         ImVec2 position(drawPosition.x + sound.chunkPositionX * Level::chunkWidth,
                         drawPosition.y + sound.chunkPositionY * Level::chunkHeight);
+        ImRect soundBox = {position, {position.x + Level::chunkWidth, position.y + Level::chunkHeight}};
+
+        if (!isVisibleInWindow(soundBox)) continue;
 
         bool fullAlpha = true;
-        ImVec2 mousePos = ImGui::GetMousePos();
         if (leftMouseDownOnLevel(level) &&
-            mousePos.x >= position.x && mousePos.x < (position.x + Level::chunkWidth) &&
-            mousePos.y >= position.y && mousePos.y < (position.y + Level::chunkHeight))
+            soundBox.Contains(ImGui::GetMousePos()))
         {
             ImGuiWidgets::SetTooltipStacked("[SOUND]\n"
                                             "Path: %s\n"
@@ -1040,14 +1066,13 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImRect windowClipRect = ImGui::GetCurrentWindow()->ClipRect;
 
     for (const LevelTrigger& trigger : level.data().triggers) {
         ImVec2 triggerPosition{drawPosition.x + trigger.lvlDescription.position.x,
                                drawPosition.y + trigger.lvlDescription.position.y};
         ImRect triggerBox = {triggerPosition, {triggerPosition.x + trigger.texture->w, triggerPosition.y + trigger.texture->h}};
 
-        if (!windowClipRect.Overlaps(triggerBox)) { continue; }
+        if (!isVisibleInWindow(triggerBox)) { continue; }
 
         ImGui::SetCursorScreenPos(triggerPosition);
 
