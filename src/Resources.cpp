@@ -5,6 +5,7 @@
 #include <future>
 
 #include "parsers/SDB_Parser.h"
+#include "CsExecutor.h"
 
 #include "utils/DebugLog.h"
 #include "utils/StringUtils.h"
@@ -71,6 +72,26 @@ std::vector<std::string> Resources::levelNames(LevelType type) const
     return results;
 }
 
+std::vector<std::string> Resources::sdbFiles() const
+{
+    return filesWithExtension({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
+}
+
+std::vector<std::string> Resources::csxFiles() const
+{
+    return filesWithExtensionAsync({Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}, ".csx");
+}
+
+std::vector<std::string> Resources::mdfFiles() const
+{
+    return filesWithExtension({Magic}, ".mdf"); // TODO: fs::directory_iterator
+}
+
+std::vector<std::string> Resources::csFiles() const
+{
+    return filesWithExtension({Scripts_Dialogs}, ".cs");
+}
+
 StringHashTable<std::string> Resources::levelHumanNameDictionary() const
 {
     std::string error;
@@ -127,24 +148,26 @@ StringHashTable<std::string> Resources::levelHumanNameDictionary() const
     return result;
 }
 
-std::vector<std::string> Resources::sdbFiles() const
+std::map<int, std::string> Resources::dialogPhrases() const
 {
-    return filesWithExtension({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
+    std::string error;
+    SDB_Data sdbDialogs;
+    std::string sdbPath = std::format("{}/dialogs/dialogsphrases.sdb", m_mainDirectories[Sdb]);
+    if (!SDB_Parser::parse(sdbPath, sdbDialogs, &error))
+        LogFmt("Load dialogsphrases.sdb error: {}", error);
+
+    return sdbDialogs.strings;
 }
 
-std::vector<std::string> Resources::csxFiles() const
+UMapStringVar_t Resources::globalVars() const
 {
-    return filesWithExtensionAsync({Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}, ".csx");
-}
+    std::string error;
+    std::string varsPath = std::format("{}/dialogs_special/zlato_vars.scr", m_mainDirectories[Scripts]);
+    UMapStringVar_t globalVars;
+    if (!CsExecutor::readGlobalVariables(varsPath, globalVars, &error))
+        LogFmt("Load zlato_vars.scr error: {}", error);
 
-std::vector<std::string> Resources::mdfFiles() const
-{
-    return filesWithExtension({Magic}, ".mdf"); // TODO: fs::directory_iterator
-}
-
-std::vector<std::string> Resources::csFiles() const
-{
-    return filesWithExtension({Scripts_Dialogs}, ".cs");
+    return globalVars;
 }
 
 std::vector<std::string> Resources::Resources::filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const {

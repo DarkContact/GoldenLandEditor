@@ -6,7 +6,6 @@
 #include "imgui.h"
 
 #include "parsers/CS_Parser.h"
-#include "parsers/SDB_Parser.h"
 #include "windows/CsExecutorViewer.h"
 #include "Types.h"
 
@@ -14,7 +13,12 @@ class CsViewer {
 public:
     CsViewer();
 
-    void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
+    void update(bool& showWindow,
+                std::string_view rootDirectory,
+                const std::vector<std::string>& csFiles,
+                const std::map<int, std::string>& dialogPhrases,
+                const UMapStringVar_t& globalVars);
+
     void injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
 
 private:
@@ -24,8 +28,6 @@ private:
     ImGuiTextFilter m_textFilterFile;
     ImGuiTextFilter m_textFilterString;
     CS_Data m_csData;
-    SDB_Data m_sdbDialogs;
-    UMapStringVar_t m_globalVars;
     std::string m_csError;
     std::vector<bool> m_funcNodes;
     bool m_showOnlyFunctions = false;

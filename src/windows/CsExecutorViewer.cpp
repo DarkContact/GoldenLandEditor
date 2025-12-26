@@ -14,8 +14,8 @@ void CsExecutorViewer::update(bool& showWindow,
                               bool& needUpdate,
                               std::string_view title,
                               std::span<const CS_Node> nodes,
-                              const UMapStringVar_t& globalVars,
-                              const SDB_Data& dialogsPhrases)
+                              const std::map<int, std::string>& dialogsPhrases,
+                              const UMapStringVar_t& globalVars)
 {
     if (needUpdate) {
         m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
@@ -109,7 +109,7 @@ void CsExecutorViewer::update(bool& showWindow,
                     ImGui::SeparatorText("Dialog");
 
                     std::string_view sayPhrase = "[NOT FOUND!]";
-                    if (auto it = dialogsPhrases.strings.find(dialogData[0]); it != dialogsPhrases.strings.cend()) {
+                    if (auto it = dialogsPhrases.find(dialogData[0]); it != dialogsPhrases.cend()) {
                         sayPhrase = it->second;
                     }
                     ImGui::TextWrapped("%s", sayPhrase.data());
@@ -134,7 +134,7 @@ void CsExecutorViewer::update(bool& showWindow,
                         }
                         ImGui::SameLine();
                         std::string_view answerPhrase = "[NOT FOUND!]";
-                        if (auto it = dialogsPhrases.strings.find(dialogData[i]); it != dialogsPhrases.strings.cend()) {
+                        if (auto it = dialogsPhrases.find(dialogData[i]); it != dialogsPhrases.cend()) {
                             answerPhrase = it->second;
                         }
                         ImGui::TextWrapped("%s", answerPhrase.data());

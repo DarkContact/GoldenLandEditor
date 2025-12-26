@@ -275,7 +275,8 @@ void Application::mainLoop() {
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles());
+            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles(),
+                              m_rootDirContext.dialogPhrases(), m_rootDirContext.globalVars());
 
             if (showSettingsWindow) {
                 m_fontSettings->update(showSettingsWindow);

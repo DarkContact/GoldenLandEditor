@@ -5,7 +5,6 @@
 
 #include "Types.h"
 #include "parsers/CS_Parser.h"
-#include "parsers/SDB_Parser.h"
 
 #include "CsExecutor.h"
 
@@ -17,8 +16,8 @@ public:
                 bool& needUpdate,
                 std::string_view title,
                 std::span<const CS_Node> nodes,
-                const UMapStringVar_t& globalVars,
-                const SDB_Data& dialogsPhrases);
+                const std::map<int, std::string>& dialogsPhrases,
+                const UMapStringVar_t& globalVars);
 
     bool isNodeExecuted(int index) const;
     int executedPercent() const;
