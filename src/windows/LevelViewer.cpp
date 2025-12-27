@@ -11,7 +11,6 @@
 #include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
 
-
 LevelViewer::LevelViewer() {}
 
 void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level& level)
@@ -255,6 +254,12 @@ bool LevelViewer::isVisibleInWindow(const ImRect& rect) const
     return ImGui::GetCurrentWindow()->ClipRect.Overlaps(rect);
 }
 
+bool LevelViewer::leftMouseDownOnLevel(const Level& level) const {
+    return !level.data().imgui.minimapHovered &&
+           ImGui::IsWindowFocused() &&
+           ImGui::IsMouseDown(ImGuiMouseButton_Left);
+}
+
 ImVec2 LevelViewer::computeMinimapSize(const Level& level, bool hasMinimap) {
     if (hasMinimap) {
         return ImVec2(level.data().minimap->w,
@@ -294,12 +299,6 @@ ImVec2 LevelViewer::transformPoint(const ImVec2& pointInSource, const ImRect& so
     pointInTarget.y = targetRect.Min.y + normalized.y * (targetRect.Max.y - targetRect.Min.y);
 
     return pointInTarget;
-}
-
-bool LevelViewer::leftMouseDownOnLevel(const Level& level) {
-    return !level.data().imgui.minimapHovered &&
-           ImGui::IsWindowFocused() &&
-           ImGui::IsMouseDown(ImGuiMouseButton_Left);
 }
 
 const char* LevelViewer::maskSoundToString(MapDataSound sound) {

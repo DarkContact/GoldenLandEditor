@@ -12,11 +12,11 @@ public:
 
 private:
     bool isVisibleInWindow(const ImRect& rect) const;
+    bool leftMouseDownOnLevel(const Level& level) const;
 
     ImVec2 computeMinimapSize(const Level& level, bool hasMinimap);
     ImVec2 computeMinimapPosition(const Level& level, ImVec2 minimapSize);
     ImVec2 transformPoint(const ImVec2& pointInSource, const ImRect& sourceRect, const ImRect& targetRect);
-    bool leftMouseDownOnLevel(const Level& level);
     const char* maskSoundToString(MapDataSound sound);
     std::string personInfo(const SEF_Person& person);
 
