@@ -188,7 +188,8 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         }
     }
 
-    if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) {
+    if (ImGui::IsWindowHovered()
+        && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
         ImGui::SetWindowFocus();
     }
 
@@ -355,7 +356,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
     }
 
     const bool isShiftLMB = io.KeyShift && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-    const bool isMMB = ImGui::IsMouseClicked(ImGuiMouseButton_Middle);
+    const bool isMMB = ImGui::IsMouseDown(ImGuiMouseButton_Middle);
 
     // Начало перетаскивания по уровню
     if (!imgui.draggingLevel && (isShiftLMB || isMMB)) {
@@ -797,6 +798,16 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             fullAlpha = false;
         }
 
+        if (!level.data().imgui.minimapHovered &&
+            ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+            personBox.Contains(ImGui::GetMousePos()))
+        {
+            if (!ImGui::IsPopupOpen("PersonPopup")) {
+                ImGui::OpenPopup("PersonPopup");
+                level.data().imgui.popupPerson = &person;
+            }
+        }
+
         if (isVisibleInWindow(personBox)) {
             drawList->AddRectFilled(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(255, 228, 0, fullAlpha ? 192 : 64));
             drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
@@ -814,6 +825,27 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             ImGui::SetCursorScreenPos(textPos);
             ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.0f, fullAlpha ? 1.0f : 0.4f), "%s", personName.data());
         }
+    }
+
+    if (!ImGui::IsPopupOpen("PersonPopup")) {
+        level.data().imgui.popupPerson = nullptr;
+    }
+
+    if (ImGui::BeginPopup("PersonPopup", ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings)) {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle)) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        const auto* person = level.data().imgui.popupPerson;
+        if (person) {
+            std::string_view personName = level.data().sdbData.strings.empty() ? person->techName
+                                                                               : level.data().sdbData.strings.at(person->literaryNameIndex);
+
+            ImGui::SeparatorText(personName.data());
+            ImGui::MenuItem("Start dialog", NULL, false, !person->scriptDialog.empty());
+        }
+
+        ImGui::EndPopup();
     }
 }
 
