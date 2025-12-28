@@ -315,7 +315,7 @@ const char* LevelViewer::maskSoundToString(MapDataSound sound) {
     return {};
 }
 
-std::string LevelViewer::personInfo(const SEF_Person& person) {
+std::string LevelViewer::personInfo(const SEF_Person& person) const {
     return std::format("Name: {}\n"
                        "Position: {}x{}\n"
                        "Index: {}\n"
@@ -345,6 +345,11 @@ std::string LevelViewer::personInfo(const SEF_Person& person) {
                                                       : std::format("Inventory: {}\n", person.scriptInventory));
 }
 
+std::string_view LevelViewer::personName(const Level& level, const SEF_Person& person) const
+{
+    return level.data().sdbData.strings.empty() ? person.techName
+                                                : level.data().sdbData.strings.at(person.literaryNameIndex);
+}
 
 void LevelViewer::handleLevelDragScroll(Level& level) {
     Tracy_ZoneScoped;
@@ -813,8 +818,7 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
             drawList->AddRect(position, {position.x + Level::tileWidth, position.y + Level::tileHeight}, IM_COL32(0, 0, 0, fullAlpha ? 192 : 64));
         }
 
-        std::string_view personName = level.data().sdbData.strings.empty() ? person.techName
-                                                                           : level.data().sdbData.strings.at(person.literaryNameIndex);
+        std::string_view personName = this->personName(level, person);
 
         const ImVec2 textPos = {position.x + Level::tileWidth + 2.0f, position.y + 4.0f};
         const ImVec2 textSize = ImGui::CalcTextSize(personName.data());
@@ -838,11 +842,11 @@ void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 
         const auto* person = level.data().imgui.popupPerson;
         if (person) {
-            std::string_view personName = level.data().sdbData.strings.empty() ? person->techName
-                                                                               : level.data().sdbData.strings.at(person->literaryNameIndex);
-
+            std::string_view personName = this->personName(level, *person);
             ImGui::SeparatorText(personName.data());
-            ImGui::MenuItem("Start dialog", NULL, false, !person->scriptDialog.empty());
+            if ( ImGui::MenuItem("Copy dialog path", NULL, false, !person->scriptDialog.empty()) ) {
+                ImGui::SetClipboardText(person->scriptDialog.c_str());
+            }
         }
 
         ImGui::EndPopup();
