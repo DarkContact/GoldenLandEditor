@@ -11,14 +11,15 @@
 #include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
 
-#include "CsExecutor.h"
 #include "CsExecutorViewer.h"
 
-CsViewer::CsViewer() {
+CsViewer::CsViewer() {}
 
-}
-
-void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& csFiles)
+void CsViewer::update(bool& showWindow,
+                      std::string_view rootDirectory,
+                      const std::vector<std::string>& csFiles,
+                      const std::map<int, std::string>& dialogPhrases,
+                      const UMapStringVar_t& globalVars)
 {
     Tracy_ZoneScoped;
     if (showWindow && !csFiles.empty()) {
@@ -27,14 +28,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         bool needUpdate = false;
 
         if (!m_onceWhenOpen) {
-            std::string error;
-            std::string sdbPath = std::format("{}/sdb/dialogs/dialogsphrases.sdb", rootDirectory);
-            if (!SDB_Parser::parse(sdbPath, m_sdbDialogs, &error))
-                LogFmt("Load dialogsphrases.sdb error: {}", error);
-
-            std::string varsPath = std::format("{}/scripts/dialogs_special/zlato_vars.scr", rootDirectory);
-            if (!CsExecutor::readGlobalVariables(varsPath, m_globalVars, &error))
-                LogFmt("Load zlato_vars.scr error: {}", error);
+            /*Unused*/
             m_onceWhenOpen = true;
         }
 
@@ -121,7 +115,7 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
                     }
 
                     const CS_Node& node = m_csData.nodes[i];
-                    node.toStringBuffer(nodeInfoBuffer, (isDialogPhrase && m_showDialogPhrases), m_sdbDialogs.strings);
+                    node.toStringBuffer(nodeInfoBuffer, (isDialogPhrase && m_showDialogPhrases), dialogPhrases);
 
                     if (m_showOnlyFunctions && m_funcNodes[i]
                         || !m_showOnlyFunctions) {
@@ -161,7 +155,14 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
 
         ImGui::End();
 
-        m_csExecutorViewer.update(m_showExecuteWindow, needUpdate, m_csData.nodes, m_globalVars, m_sdbDialogs);
+        if (m_selectedIndex >= 0) {
+            m_csExecutorViewer.update(m_showExecuteWindow,
+                                      needUpdate,
+                                      csFiles[m_selectedIndex],
+                                      m_csData.nodes,
+                                      dialogPhrases,
+                                      globalVars);
+        }
     }
 
     // Очистка
@@ -171,9 +172,8 @@ void CsViewer::update(bool& showWindow, std::string_view rootDirectory, const st
         m_csData.nodes.clear();
         m_textFilterFile.Clear();
         m_textFilterString.Clear();
-        m_sdbDialogs = {};
-        m_globalVars.clear();
         m_funcNodes.clear();
+        m_showExecuteWindow = false;
         m_onceWhenOpen = false;
         m_onceWhenClose = true;
     }

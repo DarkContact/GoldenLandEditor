@@ -91,8 +91,13 @@ struct StringViewEqual {
     }
 };
 
+
+template <typename Value>
+using StringHashTable = std::unordered_map<std::string, Value,
+                        StringViewHash, StringViewEqual>;
+
 using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
-using UMapStringVar_t = std::unordered_map<std::string, Variable_t, StringViewHash, StringViewEqual>;
+using UMapStringVar_t = StringHashTable<Variable_t>;
 
 template <typename R>
 concept FormattableRange =

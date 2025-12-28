@@ -6,8 +6,7 @@
 
 #include "parsers/SDB_Parser.h"
 
-class SdbViewer
-{
+class SdbViewer {
 public:
     SdbViewer();
 

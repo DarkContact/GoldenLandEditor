@@ -1,8 +1,5 @@
 #include "Application.h"
-#include "Settings.h"
 
-#include <atomic>
-#include <future>
 #include <format>
 
 #include <SDL3/SDL.h>
@@ -11,65 +8,11 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "Resources.h"
+#include "Settings.h"
 #include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
-#include "windows/FontSettings.h"
-#include "windows/LevelPicker.h"
-#include "windows/LevelViewer.h"
-#include "windows/CsxViewer.h"
-#include "windows/SdbViewer.h"
-#include "windows/MdfViewer.h"
-#include "windows/CsViewer.h"
-
 #include "utils/TracyProfiler.h"
 #include "utils/DebugLog.h"
-
-namespace {
-    std::atomic_bool backgroundWork = false;
-}
-
-void Application::RootDirectoryContext::setRootDirectoryAndReload(std::string_view rootDirectory) {
-    backgroundWork = true;
-
-    levels.clear(); // TODO: Что-то делать с уровнями если остались несохранённые данные
-    selectedLevelIndex = 0;
-
-    showCsxWindow = false;
-    showSdbWindow = false;
-    showMdfWindow = false;
-    showCsWindow = false;
-
-    asyncLoadPaths(rootDirectory); // TODO: Запись rootDirectory в ini файл настроек
-}
-
-bool Application::RootDirectoryContext::isEmptyContext() const {
-    bool emptyResources =
-            singleLevelNames.empty() &&
-            multiplayerLevelNames.empty() &&
-            csxFiles.empty() &&
-            sdbFiles.empty() &&
-            mdfFiles.empty() &&
-            csFiles.empty();
-
-    return m_rootDirectory.empty() || emptyResources;
-}
-
-void Application::RootDirectoryContext::asyncLoadPaths(std::string_view rootDirectory) {
-    backgroundWork = true;
-    this->m_rootDirectory = rootDirectory;
-    auto backgroundTask = [] (RootDirectoryContext* rootDirContext) {
-        Resources resources(rootDirContext->rootDirectory());
-        rootDirContext->singleLevelNames = resources.levelNames(LevelType::kSingle);
-        rootDirContext->multiplayerLevelNames = resources.levelNames(LevelType::kMultiplayer);
-        rootDirContext->csxFiles = resources.csxFiles();
-        rootDirContext->sdbFiles = resources.sdbFiles();
-        rootDirContext->mdfFiles = resources.mdfFiles();
-        rootDirContext->csFiles = resources.csFiles();
-        backgroundWork = false;
-    };
-    m_loadPathFuture = std::async(std::launch::async, backgroundTask, this);
-}
 
 Application::Application() {
     Settings settings("settings.ini");
@@ -82,6 +25,8 @@ Application::Application() {
 
     initSdl();
     initImGui(fontFilepath, fontSize);
+
+    m_fontSettings = std::make_optional<FontSettings>();
 }
 
 Application::~Application() {
@@ -180,7 +125,7 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
 }
 
 bool Application::hasActiveAnimations() const {
-    if (backgroundWork) {
+    if (m_rootDirContext.isLoading()) {
         return true;
     }
     if (m_mdfViewer.isAnimating()) {
@@ -225,7 +170,7 @@ void Application::mainLoop() {
 
         ImGuiID mainDockSpace = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());  
 
-        bool loaderWindow = backgroundWork.load();
+        bool loaderWindow = m_rootDirContext.isLoading();
         ImGuiWidgets::Loader("Loading...", loaderWindow);
         ImGuiWidgets::ShowMessageModal("Error", uiError);
 
@@ -233,22 +178,22 @@ void Application::mainLoop() {
             if (ImGui::BeginMenu("File")) {
                 ImGui::BeginDisabled(m_rootDirContext.isEmptyContext());
 
-                bool levelsDisabled = m_rootDirContext.singleLevelNames.empty()
-                                      && m_rootDirContext.multiplayerLevelNames.empty();
+                bool levelsDisabled = m_rootDirContext.singleLevelNames().empty()
+                                      && m_rootDirContext.multiplayerLevelNames().empty();
                 if (ImGui::MenuItem("Levels", NULL, false, !levelsDisabled)) {
                     showLevelsWindow = true;
                 }
                 ImGui::Separator();
-                if (ImGui::MenuItem("CSX Viewer", NULL, false, !m_rootDirContext.csxFiles.empty())) {
+                if (ImGui::MenuItem("CSX Viewer", NULL, false, !m_rootDirContext.csxFiles().empty())) {
                     m_rootDirContext.showCsxWindow = true;
                 }
-                if (ImGui::MenuItem("SDB Viewer", NULL, false, !m_rootDirContext.sdbFiles.empty())) {
+                if (ImGui::MenuItem("SDB Viewer", NULL, false, !m_rootDirContext.sdbFiles().empty())) {
                     m_rootDirContext.showSdbWindow = true;
                 }
-                if (ImGui::MenuItem("MDF Viewer", NULL, false, !m_rootDirContext.mdfFiles.empty())) {
+                if (ImGui::MenuItem("MDF Viewer", NULL, false, !m_rootDirContext.mdfFiles().empty())) {
                     m_rootDirContext.showMdfWindow = true;
                 }
-                if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles.empty())) {
+                if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles().empty())) {
                     m_rootDirContext.showCsWindow = true;
                 }
 
@@ -297,7 +242,7 @@ void Application::mainLoop() {
             ImGui::EndMainMenuBar();
         }
 
-        if (!backgroundWork) {
+        if (!m_rootDirContext.isLoading()) {
             if (m_rootDirContext.isEmptyContext()) {
                 ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration
                     | ImGuiWindowFlags_AlwaysAutoResize
@@ -324,16 +269,17 @@ void Application::mainLoop() {
             }
 
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles);
+            m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles);
+            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles);
+            m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+            m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles(),
+                              m_rootDirContext.dialogPhrases(), m_rootDirContext.globalVars());
 
             if (showSettingsWindow) {
-                FontSettings::update(showSettingsWindow);
+                m_fontSettings->update(showSettingsWindow);
             }
 
             if (showAboutWindow) {
@@ -346,15 +292,16 @@ void Application::mainLoop() {
 
         // NOTE: Для генерации озвучки
         // static bool csViewerOnce = false;
-        // if (!backgroundWork && !csViewerOnce) {
-        //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles);
+        // if (!m_rootDirContext.isBusy() && !csViewerOnce) {
+        //     m_csViewer.injectPlaySoundAndGeneratePhrases("C:/Games/Холодные Небеса", m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles());
         //     csViewerOnce = true;
         // }
 
-        if (showLevelsWindow && !m_rootDirContext.singleLevelNames.empty()) {
+        if (showLevelsWindow && !m_rootDirContext.singleLevelNames().empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
-                                                   m_rootDirContext.singleLevelNames,
-                                                   m_rootDirContext.multiplayerLevelNames,
+                                                   m_rootDirContext.singleLevelNames(),
+                                                   m_rootDirContext.multiplayerLevelNames(),
+                                                   m_rootDirContext.levelHumanNamesDict(),
                                                    m_rootDirContext.selectedLevelIndex); result.selected) {
                 bool alreadyLoaded = false;
                 for (const auto& level : m_rootDirContext.levels) {
@@ -379,7 +326,7 @@ void Application::mainLoop() {
             }
         }
 
-        if (!backgroundWork) {
+        if (!m_rootDirContext.isLoading()) {
             for (auto it = m_rootDirContext.levels.begin(); it != m_rootDirContext.levels.end();) {
                 bool openLevel = true;
                 Level& level = *it;

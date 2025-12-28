@@ -56,6 +56,8 @@ struct LevelImgui {
     MapTilesMode mapTilesMode = MapTilesMode::Relief;
 
     bool showPersons = true;
+    const SEF_Person* popupPerson = nullptr;
+
     bool showEntrancePoints = true;
 
     bool showCellGroups = false;

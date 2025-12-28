@@ -59,11 +59,6 @@ jobs:
           name: windows-x64-build
           path: release-files
 
-      - name: Create ZIP archive
-        run: |
-          cd release-files
-          zip -jr ../GoldenLandEditor.zip . -i '*.exe' '*.dll'
-
       - name: Extract version
         run: |
           VERSION=$(cat release-files/VERSION | tr -d '\r\n')
@@ -71,8 +66,7 @@ jobs:
 
       - name: Extract changelog for this version
         run: |
-          version=${{ env.VERSION }}
-          awk -v ver="$version" '
+          awk -v ver="$VERSION" '
             # Start of requested version (ignore leading # and spaces)
             $0 ~ "^[[:space:]]*#*\\s*\\[" ver "\\]" { in_section=1; next }
 
@@ -91,12 +85,17 @@ jobs:
             }
           ' release-files/CHANGELOG.md > ReleaseNotes.txt
 
+      - name: Create ZIP archive
+        run: |
+          cd release-files
+          zip -jr ../GoldenLandEditor_v$VERSION.zip . -i '*.exe' '*.dll'
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: GoldenLandEditor v${{ env.VERSION }}
-          files: GoldenLandEditor.zip
+          files: GoldenLandEditor_v${{ env.VERSION }}.zip
           body_path: ReleaseNotes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,7 @@
 #include "StringUtils.h"
 
 #include <string_view>
+#include <algorithm>
 #include <charconv>
 #include <cstring>
 #include <cassert>
@@ -9,6 +10,13 @@ using namespace std::literals::string_view_literals;
 
 static constexpr bool isSpace(int ch) noexcept {
     return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
+}
+
+
+static constexpr char toLower(char c) noexcept {
+    if (c >= 'A' && c <= 'Z')
+        return c + ('a' - 'A');
+    return c;
 }
 
 static constexpr std::string_view win1251_to_utf8[] = {
@@ -30,6 +38,11 @@ static constexpr std::string_view win1251_to_utf8[] = {
     "а"sv, "б"sv, "в"sv, "г"sv, "д"sv, "е"sv, "ж"sv, "з"sv, "и"sv, "й"sv, "к"sv, "л"sv, "м"sv, "н"sv, "о"sv, "п"sv,    // 0xE0 - 0xEF
     "р"sv, "с"sv, "т"sv, "у"sv, "ф"sv, "х"sv, "ц"sv, "ч"sv, "ш"sv, "щ"sv, "ъ"sv, "ы"sv, "ь"sv, "э"sv, "ю"sv, "я"sv,    // 0xF0 - 0xFF
 };
+
+void StringUtils::toLowerAscii(std::string_view input, std::span<char> output) noexcept {
+    assert(output.size() >= input.size());
+    std::transform(input.begin(), input.end(), output.begin(), toLower);
+}
 
 std::string_view StringUtils::trimLeft(std::string_view input) noexcept {
     while (!input.empty() && isSpace(input.front())) {

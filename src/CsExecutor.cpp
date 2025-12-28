@@ -96,6 +96,8 @@ void CsExecutor::readScriptVariables()
         if (node.opcode == OpcodeType::kStringVarName) {
             if (auto it = m_globalVars.find(node.text); it != m_globalVars.end()) {
                 m_scriptVars.emplace(node.text, it->second);
+            } else {
+                LogFmt("Script variable '{}' not found in globals vars", node.text);
             }
         }
     }

@@ -15,6 +15,8 @@ class StringUtils
 public:
     StringUtils() = delete;
 
+    static void toLowerAscii(std::string_view input, std::span<char> output) noexcept;
+
     static std::string_view trimLeft(std::string_view input) noexcept;
     static std::string_view trimRight(std::string_view input) noexcept;
     static std::string_view trim(std::string_view input) noexcept;

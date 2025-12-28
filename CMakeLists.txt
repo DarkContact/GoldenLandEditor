@@ -104,6 +104,8 @@ add_executable(GoldenLandEditor WIN32
     src/enums/CsOpcodes.cpp
     src/Application.h
     src/Application.cpp
+    src/RootDirectoryContext.h
+    src/RootDirectoryContext.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE
