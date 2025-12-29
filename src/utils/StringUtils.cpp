@@ -134,6 +134,7 @@ std::string_view StringUtils::extractQuotedValue(std::string_view line) noexcept
 
 std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
     std::string result;
+    result.reserve(input.size() * 2);
     for (unsigned char ch : input) {
         result += win1251_to_utf8[ch];
     }
@@ -142,6 +143,7 @@ std::string StringUtils::decodeWin1251ToUtf8(std::string_view input) noexcept {
 
 size_t StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept {
     assert(!buffer.empty());
+    assert(input.data() != buffer.data());
 
     size_t pos = 0;
     for (unsigned char ch : input) {
