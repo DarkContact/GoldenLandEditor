@@ -42,7 +42,7 @@ bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* er
         } else {
             StringUtils::decodeWin1251ToUtf8Buffer(textSv, stringText);
         }
-        data.strings.emplace(id, stringText);
+        data.strings.emplace_hint(data.strings.end(), id, stringText);
     }
 
     assert(fileData.size() == offset);
