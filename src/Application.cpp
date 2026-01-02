@@ -26,7 +26,7 @@ Application::Application() {
     Tracy_HookSdlMemory();
     initSdl();
 
-    // TODO: Tracy_HookImGuiMemory
+    Tracy_HookImGuiMemory();
     initImGui(fontFilepath, fontSize);
 
     m_fontSettings = std::make_optional<FontSettings>();
