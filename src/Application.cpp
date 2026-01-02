@@ -71,7 +71,10 @@ void Application::initSdl() {
         LogFmt("SDL_CreateRenderer error: {}", SDL_GetError());
         throw std::runtime_error(std::format("SDL_CreateRenderer error: {}", SDL_GetError()));
     }
+
+#ifdef GOLDENLAND_FPS_LIMIT
     SDL_SetRenderVSync(m_renderer, 1);
+#endif
 
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(m_window);
@@ -164,7 +167,11 @@ void Application::mainLoop() {
 
     while (!m_done)
     {
-        bool hasEvents = processEvents(m_renderCooldown > 0);
+        bool noWait = true;
+#ifdef GOLDENLAND_FPS_LIMIT
+        noWait = (m_renderCooldown > 0);
+#endif
+        bool hasEvents = processEvents(noWait);
 
         // Start the Dear ImGui frame
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -344,12 +351,14 @@ void Application::mainLoop() {
                 ++it;
             }
         }
-        
+
+#ifdef GOLDENLAND_FPS_LIMIT
         if (hasActiveAnimations() || hasEvents) {
             m_renderCooldown = kRenderCooldownFrames;
         } else if (m_renderCooldown > 0) {
             m_renderCooldown--;
         }
+#endif
 
         render();
     }

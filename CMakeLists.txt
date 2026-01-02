@@ -17,6 +17,7 @@ option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
 option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
+option(GOLDENLAND_ENABLE_FPS_LIMIT          "Enable FPS limit in app" ON)
 
 # SDL3 Hint
 if(WIN32)
@@ -205,4 +206,8 @@ if(GOLDENLAND_ENABLE_COPY_DLL AND WIN32)
             $<TARGET_FILE_DIR:GoldenLandEditor>
         VERBATIM
     )
+endif()
+
+if(GOLDENLAND_ENABLE_FPS_LIMIT)
+    target_compile_definitions(GoldenLandEditor PRIVATE GOLDENLAND_FPS_LIMIT)
 endif()

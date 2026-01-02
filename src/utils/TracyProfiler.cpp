@@ -20,11 +20,11 @@ void operator delete(void* ptr) noexcept {
 
 namespace TracyProfilerInternal {
 
-void CaptureImage(SDL_Renderer* renderer) {
-
+void CaptureImage(SDL_Renderer* renderer)
+{
     SDL_Surface* screenSurface = SDL_RenderReadPixels(renderer, nullptr);
 
-    SDL_Rect rgbaRect(0, 0, 320, 180);
+    const SDL_Rect rgbaRect(0, 0, 320, 180);
     SDL_Surface* rgbaSurface = SDL_CreateSurface(rgbaRect.w, rgbaRect.h, SDL_PIXELFORMAT_RGBA32);
     SDL_BlitSurfaceScaled(screenSurface, NULL, rgbaSurface, &rgbaRect, SDL_SCALEMODE_LINEAR);
 
@@ -36,7 +36,6 @@ void CaptureImage(SDL_Renderer* renderer) {
 
     SDL_DestroySurface(screenSurface);
     SDL_DestroySurface(rgbaSurface);
-
 }
 
 // -- SDL Memory --
