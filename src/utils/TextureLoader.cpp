@@ -1,7 +1,7 @@
 #include "TextureLoader.h"
 
 #include <memory>
-#define STB_IMAGE_IMPLEMENTATION
+
 #include "stb_image.h"
 
 #include "parsers/CSX_Parser.h"

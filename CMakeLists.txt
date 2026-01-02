@@ -41,6 +41,9 @@ message(STATUS "Found SDL3: ${SDL3_DIR} (version: ${SDL3_VERSION})")
 # ImGui
 include(external/imgui.cmake)
 
+# stb_image
+include(external/stb_image.cmake)
+
 add_executable(GoldenLandEditor WIN32
     src/main.cpp
     src/windows/FontSettings.h
@@ -146,9 +149,13 @@ target_link_libraries(GoldenLandEditor PRIVATE resources_lib)
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)
-target_include_directories(GoldenLandEditor PRIVATE external/stb)
 target_include_directories(GoldenLandEditor PRIVATE imgui)
-target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
+
+target_link_libraries(GoldenLandEditor PRIVATE
+    SDL3::SDL3
+    imgui
+    stb_image
+)
 
 if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
     message(STATUS "Building with static runtime enabled")

@@ -23,10 +23,11 @@ Application::Application() {
         m_rootDirContext.setRootDirectoryAndReload(rootDir);
     }
 
+    Tracy_HookStbImageMemory();
     Tracy_HookSdlMemory();
-    initSdl();
-
     Tracy_HookImGuiMemory();
+
+    initSdl();
     initImGui(fontFilepath, fontSize);
 
     m_fontSettings = std::make_optional<FontSettings>();

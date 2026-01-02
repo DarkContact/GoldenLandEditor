@@ -4,6 +4,7 @@
 #include <SDL3/SDL_render.h>
 
 #include "imgui.h"
+#include "stb_image_ext.h"
 
 #if defined(_MSC_VER)
 void* operator new(std::size_t size) {
@@ -87,6 +88,30 @@ void freeImGui(void* ptr, void* /*user_data*/) {
 
 void TrackImGuiMemory() {
     ImGui::SetAllocatorFunctions(mallocImGui, freeImGui, nullptr);
+}
+
+// -- stb_image Memory --
+void* mallocStbImage(size_t size) {
+    auto ptr = malloc(size);
+    TracyAllocN(ptr, size, "stb_image");
+    return ptr;
+}
+
+void* reallocStbImage(void* oldPtr, size_t size) {
+    TracyFreeN(oldPtr, "stb_image");
+    void* ptr = realloc(oldPtr, size);
+    TracyAllocN(ptr, size, "stb_image");
+    return ptr;
+}
+
+void freeStbImage(void* ptr) {
+    TracyFreeN(ptr, "stb_image");
+    free(ptr);
+}
+
+void TrackStbImageMemory()
+{
+    stbi_set_allocator_functions(mallocStbImage, reallocStbImage, freeStbImage);
 }
 
 } // TracyProfilerInternal

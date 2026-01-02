@@ -41,8 +41,12 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     }
 
     std::string bgPath = levelBackground(rootDirectory, levelData.sefData.pack);
-    TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, levelData.background);
+    if (!TextureLoader::loadTextureFromFile(bgPath.c_str(), renderer, levelData.background, error)) {
+        LogFmt("Loading background failed. Error: {}", *error);
+        return {};
+    }
 
+    // TODO: Всегда генерировать миникарту из фона
     std::string minimapPath = levelMinimap(rootDirectory, levelData.sefData.pack);
     TextureLoader::loadTextureFromCsxFile(minimapPath.c_str(), renderer, levelData.minimap);
 
