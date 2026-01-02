@@ -10,6 +10,13 @@
   #include "StringUtils.h"
 #endif
 
+#ifdef _WIN32
+  #ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+  #endif
+  #include <windows.h>
+#endif
+
 void DebugLog::toOutput(const std::source_location& location, std::string_view msg) {
 #ifdef DEBUG_LOG_TIMESTAMP
     // Время в формате UTC: [10:30:25.367]
@@ -26,6 +33,12 @@ void DebugLog::toOutput(const std::source_location& location, std::string_view m
     // Сообщение
     Tracy_Message(msg.data(), msg.size());
     fputs(msg.data(), stdout);
+
+#ifdef _WIN32
+    if (IsDebuggerPresent()) {
+        OutputDebugStringA(msg.data());
+    }
+#endif
 
 #ifdef DEBUG_LOG_CONTEXT
     // Информация о расположении в исходниках: [main.cpp:35]
