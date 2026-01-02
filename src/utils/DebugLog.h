@@ -4,6 +4,10 @@
 #include <format>
 #include <cstdio>
 
+// #define DEBUG_LOG_ENABLE
+#define DEBUG_LOG_TIMESTAMP
+#define DEBUG_LOG_CONTEXT
+
 class DebugLog {
 public:
     DebugLog() = delete;
@@ -36,7 +40,7 @@ private:
     static void toOutput(const std::source_location& location, std::string_view msg);
 };
 
-#ifdef NDEBUG
+#if defined(NDEBUG) && !defined(DEBUG_LOG_ENABLE)
   #define Log(msg)
   #define LogFmt(fmt, ...)
 #else

@@ -1,14 +1,17 @@
 #include "DebugLog.h"
 
-#include <chrono>
 #include <cassert>
+#ifdef DEBUG_LOG_TIMESTAMP
+  #include <chrono>
+#endif
 
 #include "TracyProfiler.h"
-#include "StringUtils.h"
+#ifdef DEBUG_LOG_CONTEXT
+  #include "StringUtils.h"
+#endif
 
 void DebugLog::toOutput(const std::source_location& location, std::string_view msg) {
-    Tracy_Message(msg.data(), msg.size());
-
+#ifdef DEBUG_LOG_TIMESTAMP
     // Время в формате UTC: [10:30:25.367]
     using namespace std::chrono;
     auto now = system_clock::now();
@@ -18,20 +21,24 @@ void DebugLog::toOutput(const std::source_location& location, std::string_view m
     assert(resultNow.size < kBufferNowSize);
     bufferNow[resultNow.size] = '\0';
     fputs(bufferNow, stdout);
+#endif
 
     // Сообщение
+    Tracy_Message(msg.data(), msg.size());
     fputs(msg.data(), stdout);
 
-    // Достаём только имя файла
-    std::string_view fileNameOnly = StringUtils::filename(location.file_name());
-
+#ifdef DEBUG_LOG_CONTEXT
     // Информация о расположении в исходниках: [main.cpp:35]
     constexpr size_t kBufferInfoSize = 280;
     char bufferInfo[kBufferInfoSize];
-    auto resultInfo = std::format_to_n(bufferInfo, kBufferInfoSize, " [{}:{}]\n", fileNameOnly, location.line());
+
+    std::string_view fileNameOnly = StringUtils::filename(location.file_name()); // Достаём только имя файла
+    auto resultInfo = std::format_to_n(bufferInfo, kBufferInfoSize, " [{}:{}]", fileNameOnly, location.line());
     assert(resultInfo.size < kBufferInfoSize);
     bufferInfo[resultInfo.size] = '\0';
     fputs(bufferInfo, stdout);
+#endif
 
+    fputc('\n', stdout);
     fflush(stdout);
 }
