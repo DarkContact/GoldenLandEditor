@@ -194,6 +194,17 @@ if(GOLDENLAND_ENABLE_TRACY)
         add_compile_options(-g -fno-omit-frame-pointer)
     elseif(MSVC)
         add_compile_definitions(TRACY_CALLSTACK=24)
+
+        get_target_property(SDL3_DLL_PATH SDL3::SDL3-shared IMPORTED_LOCATION)
+        get_filename_component(SDL3_DLL_DIR "${SDL3_DLL_PATH}" DIRECTORY)
+        set(SDL3_PDB_PATH "${SDL3_DLL_DIR}/SDL3.pdb")
+
+        add_custom_command(TARGET GoldenLandEditor POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${SDL3_PDB_PATH}
+                $<TARGET_FILE_DIR:GoldenLandEditor>
+            VERBATIM
+        )
     endif()
 endif()
 
