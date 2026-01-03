@@ -12,12 +12,36 @@
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 
+bool TextureLoader::loadTextureFromFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
+{
+    Tracy_ZoneScoped;
+    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
+    if (fileData.empty())
+        return false;
+
+    return loadTextureFromMemory(fileData, renderer, outTexture, error);
+}
+
 bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
 {
     Tracy_ZoneScoped;
+    bool have16BitSupport = false;
+    SDL_PropertiesID props = SDL_GetRendererProperties(renderer);
+    const SDL_PixelFormat* formats = (const SDL_PixelFormat*)SDL_GetPointerProperty(props, SDL_PROP_RENDERER_TEXTURE_FORMATS_POINTER, NULL);
+    if (formats) {
+        int i = 0;
+        while (formats[i] != SDL_PIXELFORMAT_UNKNOWN) {
+            if (formats[i] == SDL_PIXELFORMAT_RGB565) {
+                have16BitSupport = true;
+                break;
+            }
+            ++i;
+        }
+    }
+
     int imageWidth = 0;
     int imageHeight = 0;
-    int channels = 4;
+    int channels = have16BitSupport ? 3 : 4;
     Tracy_ZoneStartN("stbImageLoad");
     std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> imageDataPtr = {
         stbi_load_from_memory((const stbi_uc*)memory.data(), (int)memory.size(), &imageWidth, &imageHeight, NULL, channels),
@@ -31,13 +55,32 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
         return false;
     }
 
-    Texture texture = Texture::create(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, imageWidth, imageHeight, error);
+    Texture texture = Texture::create(renderer,
+                                      have16BitSupport ? SDL_PIXELFORMAT_RGB565
+                                                       : SDL_PIXELFORMAT_RGBA32,
+                                      SDL_TEXTUREACCESS_STATIC,
+                                      imageWidth,
+                                      imageHeight,
+                                      error);
     if (!texture) {
         return false;
     }
 
     {
         Tracy_ZoneScopedN("updatePixels");
+        if (have16BitSupport) {
+            const int srcPitch = 3 * imageWidth;
+            const int dstPitch = 2 * imageWidth;
+            bool isOk = SDL_ConvertPixels(imageWidth, imageHeight,
+                                          SDL_PIXELFORMAT_RGB24, imageDataPtr.get(), srcPitch,
+                                          SDL_PIXELFORMAT_RGB565, imageDataPtr.get(), dstPitch);
+            if (!isOk) {
+                if (error)
+                    *error = std::string(SDL_GetError());
+                return false;
+            }
+        }
+
         if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
             return false;
         }
@@ -45,16 +88,6 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
 
     outTexture = std::move(texture);
     return true;
-}
-
-bool TextureLoader::loadTextureFromFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
-{
-    Tracy_ZoneScoped;
-    std::vector<uint8_t> fileData = FileUtils::loadFile(fileName, error);
-    if (fileData.empty())
-        return false;
-
-    return loadTextureFromMemory(fileData, renderer, outTexture, error);
 }
 
 bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Renderer* renderer, Texture& outTexture, std::string* error)
