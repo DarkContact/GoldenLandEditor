@@ -73,6 +73,7 @@ inline size_t StringUtils::formatToBuffer(std::span<char> buffer, std::format_st
     const size_t bufferSize = buffer.size();
     assert(bufferSize);
 
+    // NOTE: GCC 13.1.0 have bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110990)
     auto result = std::format_to_n(buffer.data(),
                                    bufferSize - 1,
                                    fmt,

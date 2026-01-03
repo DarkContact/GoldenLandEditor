@@ -12,6 +12,7 @@
 #include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
 #include "utils/TracyProfiler.h"
+#include "utils/Platform.h"
 #include "utils/DebugLog.h"
 
 Application::Application() {
@@ -149,16 +150,20 @@ bool Application::hasActiveAnimations() const {
 void Application::mainLoop() {
     ImGuiIO& io = ImGui::GetIO();
     std::string uiError;
-    std::string aboutMessage = std::format("\n"
+    std::string aboutMessage = std::format("Arch: {}\n"
+                                           "Compiler: {}\n"
+                                           "\n"
                                            "3rd-party libraries:\n"
                                            "SDL v{}.{}.{}\n"
                                            "ImGui v{}\n"
                                            "\n"
                                            "GoldenLand Editor v{}\n"
-                                           "© DarkContact 2025\n",
-                                           SDL_VERSIONNUM_MAJOR(SDL_GetVersion()),
-                                           SDL_VERSIONNUM_MINOR(SDL_GetVersion()),
-                                           SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
+                                           "© DarkContact 2026\n",
+                                           BX_ARCH_NAME,
+                                           BX_COMPILER_NAME,
+                                           SDL_MAJOR_VERSION,
+                                           SDL_MINOR_VERSION,
+                                           SDL_MICRO_VERSION,
                                            IMGUI_VERSION,
                                            GOLDENLAND_VERSION_STRING);
 
