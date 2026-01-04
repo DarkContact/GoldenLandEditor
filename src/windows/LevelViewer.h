@@ -25,6 +25,7 @@ private:
     std::string personInfo(const SEF_Person& person) const;
     std::string_view personName(const Level& level, const SEF_Person& person) const;
 
+    void levelScrollTo(Level& level, ImVec2 targetPos);
     void handleLevelDragScroll(Level& level);
     void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
     void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
@@ -41,5 +42,6 @@ private:
     void drawAnimations(Level& level, ImVec2 drawPosition);
     void drawSounds(Level& level, ImVec2 drawPosition);
     void drawTriggers(Level& level, ImVec2 drawPosition);
+
     void drawObjectsList(Level& level);
 };

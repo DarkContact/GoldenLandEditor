@@ -92,8 +92,13 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         // --- Viewport Window ---
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::SetNextWindowClass(&windowClass);
-        if (ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
+        bool isViewportWindowVisible = ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+        ImGui::PopStyleVar();
+        if (isViewportWindowVisible)
         {
+            level.data().imgui.viewportSize = ImGui::GetContentRegionAvail();
+            level.data().imgui.viewportScroll = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+
             handleHotkeys(level, anyWindowFocused);
 
             if (ImGui::IsWindowHovered()
@@ -149,7 +154,6 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             }
         }
         ImGui::End();
-        ImGui::PopStyleVar();
 
         // --- Objects Window ---
         if (level.data().imgui.showObjectsList) {
@@ -171,7 +175,11 @@ void LevelViewer::drawObjectsList(Level& level)
         for (const SEF_Person& person : level.data().sefData.persons) {
             ImGui::PushID(person.literaryNameIndex);
             if (ImGui::Button(personName(level, person).data())) {
-                // TODO: Фокус на персону
+                ImVec2 personCenter = {
+                    (person.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (person.position.y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, personCenter);
             }
             ImGui::PopID();
         }
@@ -182,7 +190,8 @@ bool LevelViewer::isAnimating(const Level& level) const
 {
     bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
     bool showMinimapAnimation = level.data().imgui.minimapAnimating;
-    return showLevelAnimation || showMinimapAnimation;
+    bool showLevelScrollAnimation = level.data().imgui.levelScrollAnimating;
+    return showLevelAnimation || showMinimapAnimation || showLevelScrollAnimation;
 }
 
 void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
@@ -461,10 +470,46 @@ std::string_view LevelViewer::personName(const Level& level, const SEF_Person& p
                                                 : level.data().sdbData.strings.at(person.literaryNameIndex);
 }
 
+void LevelViewer::levelScrollTo(Level& level, ImVec2 targetPos)
+{
+    auto& imgui = level.data().imgui;
+
+    ImVec2 contentSize = imgui.viewportSize;
+    ImVec2 centerOffset = {contentSize.x * 0.5f, contentSize.y * 0.5f};
+
+    float mapWidth = (float)level.data().background->w;
+    float mapHeight = (float)level.data().background->h;
+
+    float targetScrollX = targetPos.x - centerOffset.x;
+    float targetScrollY = targetPos.y - centerOffset.y;
+
+    targetScrollX = ImClamp(targetScrollX, 0.0f, ImMax(0.0f, mapWidth - contentSize.x));
+    targetScrollY = ImClamp(targetScrollY, 0.0f, ImMax(0.0f, mapHeight - contentSize.y));
+
+    imgui.levelScrollStart = imgui.viewportScroll;
+    imgui.levelScrollTarget = ImVec2(targetScrollX, targetScrollY);
+    imgui.levelScrollAnimTime = 0.0f;
+    imgui.levelScrollAnimating = true;
+}
+
 void LevelViewer::handleLevelDragScroll(Level& level) {
     Tracy_ZoneScoped;
     ImGuiIO& io = ImGui::GetIO();
     auto& imgui = level.data().imgui;
+
+    // Плавное перемещение scroll
+    if (imgui.levelScrollAnimating) {
+        imgui.levelScrollAnimTime += io.DeltaTime * 6.0f;
+        if (imgui.levelScrollAnimTime >= 1.0f) {
+            imgui.levelScrollAnimTime = 1.0f;
+            imgui.levelScrollAnimating = false;
+        }
+
+        ImVec2 scroll = ImLerp(imgui.levelScrollStart, imgui.levelScrollTarget, imgui.levelScrollAnimTime);
+        ImGui::SetScrollX(scroll.x);
+        ImGui::SetScrollY(scroll.y);
+    }
+
     if (!ImGui::IsWindowFocused()) {
         imgui.draggingLevel = false;
         return;
@@ -475,6 +520,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 
     // Начало перетаскивания по уровню
     if (!imgui.draggingLevel && (isShiftLMB || isMMB)) {
+        imgui.levelScrollAnimating = false; // Отключаем анимацию если начали драгать
         imgui.draggingLevel = true;
         imgui.dragStartPos = io.MousePos;
         imgui.scrollStart = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());

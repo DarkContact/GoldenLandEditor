@@ -50,6 +50,14 @@ struct LevelImgui {
     ImVec2 dragStartPos;
     ImVec2 scrollStart;
 
+    bool levelScrollAnimating = false;
+    ImVec2 levelScrollStart = ImVec2(0, 0);
+    ImVec2 levelScrollTarget = ImVec2(0, 0);
+    float levelScrollAnimTime = 0.0f;
+
+    ImVec2 viewportSize = ImVec2(0, 0);
+    ImVec2 viewportScroll = ImVec2(0, 0);
+
     bool showMetaInfo = false;
 
     bool showMapTiles = false;
