@@ -24,8 +24,10 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     bool anyWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows | ImGuiFocusedFlags_DockHierarchy);
     ImGui::PopStyleVar();
 
+    ImGuiID levelClassId = 0;
     if (isLevelWindowVisible)
     {
+        levelClassId = ImGui::GetID("LevelWindowClass");
         drawMenuBar(rootDirectory, level);
 
         ImGuiID dockspaceId = ImGui::GetID("LevelDockSpace");
@@ -56,7 +58,15 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
                                             ImGuiDockNodeFlags_NoDockingOverOther;
             }
 
-            // 2. Configure Root Node: Prevent "falling through" to the background (Root) when hovering over Viewport.
+            // 2. Configure Objects Node: Prevent docking into it.
+            ImGuiDockNode* nodeObjects = ImGui::DockBuilderGetNode(dockRightId);
+            if (nodeObjects) {
+                nodeObjects->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe |
+                                           ImGuiDockNodeFlags_NoDockingOverEmpty |
+                                           ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            // 3. Configure Root Node: Prevent "falling through" to the background (Root) when hovering over Viewport.
             // We allow splitting the root (edges), but disallow dropping into the center/background.
             ImGuiDockNode* nodeRoot = ImGui::DockBuilderGetNode(dockspaceId);
             if (nodeRoot) {
@@ -75,11 +85,16 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     // Submit docked windows only if the host window is visible (and thus the DockSpace exists)
     if (isLevelWindowVisible)
     {
+        ImGuiWindowClass windowClass;
+        windowClass.ClassId = levelClassId;
+        windowClass.DockingAllowUnclassed = false;
+
         // --- Viewport Window ---
         std::string viewportWindowName = std::format("Viewport##{}", levelWindowName.c_str());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         // NoTitleBar: Hides the window title bar.
         // NoCollapse: Prevents double-clicking to collapse.
+        ImGui::SetNextWindowClass(&windowClass);
         if (ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
         {
             handleHotkeys(level, anyWindowFocused);
@@ -142,6 +157,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         // --- Objects Window ---
         if (level.data().imgui.showObjectsList) {
             std::string objectsWindowName = std::format("Objects##{}", levelWindowName.c_str());
+            ImGui::SetNextWindowClass(&windowClass);
             if (ImGui::Begin(objectsWindowName.c_str(), &level.data().imgui.showObjectsList)) {
                 drawObjectsList(level);
             }
