@@ -19,9 +19,12 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     auto levelWindowName = Level::levelWindowName(level.data().name, level.data().type);
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
+    std::string viewportWindowName = std::format("Viewport##{}", levelWindowName);
+    std::string objectsWindowName = std::format("Objects ({})", levelWindowName);
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     bool isLevelWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
-    bool anyWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows | ImGuiFocusedFlags_DockHierarchy);
+    bool anyWindowFocused = ImGui::IsWindowFocused() || ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_DockHierarchy);
     ImGui::PopStyleVar();
 
     ImGuiID levelClassId = 0;
@@ -43,11 +46,8 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             ImGuiID dockMainId = dockspaceId;
             ImGuiID dockRightId = ImGui::DockBuilderSplitNode(dockMainId, ImGuiDir_Right, 0.25f, nullptr, &dockMainId);
 
-            std::string viewportName = std::format("Viewport##{}", levelWindowName.c_str());
-            std::string objectsName = std::format("Objects##{}", levelWindowName.c_str());
-
-            ImGui::DockBuilderDockWindow(viewportName.c_str(), dockMainId);
-            ImGui::DockBuilderDockWindow(objectsName.c_str(), dockRightId);
+            ImGui::DockBuilderDockWindow(viewportWindowName.c_str(), dockMainId);
+            ImGui::DockBuilderDockWindow(objectsWindowName.c_str(), dockRightId);
 
             // 1. Configure Viewport Node: Hide tabs, prevent tabbing into it.
             ImGuiDockNode* nodeViewport = ImGui::DockBuilderGetNode(dockMainId);
@@ -90,10 +90,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         windowClass.DockingAllowUnclassed = false;
 
         // --- Viewport Window ---
-        std::string viewportWindowName = std::format("Viewport##{}", levelWindowName.c_str());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-        // NoTitleBar: Hides the window title bar.
-        // NoCollapse: Prevents double-clicking to collapse.
         ImGui::SetNextWindowClass(&windowClass);
         if (ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
         {
@@ -156,7 +153,6 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
         // --- Objects Window ---
         if (level.data().imgui.showObjectsList) {
-            std::string objectsWindowName = std::format("Objects##{}", levelWindowName.c_str());
             ImGui::SetNextWindowClass(&windowClass);
             if (ImGui::Begin(objectsWindowName.c_str(), &level.data().imgui.showObjectsList)) {
                 drawObjectsList(level);
@@ -212,6 +208,11 @@ void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
             if (ImGui::MenuItem("Triggers", "Alt", level.data().imgui.showTriggers)) {
                 level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
             }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Panels")) {
             if (ImGui::MenuItem("Objects", "O", level.data().imgui.showObjectsList)) {
                 level.data().imgui.showObjectsList = !level.data().imgui.showObjectsList;
             }

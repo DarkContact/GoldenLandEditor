@@ -69,7 +69,7 @@ struct LevelImgui {
 
     bool showSounds = false;
     bool showTriggers = false;
-    bool showObjectsList = true;
+    bool showObjectsList = false;
 };
 
 struct LevelAnimation : public BaseAnimation {
