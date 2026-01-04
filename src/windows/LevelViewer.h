@@ -11,6 +11,9 @@ public:
     bool isAnimating(const Level& level) const;
 
 private:
+    void drawMenuBar(std::string_view rootDirectory, Level& level);
+    void handleHotkeys(Level& level);
+
     bool isVisibleInWindow(const ImRect& rect) const;
     bool leftMouseDownOnLevel(const Level& level) const;
 

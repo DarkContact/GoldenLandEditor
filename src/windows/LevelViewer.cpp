@@ -20,15 +20,79 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    bool isWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
-    ImGui::PopStyleVar();
+    if (ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar))
+    {
+        drawMenuBar(rootDirectory, level);
+        handleHotkeys(level);
 
-    if (!isWindowVisible) {
+        if (ImGui::IsWindowHovered()
+            && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
+            ImGui::SetWindowFocus();
+        }
+
+        handleLevelDragScroll(level);
+
+        // Отрисовка уровня
+        ImVec2 startPos = ImGui::GetCursorScreenPos();
+        ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+
+        if (level.data().imgui.showAnimations) {
+            drawAnimations(level, startPos);
+        }
+        if (level.data().imgui.showPersons) {
+            drawPersons(level, startPos);
+        }
+        if (level.data().imgui.showEntrancePoints) {
+            drawPointsEntrance(level, startPos);
+        }
+        if (level.data().imgui.showCellGroups) {
+            drawCellGroups(level, startPos);
+        }
+        if (level.data().imgui.showSounds) {
+            drawSounds(level, startPos);
+        }
+        if (level.data().imgui.showTriggers) {
+            drawTriggers(level, startPos);
+        }
+        if (level.data().imgui.showMapTiles) {
+            drawMapTiles(level, startPos);
+        }
+
+        ImRect minimapRect;
+        const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
+                                          startPos.y + level.data().background->h});
+        if (level.data().imgui.showMinimap) {
+            drawMinimap(level, levelRect, minimapRect);
+            minimapRect.Max.y += 16.0f;
+        } else {
+            ImVec2 minimapSize = {200.0f, 0.0f};
+            ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+
+            minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
+                                             minimapPosition.y + minimapSize.y + 8.0f}};
+            level.data().imgui.minimapHovered = false;
+        }
+
+        if (level.data().imgui.showMetaInfo) {
+            drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+        }
+    } else { // Invisible level window
         level.data().imgui.hasVisibleAnimations = false;
-        ImGui::End();
-        return;
     }
 
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
+bool LevelViewer::isAnimating(const Level& level) const
+{
+    bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
+    bool showMinimapAnimation = level.data().imgui.minimapAnimating;
+    return showLevelAnimation || showMinimapAnimation;
+}
+
+void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
+{
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Minimap", "Tab", level.data().imgui.showMinimap)) {
@@ -116,8 +180,10 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
         ImGui::EndMenuBar();
     }
+}
 
-
+void LevelViewer::handleHotkeys(Level& level)
+{
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
             level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
@@ -187,67 +253,6 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             ImGui::SetScrollY(ImGui::GetScrollY() + scrollStep);
         }
     }
-
-    if (ImGui::IsWindowHovered()
-        && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
-        ImGui::SetWindowFocus();
-    }
-
-    handleLevelDragScroll(level);
-
-    // Отрисовка уровня
-    ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
-
-    if (level.data().imgui.showAnimations) {
-        drawAnimations(level, startPos);
-    }
-    if (level.data().imgui.showPersons) {
-        drawPersons(level, startPos);
-    }
-    if (level.data().imgui.showEntrancePoints) {
-        drawPointsEntrance(level, startPos);
-    }
-    if (level.data().imgui.showCellGroups) {
-        drawCellGroups(level, startPos);
-    }
-    if (level.data().imgui.showSounds) {
-        drawSounds(level, startPos);
-    }
-    if (level.data().imgui.showTriggers) {
-        drawTriggers(level, startPos);
-    }
-    if (level.data().imgui.showMapTiles) {
-        drawMapTiles(level, startPos);
-    }
-
-    ImRect minimapRect;
-    const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
-                                      startPos.y + level.data().background->h});
-    if (level.data().imgui.showMinimap) {
-        drawMinimap(level, levelRect, minimapRect);
-        minimapRect.Max.y += 16.0f;
-    } else {
-        ImVec2 minimapSize = {200.0f, 0.0f};
-        ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
-
-        minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
-                                         minimapPosition.y + minimapSize.y + 8.0f}};
-        level.data().imgui.minimapHovered = false;
-    }
-
-    if (level.data().imgui.showMetaInfo) {
-        drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
-    }
-
-    ImGui::End();
-}
-
-bool LevelViewer::isAnimating(const Level& level) const
-{
-    bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
-    bool showMinimapAnimation = level.data().imgui.minimapAnimating;
-    return showLevelAnimation || showMinimapAnimation;
 }
 
 bool LevelViewer::isVisibleInWindow(const ImRect& rect) const
