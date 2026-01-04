@@ -20,7 +20,9 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    if (ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar))
+    bool isLevelWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::PopStyleVar();
+    if (isLevelWindowVisible)
     {
         drawMenuBar(rootDirectory, level);
         handleHotkeys(level);
@@ -79,9 +81,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     } else { // Invisible level window
         level.data().imgui.hasVisibleAnimations = false;
     }
-
     ImGui::End();
-    ImGui::PopStyleVar();
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
