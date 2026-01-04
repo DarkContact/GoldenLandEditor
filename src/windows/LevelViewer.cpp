@@ -166,8 +166,16 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
 void LevelViewer::drawObjectsList(Level& level)
 {
-    ImGui::Text("Obj1");
-    ImGui::Text("Obj2");
+    if (ImGui::CollapsingHeader("Persons"))
+    {
+        for (const SEF_Person& person : level.data().sefData.persons) {
+            ImGui::PushID(person.literaryNameIndex);
+            if (ImGui::Button(personName(level, person).data())) {
+                // TODO: Фокус на персону
+            }
+            ImGui::PopID();
+        }
+    }
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
@@ -890,6 +898,8 @@ void LevelViewer::drawChunkBorder(ImVec2 chunkTopLeft, Level& level)
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
+    if (level.data().sefData.persons.empty()) { return; }
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     for (const SEF_Person& person : level.data().sefData.persons) {
         ImVec2 position(drawPosition.x + person.position.x * Level::tileWidth,
