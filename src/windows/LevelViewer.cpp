@@ -21,67 +21,141 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     bool isLevelWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
+    bool anyWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows | ImGuiFocusedFlags_DockHierarchy);
     ImGui::PopStyleVar();
+
     if (isLevelWindowVisible)
     {
         drawMenuBar(rootDirectory, level);
-        handleHotkeys(level);
 
-        if (ImGui::IsWindowHovered()
-            && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
-            ImGui::SetWindowFocus();
-        }
+        ImGuiID dockspaceId = ImGui::GetID("LevelDockSpace");
 
-        handleLevelDragScroll(level);
+        // Setup Layout (First Time)
+        // Check if the node exists BEFORE submitting DockSpace.
+        if (ImGui::DockBuilderGetNode(dockspaceId) == nullptr)
+        {
+            ImGui::DockBuilderRemoveNode(dockspaceId);
+            ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspaceId, ImGui::GetWindowSize());
 
-        // Отрисовка уровня
-        ImVec2 startPos = ImGui::GetCursorScreenPos();
-        ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+            ImGuiID dockMainId = dockspaceId;
+            ImGuiID dockRightId = ImGui::DockBuilderSplitNode(dockMainId, ImGuiDir_Right, 0.25f, nullptr, &dockMainId);
 
-        if (level.data().imgui.showAnimations) {
-            drawAnimations(level, startPos);
-        }
-        if (level.data().imgui.showPersons) {
-            drawPersons(level, startPos);
-        }
-        if (level.data().imgui.showEntrancePoints) {
-            drawPointsEntrance(level, startPos);
-        }
-        if (level.data().imgui.showCellGroups) {
-            drawCellGroups(level, startPos);
-        }
-        if (level.data().imgui.showSounds) {
-            drawSounds(level, startPos);
-        }
-        if (level.data().imgui.showTriggers) {
-            drawTriggers(level, startPos);
-        }
-        if (level.data().imgui.showMapTiles) {
-            drawMapTiles(level, startPos);
-        }
+            std::string viewportName = std::format("Viewport##{}", levelWindowName.c_str());
+            std::string objectsName = std::format("Objects##{}", levelWindowName.c_str());
 
-        ImRect minimapRect;
-        const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
-                                          startPos.y + level.data().background->h});
-        if (level.data().imgui.showMinimap) {
-            drawMinimap(level, levelRect, minimapRect);
-            minimapRect.Max.y += 16.0f;
-        } else {
-            ImVec2 minimapSize = {200.0f, 0.0f};
-            ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+            ImGui::DockBuilderDockWindow(viewportName.c_str(), dockMainId);
+            ImGui::DockBuilderDockWindow(objectsName.c_str(), dockRightId);
 
-            minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
-                                             minimapPosition.y + minimapSize.y + 8.0f}};
-            level.data().imgui.minimapHovered = false;
+            // 1. Configure Viewport Node: Hide tabs, prevent tabbing into it.
+            ImGuiDockNode* nodeViewport = ImGui::DockBuilderGetNode(dockMainId);
+            if (nodeViewport) {
+                nodeViewport->LocalFlags |= ImGuiDockNodeFlags_NoTabBar | 
+                                            ImGuiDockNodeFlags_NoDockingOverMe | 
+                                            ImGuiDockNodeFlags_NoDockingOverEmpty | 
+                                            ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            // 2. Configure Root Node: Prevent "falling through" to the background (Root) when hovering over Viewport.
+            // We allow splitting the root (edges), but disallow dropping into the center/background.
+            ImGuiDockNode* nodeRoot = ImGui::DockBuilderGetNode(dockspaceId);
+            if (nodeRoot) {
+                nodeRoot->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe | 
+                                        ImGuiDockNodeFlags_NoDockingOverEmpty | 
+                                        ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            ImGui::DockBuilderFinish(dockspaceId);
         }
 
-        if (level.data().imgui.showMetaInfo) {
-            drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+    }
+    ImGui::End();
+
+    // Submit docked windows only if the host window is visible (and thus the DockSpace exists)
+    if (isLevelWindowVisible)
+    {
+        // --- Viewport Window ---
+        std::string viewportWindowName = std::format("Viewport##{}", levelWindowName.c_str());
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        // NoTitleBar: Hides the window title bar.
+        // NoCollapse: Prevents double-clicking to collapse.
+        if (ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse))
+        {
+            handleHotkeys(level, anyWindowFocused);
+
+            if (ImGui::IsWindowHovered()
+                && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
+                ImGui::SetWindowFocus();
+            }
+
+            handleLevelDragScroll(level);
+
+            // Отрисовка уровня
+            ImVec2 startPos = ImGui::GetCursorScreenPos();
+            ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+
+            if (level.data().imgui.showAnimations) {
+                drawAnimations(level, startPos);
+            }
+            if (level.data().imgui.showPersons) {
+                drawPersons(level, startPos);
+            }
+            if (level.data().imgui.showEntrancePoints) {
+                drawPointsEntrance(level, startPos);
+            }
+            if (level.data().imgui.showCellGroups) {
+                drawCellGroups(level, startPos);
+            }
+            if (level.data().imgui.showSounds) {
+                drawSounds(level, startPos);
+            }
+            if (level.data().imgui.showTriggers) {
+                drawTriggers(level, startPos);
+            }
+            if (level.data().imgui.showMapTiles) {
+                drawMapTiles(level, startPos);
+            }
+
+            ImRect minimapRect;
+            const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
+                                              startPos.y + level.data().background->h});
+            if (level.data().imgui.showMinimap) {
+                drawMinimap(level, levelRect, minimapRect);
+                minimapRect.Max.y += 16.0f;
+            } else {
+                ImVec2 minimapSize = {200.0f, 0.0f};
+                ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+
+                minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
+                                                 minimapPosition.y + minimapSize.y + 8.0f}};
+                level.data().imgui.minimapHovered = false;
+            }
+
+            if (level.data().imgui.showMetaInfo) {
+                drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+            }
+        }
+        ImGui::End();
+        ImGui::PopStyleVar();
+
+        // --- Objects Window ---
+        if (level.data().imgui.showObjectsList) {
+            std::string objectsWindowName = std::format("Objects##{}", levelWindowName.c_str());
+            if (ImGui::Begin(objectsWindowName.c_str(), &level.data().imgui.showObjectsList)) {
+                drawObjectsList(level);
+            }
+            ImGui::End();
         }
     } else { // Invisible level window
         level.data().imgui.hasVisibleAnimations = false;
     }
-    ImGui::End();
+}
+
+void LevelViewer::drawObjectsList(Level& level)
+{
+    ImGui::Text("Obj1");
+    ImGui::Text("Obj2");
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
@@ -121,6 +195,9 @@ void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
             }
             if (ImGui::MenuItem("Triggers", "Alt", level.data().imgui.showTriggers)) {
                 level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+            }
+            if (ImGui::MenuItem("Objects", "O", level.data().imgui.showObjectsList)) {
+                level.data().imgui.showObjectsList = !level.data().imgui.showObjectsList;
             }
             ImGui::EndMenu();
         }
@@ -182,9 +259,9 @@ void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
     }
 }
 
-void LevelViewer::handleHotkeys(Level& level)
+void LevelViewer::handleHotkeys(Level& level, bool anyWindowFocused)
 {
-    if (ImGui::IsWindowFocused()) {
+    if (anyWindowFocused) {
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
             level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
         }
@@ -211,6 +288,9 @@ void LevelViewer::handleHotkeys(Level& level)
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiMod_Alt, false)) {
             level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_O, false)) {
+            level.data().imgui.showObjectsList = !level.data().imgui.showObjectsList;
         }
 
         ImGuiIO& io = ImGui::GetIO();

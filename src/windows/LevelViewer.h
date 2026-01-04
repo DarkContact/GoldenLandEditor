@@ -12,7 +12,7 @@ public:
 
 private:
     void drawMenuBar(std::string_view rootDirectory, Level& level);
-    void handleHotkeys(Level& level);
+    void handleHotkeys(Level& level, bool anyWindowFocused);
 
     bool isVisibleInWindow(const ImRect& rect) const;
     bool leftMouseDownOnLevel(const Level& level) const;
@@ -41,4 +41,5 @@ private:
     void drawAnimations(Level& level, ImVec2 drawPosition);
     void drawSounds(Level& level, ImVec2 drawPosition);
     void drawTriggers(Level& level, ImVec2 drawPosition);
+    void drawObjectsList(Level& level);
 };
