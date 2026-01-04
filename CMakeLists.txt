@@ -228,5 +228,9 @@ if(GOLDENLAND_ENABLE_COPY_DLL AND WIN32)
 endif()
 
 if(GOLDENLAND_ENABLE_FPS_LIMIT)
-    target_compile_definitions(GoldenLandEditor PRIVATE GOLDENLAND_FPS_LIMIT)
+    set_property(
+        SOURCE src/Application.cpp
+        APPEND PROPERTY COMPILE_DEFINITIONS
+            GOLDENLAND_FPS_LIMIT
+    )
 endif()
