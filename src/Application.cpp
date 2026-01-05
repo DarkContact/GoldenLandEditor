@@ -117,8 +117,14 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
     ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
     ImGui_ImplSDLRenderer3_Init(m_renderer);
 
+    io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
+
     // Встраиваемый шрифт
+    using namespace std::literals::string_view_literals;
+    auto fontName = "EmbeddedCarlito\0"sv;
+
     ImFontConfig embeddedFontConfig;
+    std::format_to_n(embeddedFontConfig.Name, fontName.size(), "{}", fontName);
     embeddedFontConfig.FontDataOwnedByAtlas = false;
     io.Fonts->AddFontFromMemoryTTF((void*)carlito_ttf, carlito_ttf_size, 0.0f, &embeddedFontConfig);
 
