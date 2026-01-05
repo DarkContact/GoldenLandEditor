@@ -186,6 +186,57 @@ void LevelViewer::drawObjectsList(Level& level)
             ImGui::PopID();
         }
     }
+
+    if (ImGui::CollapsingHeader("Points Entrance"))
+    {
+        for (const SEF_PointEntrance& pointEnt : level.data().sefData.pointsEntrance) {
+            if (ImGui::Button(pointEnt.techName.c_str())) {
+                ImVec2 pointEntCenter = {
+                    (pointEnt.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (pointEnt.position.y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, pointEntCenter, {Level::tileWidth, Level::tileHeight});
+            }
+        }
+    }
+
+    if (ImGui::CollapsingHeader("Cell Groups"))
+    {
+        auto cellGroupHandle = [this, &level](const CellGroup& group) {
+            ImGui::BeginDisabled(group.cells.empty());
+            if (ImGui::Button(group.name.c_str())) {
+                ImVec2 groupCenter = {
+                    (group.cells.front().x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (group.cells.front().y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, groupCenter, {Level::tileWidth, Level::tileHeight});
+            }
+            ImGui::EndDisabled();
+        };
+
+        for (const CellGroup& group : level.data().sefData.cellGroups) {
+            cellGroupHandle(group);
+        }
+        for (const CellGroup& group : level.data().lvlData.cellGroups) {
+            cellGroupHandle(group);
+        }
+    }
+
+    if (ImGui::CollapsingHeader("Animations"))
+    {
+        for (LevelAnimation& animation : level.data().animations) {
+            ImGui::PushID(animation.description.number);
+            if (ImGui::Button(animation.description.name.c_str())) {
+                ImVec2 animationCenter = {
+                    animation.description.position.x + (animation.textures.front()->w * 0.5f),
+                    animation.description.position.y + (animation.textures.front()->h * 0.5f)
+                };
+                levelScrollTo(level, animationCenter, {animation.textures.front()->w * 0.3f,
+                                                       animation.textures.front()->h * 0.3f});
+            }
+            ImGui::PopID();
+        }
+    }
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
