@@ -179,6 +179,11 @@ void Application::mainLoop() {
 #endif
         bool hasEvents = processEvents(noWait);
 
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_F11, false)) {
+            bool isFullscreen = SDL_GetWindowFlags(m_window) & SDL_WINDOW_FULLSCREEN;
+            SDL_SetWindowFullscreen(m_window, !isFullscreen);
+        }
+
         // Start the Dear ImGui frame
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
@@ -244,6 +249,15 @@ void Application::mainLoop() {
                 if (ImGui::MenuItem("Font settings")) {
                     showSettingsWindow = true;
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Window")) {
+                bool isFullscreen = SDL_GetWindowFlags(m_window) & SDL_WINDOW_FULLSCREEN;
+                if (ImGui::MenuItem("Fullscreen", "F11", isFullscreen)) {
+                    SDL_SetWindowFullscreen(m_window, !isFullscreen);
+                }
+
                 ImGui::EndMenu();
             }
 
