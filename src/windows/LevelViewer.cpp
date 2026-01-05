@@ -237,6 +237,19 @@ void LevelViewer::drawObjectsList(Level& level)
             ImGui::PopID();
         }
     }
+
+    if (ImGui::CollapsingHeader("Sounds"))
+    {
+        for (const ExtraSound& sound : level.data().lvlData.sounds.otherSounds) {
+            if (ImGui::Button(std::format("{0}##{0}{1}{2}",sound.path, sound.chunkPositionX, sound.chunkPositionY).c_str())) {
+                ImVec2 soundCenter = {
+                    (sound.chunkPositionX * Level::chunkWidth) + (Level::chunkWidth * 0.5f),
+                    (sound.chunkPositionY * Level::chunkHeight) + (Level::chunkHeight * 0.5f)
+                };
+                levelScrollTo(level, soundCenter, {Level::chunkWidth, Level::chunkHeight});
+            }
+        }
+    }
 }
 
 bool LevelViewer::isAnimating(const Level& level) const
