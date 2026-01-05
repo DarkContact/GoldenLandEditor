@@ -134,6 +134,8 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
                 drawMapTiles(level, startPos);
             }
 
+            drawSelectionHighlight(level, startPos);
+
             ImRect minimapRect;
             const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
                                               startPos.y + level.data().background->h});
@@ -179,7 +181,7 @@ void LevelViewer::drawObjectsList(Level& level)
                     (person.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
                     (person.position.y * Level::tileHeight) + (Level::tileHeight * 0.5f)
                 };
-                levelScrollTo(level, personCenter);
+                levelScrollTo(level, personCenter, {Level::tileWidth, Level::tileHeight});
             }
             ImGui::PopID();
         }
@@ -191,7 +193,8 @@ bool LevelViewer::isAnimating(const Level& level) const
     bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
     bool showMinimapAnimation = level.data().imgui.minimapAnimating;
     bool showLevelScrollAnimation = level.data().imgui.levelScrollAnimating;
-    return showLevelAnimation || showMinimapAnimation || showLevelScrollAnimation;
+    bool showSelectionHighlight = level.data().imgui.showSelectionHighlight;
+    return showLevelAnimation || showMinimapAnimation || showLevelScrollAnimation || showSelectionHighlight;
 }
 
 void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
@@ -470,7 +473,7 @@ std::string_view LevelViewer::personName(const Level& level, const SEF_Person& p
                                                 : level.data().sdbData.strings.at(person.literaryNameIndex);
 }
 
-void LevelViewer::levelScrollTo(Level& level, ImVec2 targetPos)
+void LevelViewer::levelScrollTo(Level& level, ImVec2 targetPos, ImVec2 targetSize)
 {
     auto& imgui = level.data().imgui;
 
@@ -490,6 +493,10 @@ void LevelViewer::levelScrollTo(Level& level, ImVec2 targetPos)
     imgui.levelScrollTarget = ImVec2(targetScrollX, targetScrollY);
     imgui.levelScrollAnimTime = 0.0f;
     imgui.levelScrollAnimating = true;
+
+    imgui.selectionHighlightCenter = targetPos;
+    imgui.selectionHighlightSize = targetSize;
+    imgui.showSelectionHighlight = false;
 }
 
 void LevelViewer::handleLevelDragScroll(Level& level) {
@@ -503,6 +510,9 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
         if (imgui.levelScrollAnimTime >= 1.0f) {
             imgui.levelScrollAnimTime = 1.0f;
             imgui.levelScrollAnimating = false;
+
+            imgui.showSelectionHighlight = true;
+            imgui.selectionHighlightAnimTime = 0.0f;
         }
 
         ImVec2 scroll = ImLerp(imgui.levelScrollStart, imgui.levelScrollTarget, imgui.levelScrollAnimTime);
@@ -548,6 +558,44 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 
         ImGui::SetScrollX(newScrollX);
         ImGui::SetScrollY(newScrollY);
+    }
+}
+
+void LevelViewer::drawSelectionHighlight(Level& level, ImVec2 drawPosition)
+{
+    auto& imgui = level.data().imgui;
+    if (!imgui.showSelectionHighlight) return;
+
+    ImGuiIO& io = ImGui::GetIO();
+    imgui.selectionHighlightAnimTime += io.DeltaTime * 3.0f;
+    if (imgui.selectionHighlightAnimTime >= 1.0f) {
+        imgui.selectionHighlightAnimTime = 1.0f;
+        imgui.showSelectionHighlight = false;
+        return;
+    }
+
+    float t = imgui.selectionHighlightAnimTime;
+    ImVec2 targetSize = imgui.selectionHighlightSize;
+    ImVec2 startSize = { targetSize.x * 5.0f, targetSize.y * 5.0f };
+
+    ImVec2 currentSize = ImLerp(startSize, targetSize, t);
+    
+    ImVec2 centerWorld = imgui.selectionHighlightCenter;
+    ImVec2 centerScreen = { drawPosition.x + centerWorld.x, drawPosition.y + centerWorld.y };
+    
+    ImRect rect(
+        centerScreen.x - currentSize.x * 0.5f,
+        centerScreen.y - currentSize.y * 0.5f,
+        centerScreen.x + currentSize.x * 0.5f,
+        centerScreen.y + currentSize.y * 0.5f
+    );
+    
+    if (isVisibleInWindow(rect)) {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        drawList->AddRect(rect.Min, rect.Max, IM_COL32(255, 228, 0, 255), 0.0f, 0, 2.0f);
+        ImRect rectShadow(rect);
+        rectShadow.Expand(1);
+        drawList->AddRect(rectShadow.Min, rectShadow.Max, IM_COL32(0, 0, 0, 160), 0.0f, 0, 1.0f);
     }
 }
 
