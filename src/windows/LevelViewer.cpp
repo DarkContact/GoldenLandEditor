@@ -173,10 +173,14 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 void LevelViewer::drawObjectsList(Level& level)
 {
     Tracy_ZoneScoped;
-    if (ImGui::CollapsingHeader("Persons"))
+    char headerBuffer[64];
+
+    StringUtils::formatToBuffer(headerBuffer, "Persons ({})", level.data().sefData.persons.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
+        int id = 0;
         for (const SEF_Person& person : level.data().sefData.persons) {
-            ImGui::PushID(person.literaryNameIndex);
+            ImGui::PushID(id++);
             if (ImGui::Button(personName(level, person).data())) {
                 ImVec2 personCenter = {
                     (person.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
@@ -188,7 +192,8 @@ void LevelViewer::drawObjectsList(Level& level)
         }
     }
 
-    if (ImGui::CollapsingHeader("Points Entrance"))
+    StringUtils::formatToBuffer(headerBuffer, "Points Entrance ({})", level.data().sefData.pointsEntrance.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
         for (const SEF_PointEntrance& pointEnt : level.data().sefData.pointsEntrance) {
             if (ImGui::Button(pointEnt.techName.c_str())) {
@@ -201,7 +206,8 @@ void LevelViewer::drawObjectsList(Level& level)
         }
     }
 
-    if (ImGui::CollapsingHeader("Cell Groups"))
+    StringUtils::formatToBuffer(headerBuffer, "Cell Groups ({})", level.data().sefData.cellGroups.size() + level.data().lvlData.cellGroups.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
         auto cellGroupHandle = [this, &level](const CellGroup& group) {
             ImGui::BeginDisabled(group.cells.empty());
@@ -223,7 +229,8 @@ void LevelViewer::drawObjectsList(Level& level)
         }
     }
 
-    if (ImGui::CollapsingHeader("Animations"))
+    StringUtils::formatToBuffer(headerBuffer, "Animations ({})", level.data().animations.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
         for (LevelAnimation& animation : level.data().animations) {
             ImGui::PushID(animation.description.number);
@@ -239,20 +246,25 @@ void LevelViewer::drawObjectsList(Level& level)
         }
     }
 
-    if (ImGui::CollapsingHeader("Sounds"))
+    StringUtils::formatToBuffer(headerBuffer, "Sounds ({})", level.data().lvlData.sounds.otherSounds.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
+        int id = 0;
         for (const ExtraSound& sound : level.data().lvlData.sounds.otherSounds) {
-            if (ImGui::Button(std::format("{0}##{0}{1}{2}",sound.path, sound.chunkPositionX, sound.chunkPositionY).c_str())) {
+            ImGui::PushID(id++);
+            if (ImGui::Button(sound.path.c_str())) {
                 ImVec2 soundCenter = {
                     (sound.chunkPositionX * Level::chunkWidth) + (Level::chunkWidth * 0.5f),
                     (sound.chunkPositionY * Level::chunkHeight) + (Level::chunkHeight * 0.5f)
                 };
                 levelScrollTo(level, soundCenter, {Level::chunkWidth, Level::chunkHeight});
             }
+            ImGui::PopID();
         }
     }
 
-    if (ImGui::CollapsingHeader("Triggers"))
+    StringUtils::formatToBuffer(headerBuffer, "Triggers ({})", level.data().triggers.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
     {
         for (const LevelTrigger& trigger : level.data().triggers) {
             if (ImGui::Button(trigger.lvlDescription.name.c_str())) {
