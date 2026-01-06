@@ -709,7 +709,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
 
                 ImVec2 minimapPosition = transformPoint(position, levelRect, minimapRect);
                 drawList->AddCircleFilled(minimapPosition, 2.0f, IM_COL32(255, 228, 0, 220));
-                drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 128));
+                drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 160));
             }
         }
 
@@ -727,7 +727,7 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
 
                 ImVec2 minimapPosition = transformPoint(centerPosition, levelRect, minimapRect);
                 drawList->AddCircleFilled(minimapPosition, 3.0f, IM_COL32(0, 140, 248, 255));
-                drawList->AddCircle(minimapPosition, 4.0f, IM_COL32(0, 0, 0, 128));
+                drawList->AddCircle(minimapPosition, 4.0f, IM_COL32(0, 0, 0, 160));
             }
         }
     }
