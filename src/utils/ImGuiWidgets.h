@@ -17,4 +17,7 @@ public:
     static bool ShowMessageModalEx(std::string_view title, const std::function<void()>& callback);
 
     static void SetTooltipStacked(const char* fmt, ...) IM_FMTARGS(1);
+
+    static bool BeginTooltipStacked();
+    static void EndTooltipStacked();
 };

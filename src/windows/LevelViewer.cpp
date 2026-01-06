@@ -1421,30 +1421,36 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 
             drawList->AddRect(triggerBox.Min, triggerBox.Max, IM_COL32(255, 228, 0, 192));
 
-            std::string_view triggerName = "[NONE]";
+            std::string_view triggerName;
             if (!level.data().sdbData.strings.empty() && trigger.sefDescription) {
                 triggerName = level.data().sdbData.strings.at(trigger.sefDescription->get().literaryNameIndex);
             }
 
-            ImGuiWidgets::SetTooltipStacked("[TRIGGER]\n"
-                                            "Name: %s\n"
-                                            "LitName: %s\n"
-                                            "Position: %dx%d\n"
-                                            "Index: %u\n"
-                                            "Size: %dx%d\n"
-                                            "Params: %u %u\n"
-                                            "IsTransition: %d\n"
-                                            "IsVisible: %d\n"
-                                            "IsActive: %d",
-                                            trigger.lvlDescription.name.c_str(),
-                                            triggerName.data(),
-                                            trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
-                                            trigger.lvlDescription.number,
-                                            trigger.texture->w, trigger.texture->h,
-                                            trigger.lvlDescription.param1, trigger.lvlDescription.param2,
-                                            isTransition,
-                                            isVisible,
-                                            isActive);
+            if (ImGuiWidgets::BeginTooltipStacked()) {
+                ImGui::Text("[TRIGGER]\n"
+                            "Name: %s\n"
+                            "Position: %dx%d\n"
+                            "Index: %u\n"
+                            "Size: %dx%d\n"
+                            "Params: %u %u\n"
+                            "IsTransition: %d\n"
+                            "IsVisible: %d\n"
+                            "IsActive: %d",
+                            trigger.lvlDescription.name.c_str(),
+                            trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
+                            trigger.lvlDescription.number,
+                            trigger.texture->w, trigger.texture->h,
+                            trigger.lvlDescription.param1, trigger.lvlDescription.param2,
+                            isTransition,
+                            isVisible,
+                            isActive);
+                ImGui::PushTextWrapPos(500.0f);
+                if (!triggerName.empty()) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.92f, 0.5f, 1.0f), "%s", triggerName.data());
+                }
+                ImGui::PopTextWrapPos();
+                ImGuiWidgets::EndTooltipStacked();
+            }
         }
     }
 }
