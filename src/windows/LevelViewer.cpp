@@ -172,6 +172,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
 void LevelViewer::drawObjectsList(Level& level)
 {
+    Tracy_ZoneScoped;
     if (ImGui::CollapsingHeader("Persons"))
     {
         for (const SEF_Person& person : level.data().sefData.persons) {
@@ -247,6 +248,19 @@ void LevelViewer::drawObjectsList(Level& level)
                     (sound.chunkPositionY * Level::chunkHeight) + (Level::chunkHeight * 0.5f)
                 };
                 levelScrollTo(level, soundCenter, {Level::chunkWidth, Level::chunkHeight});
+            }
+        }
+    }
+
+    if (ImGui::CollapsingHeader("Triggers"))
+    {
+        for (const LevelTrigger& trigger : level.data().triggers) {
+            if (ImGui::Button(trigger.lvlDescription.name.c_str())) {
+                ImVec2 triggerCenter = {
+                    trigger.lvlDescription.position.x + (trigger.texture->w * 0.5f),
+                    trigger.lvlDescription.position.y + (trigger.texture->h * 0.5f),
+                };
+                levelScrollTo(level, triggerCenter, {trigger.texture->w * 0.5f, trigger.texture->h * 0.5f});
             }
         }
     }
