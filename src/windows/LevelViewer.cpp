@@ -712,6 +712,24 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
                 drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 128));
             }
         }
+
+        // Отрисовка триггеров на миникарте
+        if (level.data().imgui.showTriggers) {
+            for (const LevelTrigger& trigger : level.data().triggers) {
+                bool isTransition = false;
+                if (trigger.sefDescription) {
+                    isTransition = trigger.sefDescription->get().isTransition.value_or(false);
+                }
+                if (!isTransition) continue;
+
+                ImVec2 centerPosition(levelRect.Min.x + trigger.lvlDescription.position.x + trigger.texture->w * 0.5f,
+                                      levelRect.Min.y + trigger.lvlDescription.position.y + trigger.texture->h * 0.5f);
+
+                ImVec2 minimapPosition = transformPoint(centerPosition, levelRect, minimapRect);
+                drawList->AddCircleFilled(minimapPosition, 3.0f, IM_COL32(0, 140, 248, 255));
+                drawList->AddCircle(minimapPosition, 4.0f, IM_COL32(0, 0, 0, 128));
+            }
+        }
     }
 
     // Рисуем рамку области видимости и обрабатываем drag / клик
