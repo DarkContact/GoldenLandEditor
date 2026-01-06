@@ -50,6 +50,9 @@ struct LevelImgui {
     ImVec2 dragStartPos;
     ImVec2 scrollStart;
 
+    ImVec2 viewportSize = ImVec2(0, 0);
+    ImVec2 viewportScroll = ImVec2(0, 0);
+
     bool showMetaInfo = false;
 
     bool showMapTiles = false;
@@ -69,6 +72,18 @@ struct LevelImgui {
 
     bool showSounds = false;
     bool showTriggers = false;
+
+    bool showObjectsList = false;
+
+    bool levelScrollAnimating = false;
+    ImVec2 levelScrollStart = ImVec2(0, 0);
+    ImVec2 levelScrollTarget = ImVec2(0, 0);
+    float levelScrollAnimTime = 0.0f;
+
+    bool showSelectionHighlight = false;
+    float selectionHighlightAnimTime = 0.0f;
+    ImVec2 selectionHighlightCenter = ImVec2(0, 0);
+    ImVec2 selectionHighlightSize = ImVec2(0, 0);
 };
 
 struct LevelAnimation : public BaseAnimation {

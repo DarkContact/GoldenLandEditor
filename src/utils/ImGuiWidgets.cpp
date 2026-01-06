@@ -130,3 +130,13 @@ void ImGuiWidgets::SetTooltipStacked(const char* fmt, ...) {
     SetTooltipVStacked(fmt, args);
     va_end(args);
 }
+
+bool ImGuiWidgets::BeginTooltipStacked()
+{
+    return ImGui::BeginTooltipEx(ImGuiTooltipFlags_None, ImGuiWindowFlags_None);
+}
+
+void ImGuiWidgets::EndTooltipStacked()
+{
+    ImGui::EndTooltip();
+}

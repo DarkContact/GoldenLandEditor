@@ -5,7 +5,7 @@
     #include "tracy/TracyC.h"
 
     #if defined(_MSC_VER)
-        void* operator new(std::size_t count);
+        void* operator new(std::size_t size);
         void operator delete(void* ptr) noexcept;
     #endif
 
@@ -27,9 +27,17 @@
 
     #define Tracy_CaptureImage(renderer) TracyProfilerInternal::CaptureImage(renderer)
 
+    #define Tracy_HookSdlMemory() TracyProfilerInternal::TrackSdlMemory()
+    #define Tracy_HookImGuiMemory() TracyProfilerInternal::TrackImGuiMemory()
+    #define Tracy_HookStbImageMemory() TracyProfilerInternal::TrackStbImageMemory()
+
     struct SDL_Renderer;
     namespace TracyProfilerInternal {
-        void CaptureImage(SDL_Renderer* renderer); // Работает, но медленно (~15 мс)
+        void CaptureImage(SDL_Renderer* renderer);
+
+        void TrackSdlMemory();
+        void TrackImGuiMemory();
+        void TrackStbImageMemory();
     }
 #else
     #define Tracy_ZoneScoped
@@ -49,4 +57,8 @@
     #define Tracy_FrameImage(image, width, height, offset, flip)
 
     #define Tracy_CaptureImage(renderer)
+
+    #define Tracy_HookSdlMemory()
+    #define Tracy_HookImGuiMemory()
+    #define Tracy_HookStbImageMemory()
 #endif

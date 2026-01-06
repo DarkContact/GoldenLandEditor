@@ -24,19 +24,25 @@ bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* er
         offset = 0;
     }
 
+    constexpr size_t kStringTextSize = 16384;
+    char stringText[kStringTextSize];
     while (offset < fileData.size()) {
         int32_t id = readInt32(fileData, offset);
-
         auto textSv = readStringWithSize(fileData, offset);
-        std::string text = std::string(textSv);
-        if (xorRequired) {
-            for (auto& byte : text) {
-                byte ^= 0xAA;
-            }
-        }
+        assert((textSv.size() * 2) < kStringTextSize);
 
-        text = StringUtils::decodeWin1251ToUtf8(text);
-        data.strings[id] = text;
+        if (xorRequired) {
+            char decodedText[kStringTextSize];
+            std::copy(textSv.begin(), textSv.end(), decodedText);
+            decodedText[textSv.size()] = '\0';
+            for (size_t i = 0; i < textSv.size(); ++i) {
+                decodedText[i] ^= 0xAA;
+            }
+            StringUtils::decodeWin1251ToUtf8Buffer(decodedText, stringText);
+        } else {
+            StringUtils::decodeWin1251ToUtf8Buffer(textSv, stringText);
+        }
+        data.strings.emplace_hint(data.strings.end(), id, stringText);
     }
 
     assert(fileData.size() == offset);

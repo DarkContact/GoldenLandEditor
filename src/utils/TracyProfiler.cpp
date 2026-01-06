@@ -1,11 +1,15 @@
 #include "TracyProfiler.h"
 
-#include "SDL3/SDL_render.h"
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_render.h>
+
+#include "imgui.h"
+#include "stb_image_ext.h"
 
 #if defined(_MSC_VER)
-void* operator new(std::size_t count) {
-    auto ptr = malloc(count);
-    TracyAlloc(ptr, count);
+void* operator new(std::size_t size) {
+    auto ptr = malloc(size);
+    TracyAlloc(ptr, size);
     return ptr;
 }
 
@@ -17,11 +21,11 @@ void operator delete(void* ptr) noexcept {
 
 namespace TracyProfilerInternal {
 
-void CaptureImage(SDL_Renderer* renderer) {
-
+void CaptureImage(SDL_Renderer* renderer)
+{
     SDL_Surface* screenSurface = SDL_RenderReadPixels(renderer, nullptr);
 
-    SDL_Rect rgbaRect(0, 0, 320, 180);
+    const SDL_Rect rgbaRect(0, 0, 320, 180);
     SDL_Surface* rgbaSurface = SDL_CreateSurface(rgbaRect.w, rgbaRect.h, SDL_PIXELFORMAT_RGBA32);
     SDL_BlitSurfaceScaled(screenSurface, NULL, rgbaSurface, &rgbaRect, SDL_SCALEMODE_LINEAR);
 
@@ -33,7 +37,81 @@ void CaptureImage(SDL_Renderer* renderer) {
 
     SDL_DestroySurface(screenSurface);
     SDL_DestroySurface(rgbaSurface);
+}
 
+// -- SDL Memory --
+static SDL_malloc_func mallocFunc;
+static SDL_calloc_func callocFunc;
+static SDL_realloc_func reallocFunc;
+static SDL_free_func freeFunc;
+
+void* mallocSDL(size_t size) {
+    auto ptr = mallocFunc(size);
+    TracyAllocN(ptr, size, "SDL");
+    return ptr;
+}
+
+void* callocSDL(size_t nmemb, size_t size) {
+    void* ptr = callocFunc(nmemb, size);
+    TracyAllocN(ptr, nmemb * size, "SDL");
+    return ptr;
+}
+
+void* reallocSDL(void* oldPtr, size_t size) {
+    TracyFreeN(oldPtr, "SDL");
+    void* ptr = reallocFunc(oldPtr, size);
+    TracyAllocN(ptr, size, "SDL");
+    return ptr;
+}
+
+void freeSDL(void* ptr) {
+    TracyFreeN(ptr, "SDL");
+    freeFunc(ptr);
+}
+
+void TrackSdlMemory() {
+    SDL_GetOriginalMemoryFunctions(&mallocFunc, &callocFunc, &reallocFunc, &freeFunc);
+    SDL_SetMemoryFunctions(mallocSDL, callocSDL, reallocSDL, freeSDL);
+}
+
+// -- ImGui Memory --
+void* mallocImGui(size_t size, void* /*user_data*/) {
+    void* ptr = malloc(size);
+    TracyAllocN(ptr, size, "ImGui");
+    return ptr;
+}
+
+void freeImGui(void* ptr, void* /*user_data*/) {
+    TracyFreeN(ptr, "ImGui");
+    free(ptr);
+}
+
+void TrackImGuiMemory() {
+    ImGui::SetAllocatorFunctions(mallocImGui, freeImGui, nullptr);
+}
+
+// -- stb_image Memory --
+void* mallocStbImage(size_t size) {
+    auto ptr = malloc(size);
+    TracyAllocN(ptr, size, "stb_image");
+    return ptr;
+}
+
+void* reallocStbImage(void* oldPtr, size_t size) {
+    TracyFreeN(oldPtr, "stb_image");
+    void* ptr = realloc(oldPtr, size);
+    TracyAllocN(ptr, size, "stb_image");
+    return ptr;
+}
+
+void freeStbImage(void* ptr) {
+    TracyFreeN(ptr, "stb_image");
+    free(ptr);
+}
+
+void TrackStbImageMemory()
+{
+    stbi_set_allocator_functions(mallocStbImage, reallocStbImage, freeStbImage);
 }
 
 } // TracyProfilerInternal

@@ -12,6 +12,7 @@
 #include "embedded_resources.h"
 #include "utils/ImGuiWidgets.h"
 #include "utils/TracyProfiler.h"
+#include "utils/Platform.h"
 #include "utils/DebugLog.h"
 
 Application::Application() {
@@ -22,6 +23,10 @@ Application::Application() {
     if (!rootDir.empty()) {
         m_rootDirContext.setRootDirectoryAndReload(rootDir);
     }
+
+    Tracy_HookStbImageMemory();
+    Tracy_HookSdlMemory();
+    Tracy_HookImGuiMemory();
 
     initSdl();
     initImGui(fontFilepath, fontSize);
@@ -68,7 +73,10 @@ void Application::initSdl() {
         LogFmt("SDL_CreateRenderer error: {}", SDL_GetError());
         throw std::runtime_error(std::format("SDL_CreateRenderer error: {}", SDL_GetError()));
     }
+
+#ifdef GOLDENLAND_FPS_LIMIT
     SDL_SetRenderVSync(m_renderer, 1);
+#endif
 
     SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(m_window);
@@ -109,8 +117,14 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
     ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
     ImGui_ImplSDLRenderer3_Init(m_renderer);
 
+    io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
+
     // Встраиваемый шрифт
+    using namespace std::literals::string_view_literals;
+    auto fontName = "EmbeddedCarlito\0"sv;
+
     ImFontConfig embeddedFontConfig;
+    std::format_to_n(embeddedFontConfig.Name, fontName.size(), "{}", fontName);
     embeddedFontConfig.FontDataOwnedByAtlas = false;
     io.Fonts->AddFontFromMemoryTTF((void*)carlito_ttf, carlito_ttf_size, 0.0f, &embeddedFontConfig);
 
@@ -142,16 +156,20 @@ bool Application::hasActiveAnimations() const {
 void Application::mainLoop() {
     ImGuiIO& io = ImGui::GetIO();
     std::string uiError;
-    std::string aboutMessage = std::format("\n"
+    std::string aboutMessage = std::format("Arch: {}\n"
+                                           "Compiler: {}\n"
+                                           "\n"
                                            "3rd-party libraries:\n"
                                            "SDL v{}.{}.{}\n"
                                            "ImGui v{}\n"
                                            "\n"
                                            "GoldenLand Editor v{}\n"
-                                           "© DarkContact 2025\n",
-                                           SDL_VERSIONNUM_MAJOR(SDL_GetVersion()),
-                                           SDL_VERSIONNUM_MINOR(SDL_GetVersion()),
-                                           SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
+                                           "© DarkContact 2026\n",
+                                           BX_ARCH_NAME,
+                                           BX_COMPILER_NAME,
+                                           SDL_MAJOR_VERSION,
+                                           SDL_MINOR_VERSION,
+                                           SDL_MICRO_VERSION,
                                            IMGUI_VERSION,
                                            GOLDENLAND_VERSION_STRING);
 
@@ -161,7 +179,16 @@ void Application::mainLoop() {
 
     while (!m_done)
     {
-        bool hasEvents = processEvents(m_renderCooldown > 0);
+        bool noWait = true;
+#ifdef GOLDENLAND_FPS_LIMIT
+        noWait = (m_renderCooldown > 0);
+#endif
+        bool hasEvents = processEvents(noWait);
+
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_F11, false)) {
+            bool isFullscreen = SDL_GetWindowFlags(m_window) & SDL_WINDOW_FULLSCREEN;
+            SDL_SetWindowFullscreen(m_window, !isFullscreen);
+        }
 
         // Start the Dear ImGui frame
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -228,6 +255,15 @@ void Application::mainLoop() {
                 if (ImGui::MenuItem("Font settings")) {
                     showSettingsWindow = true;
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Window")) {
+                bool isFullscreen = SDL_GetWindowFlags(m_window) & SDL_WINDOW_FULLSCREEN;
+                if (ImGui::MenuItem("Fullscreen", "F11", isFullscreen)) {
+                    SDL_SetWindowFullscreen(m_window, !isFullscreen);
+                }
+
                 ImGui::EndMenu();
             }
 
@@ -341,12 +377,14 @@ void Application::mainLoop() {
                 ++it;
             }
         }
-        
+
+#ifdef GOLDENLAND_FPS_LIMIT
         if (hasActiveAnimations() || hasEvents) {
             m_renderCooldown = kRenderCooldownFrames;
         } else if (m_renderCooldown > 0) {
             m_renderCooldown--;
         }
+#endif
 
         render();
     }

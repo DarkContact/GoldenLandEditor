@@ -19,16 +19,276 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
     auto levelWindowName = Level::levelWindowName(level.data().name, level.data().type);
     Tracy_ZoneText(levelWindowName.c_str(), levelWindowName.size());
 
+    std::string viewportWindowName = std::format("Viewport##{}", levelWindowName);
+    std::string objectsWindowName = std::format("Objects ({})", levelWindowName);
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    bool isWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
+    bool isLevelWindowVisible = ImGui::Begin(levelWindowName.c_str(), &showWindow, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_MenuBar);
+    bool anyWindowFocused = ImGui::IsWindowFocused() || ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_DockHierarchy);
     ImGui::PopStyleVar();
 
-    if (!isWindowVisible) {
-        level.data().imgui.hasVisibleAnimations = false;
+    ImGuiID levelClassId = 0;
+    if (isLevelWindowVisible)
+    {
+        levelClassId = ImGui::GetID("LevelWindowClass");
+        drawMenuBar(rootDirectory, level);
+
+        ImGuiID dockspaceId = ImGui::GetID("LevelDockSpace");
+
+        // Setup Layout (First Time)
+        // Check if the node exists BEFORE submitting DockSpace.
+        if (ImGui::DockBuilderGetNode(dockspaceId) == nullptr)
+        {
+            ImGui::DockBuilderRemoveNode(dockspaceId);
+            ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspaceId, ImGui::GetWindowSize());
+
+            ImGuiID dockMainId = dockspaceId;
+            ImGuiID dockRightId = ImGui::DockBuilderSplitNode(dockMainId, ImGuiDir_Right, 0.25f, nullptr, &dockMainId);
+
+            ImGui::DockBuilderDockWindow(viewportWindowName.c_str(), dockMainId);
+            ImGui::DockBuilderDockWindow(objectsWindowName.c_str(), dockRightId);
+
+            // 1. Configure Viewport Node: Hide tabs, prevent tabbing into it.
+            ImGuiDockNode* nodeViewport = ImGui::DockBuilderGetNode(dockMainId);
+            if (nodeViewport) {
+                nodeViewport->LocalFlags |= ImGuiDockNodeFlags_NoTabBar | 
+                                            ImGuiDockNodeFlags_NoDockingOverMe | 
+                                            ImGuiDockNodeFlags_NoDockingOverEmpty | 
+                                            ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            // 2. Configure Objects Node: Prevent docking into it.
+            ImGuiDockNode* nodeObjects = ImGui::DockBuilderGetNode(dockRightId);
+            if (nodeObjects) {
+                nodeObjects->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe |
+                                           ImGuiDockNodeFlags_NoDockingOverEmpty |
+                                           ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            // 3. Configure Root Node: Prevent "falling through" to the background (Root) when hovering over Viewport.
+            // We allow splitting the root (edges), but disallow dropping into the center/background.
+            ImGuiDockNode* nodeRoot = ImGui::DockBuilderGetNode(dockspaceId);
+            if (nodeRoot) {
+                nodeRoot->LocalFlags |= ImGuiDockNodeFlags_NoDockingOverMe | 
+                                        ImGuiDockNodeFlags_NoDockingOverEmpty | 
+                                        ImGuiDockNodeFlags_NoDockingOverOther;
+            }
+
+            ImGui::DockBuilderFinish(dockspaceId);
+        }
+
+        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+    }
+    ImGui::End();
+
+    // Submit docked windows only if the host window is visible (and thus the DockSpace exists)
+    if (isLevelWindowVisible)
+    {
+        ImGuiWindowClass windowClass;
+        windowClass.ClassId = levelClassId;
+        windowClass.DockingAllowUnclassed = false;
+
+        // --- Viewport Window ---
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::SetNextWindowClass(&windowClass);
+        bool isViewportWindowVisible = ImGui::Begin(viewportWindowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+        ImGui::PopStyleVar();
+        if (isViewportWindowVisible)
+        {
+            level.data().imgui.viewportSize = ImGui::GetContentRegionAvail();
+            level.data().imgui.viewportScroll = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+
+            handleHotkeys(level, anyWindowFocused);
+
+            if (ImGui::IsWindowHovered()
+                && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
+                ImGui::SetWindowFocus();
+            }
+
+            handleLevelDragScroll(level);
+
+            // Отрисовка уровня
+            ImVec2 startPos = ImGui::GetCursorScreenPos();
+            ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
+
+            if (level.data().imgui.showAnimations) {
+                drawAnimations(level, startPos);
+            }
+            if (level.data().imgui.showPersons) {
+                drawPersons(level, startPos);
+            }
+            if (level.data().imgui.showEntrancePoints) {
+                drawPointsEntrance(level, startPos);
+            }
+            if (level.data().imgui.showCellGroups) {
+                drawCellGroups(level, startPos);
+            }
+            if (level.data().imgui.showSounds) {
+                drawSounds(level, startPos);
+            }
+            if (level.data().imgui.showTriggers) {
+                drawTriggers(level, startPos);
+            }
+            if (level.data().imgui.showMapTiles) {
+                drawMapTiles(level, startPos);
+            }
+
+            drawSelectionHighlight(level, startPos);
+
+            ImRect minimapRect;
+            const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
+                                              startPos.y + level.data().background->h});
+            if (level.data().imgui.showMinimap) {
+                drawMinimap(level, levelRect, minimapRect);
+                minimapRect.Max.y += 16.0f;
+            } else {
+                ImVec2 minimapSize = {200.0f, 0.0f};
+                ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
+
+                minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
+                                                 minimapPosition.y + minimapSize.y + 8.0f}};
+                level.data().imgui.minimapHovered = false;
+            }
+
+            if (level.data().imgui.showMetaInfo) {
+                drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
+            }
+        }
         ImGui::End();
-        return;
+
+        // --- Objects Window ---
+        if (level.data().imgui.showObjectsList) {
+            ImGui::SetNextWindowClass(&windowClass);
+            if (ImGui::Begin(objectsWindowName.c_str(), &level.data().imgui.showObjectsList)) {
+                drawObjectsList(level);
+            }
+            ImGui::End();
+        }
+    } else { // Invisible level window
+        level.data().imgui.hasVisibleAnimations = false;
+    }
+}
+
+void LevelViewer::drawObjectsList(Level& level)
+{
+    Tracy_ZoneScoped;
+    char headerBuffer[64];
+
+    StringUtils::formatToBuffer(headerBuffer, "Persons ({})", level.data().sefData.persons.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        int id = 0;
+        for (const SEF_Person& person : level.data().sefData.persons) {
+            ImGui::PushID(id++);
+            if (ImGui::Button(personName(level, person).data())) {
+                ImVec2 personCenter = {
+                    (person.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (person.position.y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, personCenter, {Level::tileWidth, Level::tileHeight});
+            }
+            ImGui::PopID();
+        }
     }
 
+    StringUtils::formatToBuffer(headerBuffer, "Points Entrance ({})", level.data().sefData.pointsEntrance.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        for (const SEF_PointEntrance& pointEnt : level.data().sefData.pointsEntrance) {
+            if (ImGui::Button(pointEnt.techName.c_str())) {
+                ImVec2 pointEntCenter = {
+                    (pointEnt.position.x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (pointEnt.position.y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, pointEntCenter, {Level::tileWidth, Level::tileHeight});
+            }
+        }
+    }
+
+    StringUtils::formatToBuffer(headerBuffer, "Cell Groups ({})", level.data().sefData.cellGroups.size() + level.data().lvlData.cellGroups.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        auto cellGroupHandle = [this, &level](const CellGroup& group) {
+            ImGui::BeginDisabled(group.cells.empty());
+            if (ImGui::Button(group.name.c_str())) {
+                ImVec2 groupCenter = {
+                    (group.cells.front().x * Level::tileWidth) + (Level::tileWidth * 0.5f),
+                    (group.cells.front().y * Level::tileHeight) + (Level::tileHeight * 0.5f)
+                };
+                levelScrollTo(level, groupCenter, {Level::tileWidth, Level::tileHeight});
+            }
+            ImGui::EndDisabled();
+        };
+
+        for (const CellGroup& group : level.data().sefData.cellGroups) {
+            cellGroupHandle(group);
+        }
+        for (const CellGroup& group : level.data().lvlData.cellGroups) {
+            cellGroupHandle(group);
+        }
+    }
+
+    StringUtils::formatToBuffer(headerBuffer, "Animations ({})", level.data().animations.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        for (LevelAnimation& animation : level.data().animations) {
+            ImGui::PushID(animation.description.number);
+            if (ImGui::Button(animation.description.name.c_str())) {
+                ImVec2 animationCenter = {
+                    animation.description.position.x + (animation.textures.front()->w * 0.5f),
+                    animation.description.position.y + (animation.textures.front()->h * 0.5f)
+                };
+                levelScrollTo(level, animationCenter, {animation.textures.front()->w * 0.3f,
+                                                       animation.textures.front()->h * 0.3f});
+            }
+            ImGui::PopID();
+        }
+    }
+
+    StringUtils::formatToBuffer(headerBuffer, "Sounds ({})", level.data().lvlData.sounds.otherSounds.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        int id = 0;
+        for (const ExtraSound& sound : level.data().lvlData.sounds.otherSounds) {
+            ImGui::PushID(id++);
+            if (ImGui::Button(sound.path.c_str())) {
+                ImVec2 soundCenter = {
+                    (sound.chunkPositionX * Level::chunkWidth) + (Level::chunkWidth * 0.5f),
+                    (sound.chunkPositionY * Level::chunkHeight) + (Level::chunkHeight * 0.5f)
+                };
+                levelScrollTo(level, soundCenter, {Level::chunkWidth, Level::chunkHeight});
+            }
+            ImGui::PopID();
+        }
+    }
+
+    StringUtils::formatToBuffer(headerBuffer, "Triggers ({})", level.data().triggers.size());
+    if (ImGui::CollapsingHeader(headerBuffer))
+    {
+        for (const LevelTrigger& trigger : level.data().triggers) {
+            if (ImGui::Button(trigger.lvlDescription.name.c_str())) {
+                ImVec2 triggerCenter = {
+                    trigger.lvlDescription.position.x + (trigger.texture->w * 0.5f),
+                    trigger.lvlDescription.position.y + (trigger.texture->h * 0.5f),
+                };
+                levelScrollTo(level, triggerCenter, {trigger.texture->w * 0.5f, trigger.texture->h * 0.5f});
+            }
+        }
+    }
+}
+
+bool LevelViewer::isAnimating(const Level& level) const
+{
+    bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
+    bool showMinimapAnimation = level.data().imgui.minimapAnimating;
+    bool showLevelScrollAnimation = level.data().imgui.levelScrollAnimating;
+    bool showSelectionHighlight = level.data().imgui.showSelectionHighlight;
+    return showLevelAnimation || showMinimapAnimation || showLevelScrollAnimation || showSelectionHighlight;
+}
+
+void LevelViewer::drawMenuBar(std::string_view rootDirectory, Level& level)
+{
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Minimap", "Tab", level.data().imgui.showMinimap)) {
@@ -57,6 +317,14 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             }
             if (ImGui::MenuItem("Triggers", "Alt", level.data().imgui.showTriggers)) {
                 level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Panels")) {
+            if (ImGui::MenuItem("Objects", "O", level.data().imgui.showObjectsList)) {
+                level.data().imgui.showObjectsList = !level.data().imgui.showObjectsList;
             }
             ImGui::EndMenu();
         }
@@ -116,9 +384,11 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
 
         ImGui::EndMenuBar();
     }
+}
 
-
-    if (ImGui::IsWindowFocused()) {
+void LevelViewer::handleHotkeys(Level& level, bool anyWindowFocused)
+{
+    if (anyWindowFocused) {
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_Tab, false)) {
             level.data().imgui.showMinimap = !level.data().imgui.showMinimap;
         }
@@ -145,6 +415,9 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
         }
         if (ImGui::IsKeyPressed(ImGuiKey::ImGuiMod_Alt, false)) {
             level.data().imgui.showTriggers = !level.data().imgui.showTriggers;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_O, false)) {
+            level.data().imgui.showObjectsList = !level.data().imgui.showObjectsList;
         }
 
         ImGuiIO& io = ImGui::GetIO();
@@ -187,67 +460,6 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
             ImGui::SetScrollY(ImGui::GetScrollY() + scrollStep);
         }
     }
-
-    if (ImGui::IsWindowHovered()
-        && ( ImGui::IsMouseClicked(ImGuiMouseButton_Middle) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ) {
-        ImGui::SetWindowFocus();
-    }
-
-    handleLevelDragScroll(level);
-
-    // Отрисовка уровня
-    ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)level.data().background.get(), ImVec2(level.data().background->w, level.data().background->h));
-
-    if (level.data().imgui.showAnimations) {
-        drawAnimations(level, startPos);
-    }
-    if (level.data().imgui.showPersons) {
-        drawPersons(level, startPos);
-    }
-    if (level.data().imgui.showEntrancePoints) {
-        drawPointsEntrance(level, startPos);
-    }
-    if (level.data().imgui.showCellGroups) {
-        drawCellGroups(level, startPos);
-    }
-    if (level.data().imgui.showSounds) {
-        drawSounds(level, startPos);
-    }
-    if (level.data().imgui.showTriggers) {
-        drawTriggers(level, startPos);
-    }
-    if (level.data().imgui.showMapTiles) {
-        drawMapTiles(level, startPos);
-    }
-
-    ImRect minimapRect;
-    const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
-                                      startPos.y + level.data().background->h});
-    if (level.data().imgui.showMinimap) {
-        drawMinimap(level, levelRect, minimapRect);
-        minimapRect.Max.y += 16.0f;
-    } else {
-        ImVec2 minimapSize = {200.0f, 0.0f};
-        ImVec2 minimapPosition = computeMinimapPosition(level, minimapSize);
-
-        minimapRect = {minimapPosition, {minimapPosition.x + minimapSize.x,
-                                         minimapPosition.y + minimapSize.y + 8.0f}};
-        level.data().imgui.minimapHovered = false;
-    }
-
-    if (level.data().imgui.showMetaInfo) {
-        drawInfo(level, levelRect, {minimapRect.GetBL().x, minimapRect.GetBL().y});
-    }
-
-    ImGui::End();
-}
-
-bool LevelViewer::isAnimating(const Level& level) const
-{
-    bool showLevelAnimation = level.data().imgui.showAnimations && level.data().imgui.hasVisibleAnimations;
-    bool showMinimapAnimation = level.data().imgui.minimapAnimating;
-    return showLevelAnimation || showMinimapAnimation;
 }
 
 bool LevelViewer::isVisibleInWindow(const ImRect& rect) const
@@ -351,10 +563,53 @@ std::string_view LevelViewer::personName(const Level& level, const SEF_Person& p
                                                 : level.data().sdbData.strings.at(person.literaryNameIndex);
 }
 
+void LevelViewer::levelScrollTo(Level& level, ImVec2 targetPos, ImVec2 targetSize)
+{
+    auto& imgui = level.data().imgui;
+
+    ImVec2 contentSize = imgui.viewportSize;
+    ImVec2 centerOffset = {contentSize.x * 0.5f, contentSize.y * 0.5f};
+
+    float mapWidth = (float)level.data().background->w;
+    float mapHeight = (float)level.data().background->h;
+
+    float targetScrollX = targetPos.x - centerOffset.x;
+    float targetScrollY = targetPos.y - centerOffset.y;
+
+    targetScrollX = ImClamp(targetScrollX, 0.0f, ImMax(0.0f, mapWidth - contentSize.x));
+    targetScrollY = ImClamp(targetScrollY, 0.0f, ImMax(0.0f, mapHeight - contentSize.y));
+
+    imgui.levelScrollStart = imgui.viewportScroll;
+    imgui.levelScrollTarget = ImVec2(targetScrollX, targetScrollY);
+    imgui.levelScrollAnimTime = 0.0f;
+    imgui.levelScrollAnimating = true;
+
+    imgui.selectionHighlightCenter = targetPos;
+    imgui.selectionHighlightSize = targetSize;
+    imgui.showSelectionHighlight = false;
+}
+
 void LevelViewer::handleLevelDragScroll(Level& level) {
     Tracy_ZoneScoped;
     ImGuiIO& io = ImGui::GetIO();
     auto& imgui = level.data().imgui;
+
+    // Плавное перемещение scroll
+    if (imgui.levelScrollAnimating) {
+        imgui.levelScrollAnimTime += io.DeltaTime * 6.0f;
+        if (imgui.levelScrollAnimTime >= 1.0f) {
+            imgui.levelScrollAnimTime = 1.0f;
+            imgui.levelScrollAnimating = false;
+
+            imgui.showSelectionHighlight = true;
+            imgui.selectionHighlightAnimTime = 0.0f;
+        }
+
+        ImVec2 scroll = ImLerp(imgui.levelScrollStart, imgui.levelScrollTarget, imgui.levelScrollAnimTime);
+        ImGui::SetScrollX(scroll.x);
+        ImGui::SetScrollY(scroll.y);
+    }
+
     if (!ImGui::IsWindowFocused()) {
         imgui.draggingLevel = false;
         return;
@@ -365,6 +620,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 
     // Начало перетаскивания по уровню
     if (!imgui.draggingLevel && (isShiftLMB || isMMB)) {
+        imgui.levelScrollAnimating = false; // Отключаем анимацию если начали драгать
         imgui.draggingLevel = true;
         imgui.dragStartPos = io.MousePos;
         imgui.scrollStart = ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
@@ -392,6 +648,44 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
 
         ImGui::SetScrollX(newScrollX);
         ImGui::SetScrollY(newScrollY);
+    }
+}
+
+void LevelViewer::drawSelectionHighlight(Level& level, ImVec2 drawPosition)
+{
+    auto& imgui = level.data().imgui;
+    if (!imgui.showSelectionHighlight) return;
+
+    ImGuiIO& io = ImGui::GetIO();
+    imgui.selectionHighlightAnimTime += io.DeltaTime * 3.0f;
+    if (imgui.selectionHighlightAnimTime >= 1.0f) {
+        imgui.selectionHighlightAnimTime = 1.0f;
+        imgui.showSelectionHighlight = false;
+        return;
+    }
+
+    float t = imgui.selectionHighlightAnimTime;
+    ImVec2 targetSize = imgui.selectionHighlightSize;
+    ImVec2 startSize = { targetSize.x * 5.0f, targetSize.y * 5.0f };
+
+    ImVec2 currentSize = ImLerp(startSize, targetSize, t);
+    
+    ImVec2 centerWorld = imgui.selectionHighlightCenter;
+    ImVec2 centerScreen = { drawPosition.x + centerWorld.x, drawPosition.y + centerWorld.y };
+    
+    ImRect rect(
+        centerScreen.x - currentSize.x * 0.5f,
+        centerScreen.y - currentSize.y * 0.5f,
+        centerScreen.x + currentSize.x * 0.5f,
+        centerScreen.y + currentSize.y * 0.5f
+    );
+    
+    if (isVisibleInWindow(rect)) {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        drawList->AddRect(rect.Min, rect.Max, IM_COL32(255, 228, 0, 255), 0.0f, 0, 2.0f);
+        ImRect rectShadow(rect);
+        rectShadow.Expand(1);
+        drawList->AddRect(rectShadow.Min, rectShadow.Max, IM_COL32(0, 0, 0, 160), 0.0f, 0, 1.0f);
     }
 }
 
@@ -427,7 +721,25 @@ void LevelViewer::drawMinimap(Level& level, const ImRect& levelRect, ImRect& min
 
                 ImVec2 minimapPosition = transformPoint(position, levelRect, minimapRect);
                 drawList->AddCircleFilled(minimapPosition, 2.0f, IM_COL32(255, 228, 0, 220));
-                drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 128));
+                drawList->AddCircle(minimapPosition, 3.0f, IM_COL32(0, 0, 0, 160));
+            }
+        }
+
+        // Отрисовка триггеров на миникарте
+        if (level.data().imgui.showTriggers) {
+            for (const LevelTrigger& trigger : level.data().triggers) {
+                bool isTransition = false;
+                if (trigger.sefDescription) {
+                    isTransition = trigger.sefDescription->get().isTransition.value_or(false);
+                }
+                if (!isTransition) continue;
+
+                ImVec2 centerPosition(levelRect.Min.x + trigger.lvlDescription.position.x + trigger.texture->w * 0.5f,
+                                      levelRect.Min.y + trigger.lvlDescription.position.y + trigger.texture->h * 0.5f);
+
+                ImVec2 minimapPosition = transformPoint(centerPosition, levelRect, minimapRect);
+                drawList->AddCircleFilled(minimapPosition, 3.0f, IM_COL32(0, 140, 248, 255));
+                drawList->AddCircle(minimapPosition, 4.0f, IM_COL32(0, 0, 0, 160));
             }
         }
     }
@@ -788,6 +1100,8 @@ void LevelViewer::drawChunkBorder(ImVec2 chunkTopLeft, Level& level)
 void LevelViewer::drawPersons(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
+    if (level.data().sefData.persons.empty()) { return; }
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     for (const SEF_Person& person : level.data().sefData.persons) {
         ImVec2 position(drawPosition.x + person.position.x * Level::tileWidth,
@@ -1137,30 +1451,36 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 
             drawList->AddRect(triggerBox.Min, triggerBox.Max, IM_COL32(255, 228, 0, 192));
 
-            std::string_view triggerName = "[NONE]";
+            std::string_view triggerName;
             if (!level.data().sdbData.strings.empty() && trigger.sefDescription) {
                 triggerName = level.data().sdbData.strings.at(trigger.sefDescription->get().literaryNameIndex);
             }
 
-            ImGuiWidgets::SetTooltipStacked("[TRIGGER]\n"
-                                            "Name: %s\n"
-                                            "LitName: %s\n"
-                                            "Position: %dx%d\n"
-                                            "Index: %u\n"
-                                            "Size: %dx%d\n"
-                                            "Params: %u %u\n"
-                                            "IsTransition: %d\n"
-                                            "IsVisible: %d\n"
-                                            "IsActive: %d",
-                                            trigger.lvlDescription.name.c_str(),
-                                            triggerName.data(),
-                                            trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
-                                            trigger.lvlDescription.number,
-                                            trigger.texture->w, trigger.texture->h,
-                                            trigger.lvlDescription.param1, trigger.lvlDescription.param2,
-                                            isTransition,
-                                            isVisible,
-                                            isActive);
+            if (ImGuiWidgets::BeginTooltipStacked()) {
+                ImGui::Text("[TRIGGER]\n"
+                            "Name: %s\n"
+                            "Position: %dx%d\n"
+                            "Index: %u\n"
+                            "Size: %dx%d\n"
+                            "Params: %u %u\n"
+                            "IsTransition: %d\n"
+                            "IsVisible: %d\n"
+                            "IsActive: %d",
+                            trigger.lvlDescription.name.c_str(),
+                            trigger.lvlDescription.position.x, trigger.lvlDescription.position.y,
+                            trigger.lvlDescription.number,
+                            trigger.texture->w, trigger.texture->h,
+                            trigger.lvlDescription.param1, trigger.lvlDescription.param2,
+                            isTransition,
+                            isVisible,
+                            isActive);
+                ImGui::PushTextWrapPos(500.0f);
+                if (!triggerName.empty()) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.92f, 0.5f, 1.0f), "%s", triggerName.data());
+                }
+                ImGui::PopTextWrapPos();
+                ImGuiWidgets::EndTooltipStacked();
+            }
         }
     }
 }

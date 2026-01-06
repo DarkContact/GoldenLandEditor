@@ -74,26 +74,31 @@ std::vector<std::string> Resources::levelNames(LevelType type) const
 
 std::vector<std::string> Resources::sdbFiles() const
 {
+    Tracy_ZoneScoped;
     return filesWithExtension({Levels_Single, Levels_Multiplayer, Sdb}, ".sdb");
 }
 
 std::vector<std::string> Resources::csxFiles() const
 {
+    Tracy_ZoneScoped;
     return filesWithExtensionAsync({Engineres, Levels_Pack, Magic_Bitmap, Persons, Wear}, ".csx");
 }
 
 std::vector<std::string> Resources::mdfFiles() const
 {
+    Tracy_ZoneScoped;
     return filesWithExtension({Magic}, ".mdf"); // TODO: fs::directory_iterator
 }
 
 std::vector<std::string> Resources::csFiles() const
 {
+    Tracy_ZoneScoped;
     return filesWithExtension({Scripts_Dialogs}, ".cs");
 }
 
 StringHashTable<std::string> Resources::levelHumanNameDictionary() const
 {
+    Tracy_ZoneScoped;
     std::string error;
 
     SDB_Data techNames;
@@ -150,6 +155,7 @@ StringHashTable<std::string> Resources::levelHumanNameDictionary() const
 
 std::map<int, std::string> Resources::dialogPhrases() const
 {
+    Tracy_ZoneScoped;
     std::string error;
     SDB_Data sdbDialogs;
     std::string sdbPath = std::format("{}/dialogs/dialogsphrases.sdb", m_mainDirectories[Sdb]);
@@ -161,6 +167,7 @@ std::map<int, std::string> Resources::dialogPhrases() const
 
 UMapStringVar_t Resources::globalVars() const
 {
+    Tracy_ZoneScoped;
     std::string error;
     std::string varsPath = std::format("{}/dialogs_special/zlato_vars.scr", m_mainDirectories[Scripts]);
     UMapStringVar_t globalVars;

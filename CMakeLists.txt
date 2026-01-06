@@ -17,6 +17,7 @@ option(GOLDENLAND_ENABLE_OPENMP             "Enable OpenMP"           OFF)
 option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
+option(GOLDENLAND_ENABLE_FPS_LIMIT          "Enable FPS limit in app" ON)
 
 # SDL3 Hint
 if(WIN32)
@@ -39,6 +40,9 @@ message(STATUS "Found SDL3: ${SDL3_DIR} (version: ${SDL3_VERSION})")
 
 # ImGui
 include(external/imgui.cmake)
+
+# stb_image
+include(external/stb_image.cmake)
 
 add_executable(GoldenLandEditor WIN32
     src/main.cpp
@@ -106,6 +110,7 @@ add_executable(GoldenLandEditor WIN32
     src/Application.cpp
     src/RootDirectoryContext.h
     src/RootDirectoryContext.cpp
+    src/utils/Platform.h
 )
 
 target_sources(GoldenLandEditor PRIVATE
@@ -145,9 +150,13 @@ target_link_libraries(GoldenLandEditor PRIVATE resources_lib)
 
 target_include_directories(GoldenLandEditor PRIVATE src)
 target_include_directories(GoldenLandEditor PRIVATE external/mINI)
-target_include_directories(GoldenLandEditor PRIVATE external/stb)
 target_include_directories(GoldenLandEditor PRIVATE imgui)
-target_link_libraries(GoldenLandEditor PRIVATE SDL3::SDL3 imgui)
+
+target_link_libraries(GoldenLandEditor PRIVATE
+    SDL3::SDL3
+    imgui
+    stb_image
+)
 
 if(GOLDENLAND_ENABLE_STATIC_RUNTIME)
     message(STATUS "Building with static runtime enabled")
@@ -169,11 +178,12 @@ if(GOLDENLAND_ENABLE_TRACY)
     FetchContent_Declare(
         tracy
         GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-        GIT_TAG master
+        GIT_TAG 05cceee0df3b8d7c6fa87e9638af311dbabc63cb # v13.1
         GIT_SHALLOW TRUE
     )
     FetchContent_MakeAvailable(tracy)
 
+    target_compile_definitions(GoldenLandEditor PRIVATE DEBUG_LOG_ENABLE)
     target_sources(GoldenLandEditor PRIVATE src/utils/TracyProfiler.cpp)
 
     option(TRACY_ENABLE "" ON)
@@ -184,6 +194,17 @@ if(GOLDENLAND_ENABLE_TRACY)
         add_compile_options(-g -fno-omit-frame-pointer)
     elseif(MSVC)
         add_compile_definitions(TRACY_CALLSTACK=24)
+
+        get_target_property(SDL3_DLL_PATH SDL3::SDL3-shared IMPORTED_LOCATION)
+        get_filename_component(SDL3_DLL_DIR "${SDL3_DLL_PATH}" DIRECTORY)
+        set(SDL3_PDB_PATH "${SDL3_DLL_DIR}/SDL3.pdb")
+
+        add_custom_command(TARGET GoldenLandEditor POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${SDL3_PDB_PATH}
+                $<TARGET_FILE_DIR:GoldenLandEditor>
+            VERBATIM
+        )
     endif()
 endif()
 
@@ -203,5 +224,13 @@ if(GOLDENLAND_ENABLE_COPY_DLL AND WIN32)
             $<TARGET_FILE:SDL3::SDL3-shared>
             $<TARGET_FILE_DIR:GoldenLandEditor>
         VERBATIM
+    )
+endif()
+
+if(GOLDENLAND_ENABLE_FPS_LIMIT)
+    set_property(
+        SOURCE src/Application.cpp
+        APPEND PROPERTY COMPILE_DEFINITIONS
+            GOLDENLAND_FPS_LIMIT
     )
 endif()

@@ -68,8 +68,13 @@ inline void StringUtils::forEachLine(std::string_view buffer, Callback&& callbac
     }
 }
 
+// #include "utils/Platform.h"
+
 template<typename... Args>
 inline size_t StringUtils::formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) {
+    // static_assert(!BX_COMPILER_GCC || (BX_COMPILER_GCC >= 130300),
+    //               "std::format_to_n have bug. Please update GCC version. More info: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110990");
+
     const size_t bufferSize = buffer.size();
     assert(bufferSize);
 

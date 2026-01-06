@@ -11,6 +11,9 @@ public:
     bool isAnimating(const Level& level) const;
 
 private:
+    void drawMenuBar(std::string_view rootDirectory, Level& level);
+    void handleHotkeys(Level& level, bool anyWindowFocused);
+
     bool isVisibleInWindow(const ImRect& rect) const;
     bool leftMouseDownOnLevel(const Level& level) const;
 
@@ -22,7 +25,9 @@ private:
     std::string personInfo(const SEF_Person& person) const;
     std::string_view personName(const Level& level, const SEF_Person& person) const;
 
+    void levelScrollTo(Level& level, ImVec2 targetPos, ImVec2 targetSize);
     void handleLevelDragScroll(Level& level);
+    void drawSelectionHighlight(Level& level, ImVec2 drawPosition);
     void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
     void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
 
@@ -38,4 +43,6 @@ private:
     void drawAnimations(Level& level, ImVec2 drawPosition);
     void drawSounds(Level& level, ImVec2 drawPosition);
     void drawTriggers(Level& level, ImVec2 drawPosition);
+
+    void drawObjectsList(Level& level);
 };
