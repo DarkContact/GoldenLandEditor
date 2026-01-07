@@ -26,6 +26,7 @@
     #define Tracy_FrameImage(image, width, height, offset, flip) FrameImage(image, width, height, offset, flip)
 
     #define Tracy_CaptureImage(renderer) TracyProfilerInternal::CaptureImage(renderer)
+    #define Tracy_VideoMemoryPlot(renderer) TracyProfilerInternal::VideoMemoryPlot(renderer)
 
     #define Tracy_HookSdlMemory() TracyProfilerInternal::TrackSdlMemory()
     #define Tracy_HookImGuiMemory() TracyProfilerInternal::TrackImGuiMemory()
@@ -34,6 +35,7 @@
     struct SDL_Renderer;
     namespace TracyProfilerInternal {
         void CaptureImage(SDL_Renderer* renderer);
+        void VideoMemoryPlot(SDL_Renderer* renderer);
 
         void TrackSdlMemory();
         void TrackImGuiMemory();
@@ -57,6 +59,7 @@
     #define Tracy_FrameImage(image, width, height, offset, flip)
 
     #define Tracy_CaptureImage(renderer)
+    #define Tracy_VideoMemoryPlot(renderer)
 
     #define Tracy_HookSdlMemory()
     #define Tracy_HookImGuiMemory()

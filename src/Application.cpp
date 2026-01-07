@@ -417,6 +417,7 @@ void Application::render() {
     ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
+    Tracy_VideoMemoryPlot(m_renderer);
     {
         Tracy_ZoneScopedN("Rendering prepare");
         Tracy_ZoneColor(0xadff2f); // GreenYellow
