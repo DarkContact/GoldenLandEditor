@@ -111,6 +111,8 @@ add_executable(GoldenLandEditor WIN32
     src/RootDirectoryContext.h
     src/RootDirectoryContext.cpp
     src/utils/Platform.h
+    src/utils/RenderUtils.h
+    src/utils/RenderUtils.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE
