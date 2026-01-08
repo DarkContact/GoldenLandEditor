@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include <algorithm>
 #include <format>
 
 #include <SDL3/SDL.h>
@@ -121,10 +122,10 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
 
     // Встраиваемый шрифт
     using namespace std::literals::string_view_literals;
-    auto fontName = "EmbeddedCarlito\0"sv;
+    auto fontName = "EmbeddedCarlito"sv;
 
     ImFontConfig embeddedFontConfig;
-    std::format_to_n(embeddedFontConfig.Name, fontName.size(), "{}", fontName);
+    std::copy(fontName.cbegin(), fontName.cend(), embeddedFontConfig.Name);
     embeddedFontConfig.FontDataOwnedByAtlas = false;
     io.Fonts->AddFontFromMemoryTTF((void*)carlito_ttf, carlito_ttf_size, 0.0f, &embeddedFontConfig);
 
