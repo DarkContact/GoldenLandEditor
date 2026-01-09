@@ -99,7 +99,7 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
 
     CSX_Parser csxParser(fileData);
     std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surfacePtr = {
-        csxParser.parse(true, error),
+        csxParser.parse(false, error),
         SDL_DestroySurface
     };
 
@@ -110,6 +110,8 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
     if (!texture)
         return false;
 
+    //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
+    SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
     outTexture = std::move(texture);
 
     return true;
@@ -300,11 +302,14 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName,
             Tracy_ZoneScopedN("Create texture");
             Tracy_ZoneTextF("%d", i);
             int lineIndexStart = i * frameHeight;
-            csxParser.parseLinesToSurface(surfacePtr.get(), true, lineIndexStart, frameHeight, true, error);
+            csxParser.parseLinesToSurface(surfacePtr.get(), true, lineIndexStart, frameHeight, false, error);
             Texture texture = Texture::createFromSurface(renderer, surfacePtr.get(), error);
             if (!texture) {
                 return false;
             }
+
+            //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
+            SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
             outTextures.push_back(std::move(texture));
         }
     }
@@ -325,11 +330,14 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName,
             return false;
         }
 
-        csxParser.parseLinesToSurface(partSurfacePtr.get(), true, lineIndexStart, partialHeight, true, error);
+        csxParser.parseLinesToSurface(partSurfacePtr.get(), true, lineIndexStart, partialHeight, false, error);
         Texture texture = Texture::createFromSurface(renderer, partSurfacePtr.get(), error);
         if (!texture) {
             return false;
         }
+
+        //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
+        SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
         outTextures.push_back(std::move(texture));
     }
     return true;
