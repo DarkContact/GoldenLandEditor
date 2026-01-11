@@ -1,5 +1,7 @@
 #include "SEF_Parser.h"
 
+#include <memory>
+
 #include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
@@ -63,6 +65,69 @@ bool SEF_Parser::parse(std::string_view sefPath, SEF_Data& data, std::string* er
         }
     });
     return true;
+}
+
+bool SEF_Parser::fastPackParse(std::string_view sefPath, std::span<char> packBuffer, std::string* error)
+{
+    Tracy_ZoneScoped;
+    std::unique_ptr<SDL_IOStream, decltype(&SDL_CloseIO)> streamPtr = {
+        SDL_IOFromFile(sefPath.data(), "rb"),
+        SDL_CloseIO
+    };
+
+    if (!streamPtr) {
+        if (error)
+            *error = SDL_GetError();
+        return false;
+    }
+
+    constexpr size_t BLOCK_SIZE = 512;
+    char buffer[BLOCK_SIZE];
+
+    const size_t bytesRead = SDL_ReadIO(streamPtr.get(), buffer, BLOCK_SIZE);
+    if (bytesRead == 0)
+        return false;
+
+    // Ищем "pack"
+    for (size_t i = 0; i + 4 < bytesRead; ++i) {
+        if (buffer[i] != 'p' ||
+            buffer[i + 1] != 'a' ||
+            buffer[i + 2] != 'c' ||
+            buffer[i + 3] != 'k')
+            continue;
+
+        // Ищем первую кавычку
+        size_t j = i + 4;
+        while (j < bytesRead && buffer[j] != '"')
+            ++j;
+
+        if (j >= bytesRead)
+            break; // кавычка не в этом блоке — не поддерживаем
+
+        const size_t start = ++j; // после "
+
+        // Ищем закрывающую кавычку
+        while (j < bytesRead && buffer[j] != '"')
+            ++j;
+
+        if (j >= bytesRead)
+            break;
+
+        const size_t len = j - start;
+        if (len + 1 > packBuffer.size()) {
+            if (error)
+                *error = "Pack buffer too small.";
+            return false;
+        }
+
+        std::memcpy(packBuffer.data(), buffer + start, len);
+        packBuffer[len] = '\0';
+        return true;
+    }
+
+    if (error)
+        *error = "Pack not found.";
+    return false;
 }
 
 Direction SEF_Parser::parseDirection(std::string_view dir) {
