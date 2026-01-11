@@ -1,8 +1,10 @@
 #include "FileUtils.h"
 
-#include <algorithm>
 #include <cassert>
+
+#include <algorithm>
 #include <format>
+#include <memory>
 #include <array>
 
 #include <SDL3/SDL_iostream.h>
@@ -88,61 +90,44 @@ bool FileUtils::saveFile(std::string_view filePath, std::span<const uint8_t> fil
 std::vector<uint8_t> FileUtils::loadJpegPhotoshopThumbnail(std::string_view filePath, std::string* error)
 {
     Tracy_ZoneScoped;
-    LogFmt("FileUtils::loadJpegPhotoshopThumbnail: {}", filePath);
-    SDL_IOStream* stream = SDL_IOFromFile(filePath.data(), "rb");
-    if (!stream) {
+    std::unique_ptr<SDL_IOStream, decltype(&SDL_CloseIO)> streamPtr = {
+        SDL_IOFromFile(filePath.data(), "rb"),
+        SDL_CloseIO
+    };
+
+    if (!streamPtr) {
         if (error)
             *error = SDL_GetError();
         return {};
     }
 
-    const uint8_t SOI = 0xD8;   // Start of image
     const uint8_t SOS = 0xDA;   // Start of scan
-    const uint8_t EOI = 0xD9;   // End of image
     const uint8_t APP13 = 0xED; // Application #13
 
-    // Проверяем SOI
-    uint8_t soi[2];
-    if (SDL_ReadIO(stream, soi, 2) != 2) {
-        if (error)
-            *error = "Invalid jpeg (small file).";
-        return {};
-    }
-
-    if (soi[0] != 0xFF || soi[1] != SOI) {
-        if (error)
-            *error = "Can't find SOI marker.";
-        return {};
-    }
+    // Пропускаем SOI
+    SDL_SeekIO(streamPtr.get(), 2, SDL_IO_SEEK_SET);
 
     bool foundApp13 = false;
     uint8_t markerAndLength[4];
     uint16_t length;
-
     while (true) {
         // Читаем marker + length
-        if (SDL_ReadIO(stream, markerAndLength, 4) != 4)
+        if (SDL_ReadIO(streamPtr.get(), markerAndLength, 4) != 4)
             break;
 
-        if (markerAndLength[0] != 0xFF)
-            break; // повреждённый JPEG
-
         uint8_t id = markerAndLength[1];
-        if (id == SOS || id == EOI)
+        if (id == SOS)
             break;
 
         // Big-Endian
         length = (markerAndLength[2] << 8) | markerAndLength[3];
-        if (length < 2)
-            break;
-
         if (id == APP13) {
             foundApp13 = true;
             break;
         }
 
         // Пропускаем тело сегмента
-        SDL_SeekIO(stream, length - 2, SDL_IO_SEEK_CUR);
+        SDL_SeekIO(streamPtr.get(), length - 2, SDL_IO_SEEK_CUR);
     }
 
     if (!foundApp13) {
@@ -155,12 +140,11 @@ std::vector<uint8_t> FileUtils::loadJpegPhotoshopThumbnail(std::string_view file
     size_t app13Size = length - 2;
     app13Buffer.resize(app13Size);
 
-    if (SDL_ReadIO(stream, app13Buffer.data(), app13Size) != app13Size) {
+    if (SDL_ReadIO(streamPtr.get(), app13Buffer.data(), app13Size) != app13Size) {
         if (error)
             *error = "Failed to read APP13.";
         return {};
     }
-    LogFmt("FoundApp13: {}", foundApp13);
 
     for (size_t i = 0; i < app13Size; ++i) {
         if (app13Buffer[i] == '8') {
@@ -205,23 +189,28 @@ std::vector<uint8_t> FileUtils::loadJpegPhotoshopThumbnail(std::string_view file
                     uint32_t sizeAfterCompression =
                         (data[20] << 24) | (data[21] << 16) | (data[22] << 8) | data[23];
 
-                    const uint8_t* jpegData = data + 28;
-
                     if (28 + sizeAfterCompression > resourceSize) {
                         if (error)
                             *error = "Invalid thumbnail size.";
                         return {};
                     }
 
-                    std::vector<uint8_t> result(jpegData, jpegData + sizeAfterCompression);
-                    SDL_CloseIO(stream);
-                    return result;
+                    // --- Zero-copy: сдвигаем данные в начало вектора ---
+                    size_t jpegOffset = offset + 28;
+                    if (jpegOffset != 0) {
+                        std::memmove(app13Buffer.data(), app13Buffer.data() + jpegOffset, sizeAfterCompression);
+                    }
+                    app13Buffer.resize(sizeAfterCompression);
+
+                    return app13Buffer; // теперь vector содержит только JPEG
                 }
                 i += 6;
             }
         }
     }
 
+    if (error)
+        *error = "No thumbnail in APP13.";
     return {};
 }
 
