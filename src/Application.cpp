@@ -336,6 +336,8 @@ void Application::mainLoop() {
 
         if (showLevelsWindow && !m_rootDirContext.singleLevelNames().empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
+                                                   m_renderer,
+                                                   m_rootDirContext.rootDirectory(),
                                                    m_rootDirContext.singleLevelNames(),
                                                    m_rootDirContext.multiplayerLevelNames(),
                                                    m_rootDirContext.levelHumanNamesDict(),
