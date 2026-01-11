@@ -8,6 +8,7 @@
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_timer.h>
 
+#include "utils/DebugLog.h"
 #include "utils/TracyProfiler.h"
 
 #ifdef _WIN32
@@ -80,6 +81,148 @@ bool FileUtils::saveFile(std::string_view filePath, std::span<const uint8_t> fil
         *error = SDL_GetError();
     }
     return isOk;
+}
+
+// NOTE: ImageResourceBlock https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_34945
+// NOTE: ThumbnailResource https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_74450
+std::vector<uint8_t> FileUtils::loadJpegPhotoshopThumbnail(std::string_view filePath, std::string* error)
+{
+    Tracy_ZoneScoped;
+    LogFmt("FileUtils::loadJpegPhotoshopThumbnail: {}", filePath);
+    SDL_IOStream* stream = SDL_IOFromFile(filePath.data(), "rb");
+    if (!stream) {
+        if (error)
+            *error = SDL_GetError();
+        return {};
+    }
+
+    const uint8_t SOI = 0xD8;   // Start of image
+    const uint8_t SOS = 0xDA;   // Start of scan
+    const uint8_t EOI = 0xD9;   // End of image
+    const uint8_t APP13 = 0xED; // Application #13
+
+    // Проверяем SOI
+    uint8_t soi[2];
+    if (SDL_ReadIO(stream, soi, 2) != 2) {
+        if (error)
+            *error = "Invalid jpeg (small file).";
+        return {};
+    }
+
+    if (soi[0] != 0xFF || soi[1] != SOI) {
+        if (error)
+            *error = "Can't find SOI marker.";
+        return {};
+    }
+
+    bool foundApp13 = false;
+    uint8_t markerAndLength[4];
+    uint16_t length;
+
+    while (true) {
+        // Читаем marker + length
+        if (SDL_ReadIO(stream, markerAndLength, 4) != 4)
+            break;
+
+        if (markerAndLength[0] != 0xFF)
+            break; // повреждённый JPEG
+
+        uint8_t id = markerAndLength[1];
+        if (id == SOS || id == EOI)
+            break;
+
+        // Big-Endian
+        length = (markerAndLength[2] << 8) | markerAndLength[3];
+        if (length < 2)
+            break;
+
+        if (id == APP13) {
+            foundApp13 = true;
+            break;
+        }
+
+        // Пропускаем тело сегмента
+        SDL_SeekIO(stream, length - 2, SDL_IO_SEEK_CUR);
+    }
+
+    if (!foundApp13) {
+        if (error)
+            *error = "No thumbnail.";
+        return {};
+    }
+
+    std::vector<uint8_t> app13Buffer;
+    size_t app13Size = length - 2;
+    app13Buffer.resize(app13Size);
+
+    if (SDL_ReadIO(stream, app13Buffer.data(), app13Size) != app13Size) {
+        if (error)
+            *error = "Failed to read APP13.";
+        return {};
+    }
+    LogFmt("FoundApp13: {}", foundApp13);
+
+    for (size_t i = 0; i < app13Size; ++i) {
+        if (app13Buffer[i] == '8') {
+            if (app13Buffer[i + 1] == 'B'
+                && app13Buffer[i + 2] == 'I'
+                && app13Buffer[i + 3] == 'M')
+            {
+                uint16_t uid = (app13Buffer[i + 4] << 8) | app13Buffer[i + 5];
+                if (uid == 0x040C) { // Thumbnail resources
+                    size_t offset = i + 6;
+
+                    // ---- Skip Pascal name ----
+                    uint8_t nameLen = app13Buffer[offset];
+                    offset += 1 + nameLen;
+                    if (offset & 1) offset++; // even padding
+
+                    // ---- Resource size ----
+                    if (offset + 4 > app13Size)
+                        break;
+
+                    uint32_t resourceSize =
+                        (app13Buffer[offset] << 24) |
+                        (app13Buffer[offset + 1] << 16) |
+                        (app13Buffer[offset + 2] << 8) |
+                        (app13Buffer[offset + 3]);
+
+                    offset += 4;
+
+                    if (offset + resourceSize > app13Size)
+                        break;
+
+                    // ---- Parse ThumbnailResource ----
+                    const uint8_t* data = app13Buffer.data() + offset;
+
+                    uint32_t format = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+                    if (format != 1) {
+                        if (error)
+                            *error = "Thumbnail is not JPEG.";
+                        return {};
+                    }
+
+                    uint32_t sizeAfterCompression =
+                        (data[20] << 24) | (data[21] << 16) | (data[22] << 8) | data[23];
+
+                    const uint8_t* jpegData = data + 28;
+
+                    if (28 + sizeAfterCompression > resourceSize) {
+                        if (error)
+                            *error = "Invalid thumbnail size.";
+                        return {};
+                    }
+
+                    std::vector<uint8_t> result(jpegData, jpegData + sizeAfterCompression);
+                    SDL_CloseIO(stream);
+                    return result;
+                }
+                i += 6;
+            }
+        }
+    }
+
+    return {};
 }
 
 #ifdef _WIN32
