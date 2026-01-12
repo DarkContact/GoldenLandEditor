@@ -59,7 +59,7 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
         std::string_view currentLevelName = levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex];
         writeLevelHumanNameToBuffer(levelHumanNamesDict, currentLevelName, currentLevelNameBuffer);
 
-        if (ImGui::BeginCombo("Levels", currentLevelNameBuffer)) {
+        if (ImGui::BeginCombo("Levels", currentLevelNameBuffer, ImGuiComboFlags_HeightLarge)) {
             char levelNameBuffer[256];
             for (int i = 0; i < static_cast<int>(levelNames(singleLevelNames, multiLevelNames).size()); ++i) {
                 bool isSelected = (i == selectedLevelIndex);
