@@ -88,46 +88,38 @@ bool SEF_Parser::fastPackParse(std::string_view sefPath, std::span<char> packBuf
     if (bytesRead == 0)
         return false;
 
-    // Ищем "pack"
-    for (size_t i = 0; i + 4 < bytesRead; ++i) {
-        if (buffer[i] != 'p' ||
-            buffer[i + 1] != 'a' ||
-            buffer[i + 2] != 'c' ||
-            buffer[i + 3] != 'k')
-            continue;
-
-        // Ищем первую кавычку
-        size_t j = i + 4;
-        while (j < bytesRead && buffer[j] != '"')
-            ++j;
-
-        if (j >= bytesRead)
-            break; // кавычка не в этом блоке — не поддерживаем
-
-        const size_t start = ++j; // после "
-
-        // Ищем закрывающую кавычку
-        while (j < bytesRead && buffer[j] != '"')
-            ++j;
-
-        if (j >= bytesRead)
-            break;
-
-        const size_t len = j - start;
-        if (len + 1 > packBuffer.size()) {
-            if (error)
-                *error = "Pack buffer too small.";
-            return false;
-        }
-
-        std::memcpy(packBuffer.data(), buffer + start, len);
-        packBuffer[len] = '\0';
-        return true;
+    std::string_view bufferView(buffer, bytesRead);
+    size_t keyPos = bufferView.find("pack:");
+    if (keyPos == std::string_view::npos) {
+        if (error)
+            *error = "Pack not found.";
+        return false;
     }
 
-    if (error)
-        *error = "Pack not found.";
-    return false;
+    size_t startQuote = bufferView.find('"', keyPos);
+    if (startQuote == std::string_view::npos) {
+        if (error)
+            *error = "Start quote not found.";
+        return false;
+    }
+
+    size_t endQuote = bufferView.find('"', startQuote + 1);
+    if (endQuote == std::string_view::npos) {
+        if (error)
+            *error = "End quote not found.";
+        return false;
+    }
+
+    size_t valueLen = endQuote - startQuote - 1;
+    if (valueLen + 1 > packBuffer.size()) {
+        if (error)
+            *error = "Pack buffer too small.";
+        return false;
+    }
+
+    std::memcpy(packBuffer.data(), buffer + startQuote + 1, valueLen);
+    packBuffer[valueLen] = '\0';
+    return true;
 }
 
 Direction SEF_Parser::parseDirection(std::string_view dir) {
