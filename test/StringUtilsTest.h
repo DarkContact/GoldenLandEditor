@@ -23,6 +23,25 @@ TEST(NaturalCompare, SimpleWithLeadingZero) {
     EXPECT_EQ(data, result);
 }
 
+TEST(NaturalCompare, SimpleWithSpaces) {
+    std::vector<std::string> result = {
+        "0 ab",
+        "0ab",
+        "a 1",
+        "a 10",
+        "a 11",
+        "a b",
+        "a_000",
+        "a_00",
+        "a_0",
+        "ab"
+    };
+
+    std::vector<std::string> data = result;
+    std::sort(data.begin(), data.end(), StringUtils::naturalCompare);
+    EXPECT_EQ(data, result);
+}
+
 TEST(NaturalCompare, Overflow) {
     std::vector<std::string> result = {
         "a_11",
