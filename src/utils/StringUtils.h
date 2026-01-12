@@ -45,6 +45,8 @@ public:
 
     template <typename... Args>
     static size_t formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
+
+    static bool naturalCompare(std::string_view a, std::string_view b) noexcept;
 };
 
 

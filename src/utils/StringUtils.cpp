@@ -12,6 +12,9 @@ static constexpr bool isSpace(int ch) noexcept {
     return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
 }
 
+static constexpr bool isDigit(int ch) noexcept {
+    return (ch >= '0' && ch <= '9');
+}
 
 static constexpr char toLower(char c) noexcept {
     if (c >= 'A' && c <= 'Z')
@@ -173,4 +176,30 @@ std::u8string_view StringUtils::toUtf8View(std::string_view input) noexcept {
 
 std::string_view StringUtils::fromUtf8View(std::u8string_view input) noexcept {
     return {(char*)input.data(), input.size()};
+}
+
+bool StringUtils::naturalCompare(std::string_view a, std::string_view b) noexcept {
+    size_t i = 0, j = 0;
+
+    while (i < a.size() && j < b.size()) {
+        if (isDigit(a[i]) && isDigit(b[j])) {
+            // TODO: Fix overflow
+            uint64_t numA = 0, numB = 0;
+
+            while (i < a.size() && isDigit(a[i]))
+                numA = numA * 10 + (a[i++] - '0');
+
+            while (j < b.size() && isDigit(b[j]))
+                numB = numB * 10 + (b[j++] - '0');
+
+            if (numA != numB)
+                return numA < numB;
+        } else {
+            if (a[i] != b[j])
+                return a[i] < b[j];
+            ++i;
+            ++j;
+        }
+    }
+    return a.size() < b.size();
 }
