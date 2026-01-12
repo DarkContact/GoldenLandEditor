@@ -18,6 +18,7 @@ option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
 option(GOLDENLAND_ENABLE_FPS_LIMIT          "Enable FPS limit in app" ON)
+option(GOLDENLAND_BUILD_TESTS               "Build tests"             OFF)
 
 # SDL3 Hint
 if(WIN32)
@@ -235,4 +236,15 @@ if(GOLDENLAND_ENABLE_FPS_LIMIT)
         APPEND PROPERTY COMPILE_DEFINITIONS
             GOLDENLAND_FPS_LIMIT
     )
+endif()
+
+if(GOLDENLAND_BUILD_TESTS)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+    )
+    FetchContent_MakeAvailable(googletest)
+
+    add_subdirectory(test)
 endif()
