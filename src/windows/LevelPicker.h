@@ -27,6 +27,12 @@ public:
                              const StringHashTable<std::string>& levelHumanNamesDict,
                              int& selectedLevelIndex);
 
+    const std::vector<std::string>& levelNames(const std::vector<std::string>& singleLevelNames,
+                                               const std::vector<std::string>& multiLevelNames) const
+    {
+        return (m_type == LevelType::kSingle) ? singleLevelNames : multiLevelNames;
+    }
+
     void writeLevelHumanNameToBuffer(const StringHashTable<std::string>& levelHumanNamesDict,
                                      std::string_view levelName,
                                      std::span<char> outLevelNameBuffer);
@@ -38,5 +44,7 @@ public:
 private:
     std::string_view m_title;
     LevelType m_type = LevelType::kSingle;
+
     Texture m_preview;
+    std::string m_previewError;
 };

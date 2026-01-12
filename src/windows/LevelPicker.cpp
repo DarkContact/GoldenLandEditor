@@ -8,6 +8,7 @@
 #include "utils/TextureLoader.h"
 #include "utils/StringUtils.h"
 #include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 
 LevelPicker::LevelPicker() :
     m_title("Level picker")
@@ -26,15 +27,13 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
     const ImGuiIO& io = ImGui::GetIO();
     LevelPickerResult result;
 
-    const std::vector<std::string>& levelNames = (m_type == LevelType::kSingle) ? singleLevelNames
-                                                                                : multiLevelNames;
-
     if ( showWindow && !ImGui::IsPopupOpen(m_title.data()) ) {
         ImGui::OpenPopup(m_title.data());
 
-        if (!m_preview.isValid()) {
-            //loadPreview(rootDirectory, levelNames[selectedLevelIndex], renderer);
+        if (multiLevelNames.empty()) {
+            m_type = LevelType::kSingle;
         }
+        loadPreview(rootDirectory, levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex], renderer);
     }
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
@@ -46,31 +45,29 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
             if (ImGui::RadioButton("Single", m_type == LevelType::kSingle)) {
                 m_type = LevelType::kSingle;
                 selectedLevelIndex = 0;
-                //loadPreview(rootDirectory, levelNames[selectedLevelIndex], renderer);
+                loadPreview(rootDirectory, levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex], renderer);
             }
             ImGui::SameLine();
             if (ImGui::RadioButton("Multiplayer", m_type == LevelType::kMultiplayer)) {
                 m_type = LevelType::kMultiplayer;
                 selectedLevelIndex = 0;
-                //loadPreview(rootDirectory, levelNames[selectedLevelIndex], renderer);
+                loadPreview(rootDirectory, levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex], renderer);
             }
-        } else {
-            m_type = LevelType::kSingle;
-        }     
+        }
 
         char currentLevelNameBuffer[256];
-        std::string_view currentLevelName = levelNames[selectedLevelIndex];
+        std::string_view currentLevelName = levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex];
         writeLevelHumanNameToBuffer(levelHumanNamesDict, currentLevelName, currentLevelNameBuffer);
 
         if (ImGui::BeginCombo("Levels", currentLevelNameBuffer)) {
             char levelNameBuffer[256];
-            for (int i = 0; i < static_cast<int>(levelNames.size()); ++i) {
+            for (int i = 0; i < static_cast<int>(levelNames(singleLevelNames, multiLevelNames).size()); ++i) {
                 bool isSelected = (i == selectedLevelIndex);
 
-                writeLevelHumanNameToBuffer(levelHumanNamesDict, levelNames[i], levelNameBuffer);
+                writeLevelHumanNameToBuffer(levelHumanNamesDict, levelNames(singleLevelNames, multiLevelNames)[i], levelNameBuffer);
                 if (ImGui::Selectable(levelNameBuffer, isSelected)) {
                     selectedLevelIndex = i;
-                    //loadPreview(rootDirectory, levelNames[selectedLevelIndex], renderer);
+                    loadPreview(rootDirectory, levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex], renderer);
                 }
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus();
@@ -79,16 +76,28 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
             ImGui::EndCombo();
         }
 
-        // if (m_preview.isValid()) {
-        //     ImGui::Image((ImTextureID)m_preview.get(), ImVec2(m_preview->w, m_preview->h));
-        // }
-
-        if (ImGui::Button("Load")) {
+        ImGui::SameLine();
+        if ( ImGui::Button("Load", ImVec2(70.0f, 0.0f)) ) {
             showWindow = false;
 
             result.selected = true;
             result.loadedLevelType = m_type;
             result.loadedLevelName = currentLevelName;
+        }
+
+        if (m_preview.isValid()) {
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+
+            ImVec2 imageSize(m_preview->w, m_preview->h);
+            //ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - imageSize.x) * 0.5f);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
+
+            ImGui::Image((ImTextureID)m_preview.get(), imageSize);
+
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
         }
 
         ImGui::EndPopup();
@@ -114,14 +123,25 @@ void LevelPicker::loadPreview(std::string_view rootDirectory,
                               SDL_Renderer* renderer)
 {
     Tracy_ZoneScoped;
+    m_preview = {};
+
     char pathBuffer[768];
     StringUtils::formatToBuffer(pathBuffer, "{0}/levels/{1}/{2}/{2}.sef", rootDirectory, levelTypeToString(m_type), selectedLevelName);
 
     char pack[32];
-    SEF_Parser::fastPackParse(pathBuffer, pack, nullptr);
+    bool packParseOk = SEF_Parser::fastPackParse(pathBuffer, pack, &m_previewError);
+    if (packParseOk) {
+        StringUtils::formatToBuffer(pathBuffer, "{}/levels/pack/{}/bitmaps/layer.jpg", rootDirectory, pack);
 
-    StringUtils::formatToBuffer(pathBuffer, "{}/levels/pack/{}/bitmaps/layer.jpg", rootDirectory, pack);
-
-    auto previewBuffer = FileUtils::loadJpegPhotoshopThumbnail(pathBuffer);
-    TextureLoader::loadTextureFromMemory(previewBuffer, renderer, m_preview);
+        auto previewBuffer = FileUtils::loadJpegPhotoshopThumbnail(pathBuffer, &m_previewError);
+        if (!previewBuffer.empty()) {
+            if (!TextureLoader::loadTextureFromMemory(previewBuffer, renderer, m_preview, &m_previewError)) {
+                LogFmt("TextureLoader::loadTextureFromMemory error: {}", m_previewError);
+            }
+        } else {
+            LogFmt("FileUtils::loadJpegPhotoshopThumbnail error: {}", m_previewError);
+        }
+    } else {
+        LogFmt("SEF_Parser::fastPackParse error: {}", m_previewError);
+    }
 }
