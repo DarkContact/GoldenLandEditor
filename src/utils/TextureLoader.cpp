@@ -67,8 +67,8 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
     }
 
     {
-        Tracy_ZoneScopedN("updatePixels");
         if (have16BitSupport) {
+            Tracy_ZoneScopedN("convertPixels");
             const int srcPitch = 3 * imageWidth;
             const int dstPitch = 2 * imageWidth;
             bool isOk = SDL_ConvertPixels(imageWidth, imageHeight,
