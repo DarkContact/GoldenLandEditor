@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include "embedded_resources.h"
 #include "parsers/SEF_Parser.h"
 #include "utils/TracyProfiler.h"
 #include "utils/TextureLoader.h"
@@ -141,6 +142,7 @@ void LevelPicker::loadPreview(std::string_view rootDirectory,
                               SDL_Renderer* renderer)
 {
     Tracy_ZoneScoped;
+    bool loadPreviewOk = false;
     m_preview = {};
 
     char pathBuffer[768];
@@ -153,13 +155,21 @@ void LevelPicker::loadPreview(std::string_view rootDirectory,
 
         auto previewBuffer = FileUtils::loadJpegPhotoshopThumbnail(pathBuffer, &m_previewError);
         if (!previewBuffer.empty()) {
-            if (!TextureLoader::loadTextureFromMemory(previewBuffer, renderer, m_preview, &m_previewError)) {
-                LogFmt("TextureLoader::loadTextureFromMemory error: {}", m_previewError);
+            if (TextureLoader::loadTextureFromMemory(previewBuffer, renderer, m_preview, &m_previewError)) {
+                loadPreviewOk = true;
+            } else {
+                LogFmt("loadTextureFromMemory error: {}", m_previewError);
             }
         } else {
-            LogFmt("FileUtils::loadJpegPhotoshopThumbnail error: {}", m_previewError);
+            LogFmt("loadJpegPhotoshopThumbnail error: {}", m_previewError);
         }
     } else {
-        LogFmt("SEF_Parser::fastPackParse error: {}", m_previewError);
+        LogFmt("fastPackParse error: {}", m_previewError);
+    }
+
+    if (!loadPreviewOk) {
+        if (!TextureLoader::loadTextureFromMemory({question_bmp, question_bmp_size}, renderer, m_preview, &m_previewError)) {
+            LogFmt("loadTextureFromMemory error: {}", m_previewError);
+        }
     }
 }
