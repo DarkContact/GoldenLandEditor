@@ -1,7 +1,10 @@
 #include "LevelPicker.h"
 
+#include <cmath>
+
 #include <SDL3/SDL_render.h>
 #include "imgui.h"
+#include "imgui_internal.h"
 
 #include "parsers/SEF_Parser.h"
 #include "utils/TracyProfiler.h"
@@ -11,7 +14,7 @@
 #include "utils/DebugLog.h"
 
 LevelPicker::LevelPicker() :
-    m_title("Level picker")
+    m_title("Load Level")
 {
 
 }
@@ -37,7 +40,7 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
     }
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
-                            ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                            ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
     if (ImGui::BeginPopupModal(m_title.data(), &showWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -53,13 +56,14 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
                 selectedLevelIndex = 0;
                 loadPreview(rootDirectory, levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex], renderer);
             }
+            ImGui::Dummy({0, 0}); // Отступ
         }
 
         char currentLevelNameBuffer[256];
         std::string_view currentLevelName = levelNames(singleLevelNames, multiLevelNames)[selectedLevelIndex];
         writeLevelHumanNameToBuffer(levelHumanNamesDict, currentLevelName, currentLevelNameBuffer);
 
-        if (ImGui::BeginCombo("Levels", currentLevelNameBuffer, ImGuiComboFlags_HeightLarge)) {
+        if (ImGui::BeginCombo("##Levels", currentLevelNameBuffer, ImGuiComboFlags_HeightLarge)) {
             char levelNameBuffer[256];
             for (int i = 0; i < static_cast<int>(levelNames(singleLevelNames, multiLevelNames).size()); ++i) {
                 bool isSelected = (i == selectedLevelIndex);
@@ -76,28 +80,42 @@ LevelPickerResult LevelPicker::update(bool& showWindow,
             ImGui::EndCombo();
         }
 
-        ImGui::SameLine();
-        if ( ImGui::Button("Load", ImVec2(70.0f, 0.0f)) ) {
+        ImGui::Dummy({0, 0}); // Отступ
+        ImVec2 bgPos = ImGui::GetCursorScreenPos();
+        ImVec2 bgSize(128, 112);
+        ImGui::Dummy(bgSize);
+
+        if (m_preview.isValid()) {
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+            ImVec2 imageSize(m_preview->w, m_preview->h);
+            if (imageSize.x > bgSize.x) {
+                float ratio = bgSize.x / imageSize.x;
+                imageSize.x = bgSize.x;
+                imageSize.y *= ratio;
+                imageSize.y = std::ceil(imageSize.y);
+            }
+
+            bgPos.x += ImGui::GetContentRegionAvail().x * 0.5f - bgSize.x * 0.5f;
+            ImVec2 imagePos(
+                std::floor(bgPos.x + (bgSize.x - imageSize.x) * 0.5f),
+                std::floor(bgPos.y + (bgSize.y - imageSize.y) * 0.5f)
+            );
+
+            ImRect imageBox(imagePos, ImVec2(imagePos.x + imageSize.x, imagePos.y + imageSize.y));
+
+            drawList->AddImage((ImTextureID)m_preview.get(), imageBox.Min, imageBox.Max);
+            imageBox.Expand(1);
+            drawList->AddRect(imageBox.Min, imageBox.Max, IM_COL32(200, 200, 200, 255));
+        }
+
+        ImGui::Dummy({0, 0}); // Отступ
+        if ( ImGui::Button("Load", ImVec2(ImGui::GetContentRegionAvail().x, 0.0f)) ) {
             showWindow = false;
 
             result.selected = true;
             result.loadedLevelType = m_type;
             result.loadedLevelName = currentLevelName;
-        }
-
-        if (m_preview.isValid()) {
-            ImGui::Dummy(ImVec2(0.0f, 2.0f));
-
-            ImVec2 imageSize(m_preview->w, m_preview->h);
-            //ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - imageSize.x) * 0.5f);
-
-            ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize, 1.0f);
-            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1, 1, 1, 1));
-
-            ImGui::Image((ImTextureID)m_preview.get(), imageSize);
-
-            ImGui::PopStyleColor();
-            ImGui::PopStyleVar();
         }
 
         ImGui::EndPopup();

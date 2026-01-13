@@ -208,7 +208,7 @@ void Application::mainLoop() {
 
                 bool levelsDisabled = m_rootDirContext.singleLevelNames().empty()
                                       && m_rootDirContext.multiplayerLevelNames().empty();
-                if (ImGui::MenuItem("Levels", NULL, false, !levelsDisabled)) {
+                if (ImGui::MenuItem("Load Level...", NULL, false, !levelsDisabled)) {
                     showLevelsWindow = true;
                 }
                 ImGui::Separator();
