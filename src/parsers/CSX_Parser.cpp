@@ -80,14 +80,18 @@ bool CSX_Parser::preParse(std::string* error)
     for (int i = 0; i < m_metaInfo.colorCount; i++) {
         ColorData color;
         color.u32 = readUInt32(m_buffer, offset);
+
         if (fillColor.u32 == color.u32) {
             m_metaInfo.fillColorIndex = i;
+            color.a = 0;
+        } else {
+            color.a = 255;
         }
 
         palleteColors[i].r = color.r;
         palleteColors[i].g = color.g;
         palleteColors[i].b = color.b;
-        palleteColors[i].a = 255;
+        palleteColors[i].a = color.a;
     }
 
     // Читаем размеры изображения
@@ -109,6 +113,7 @@ bool CSX_Parser::preParse(std::string* error)
             palleteColors[m_metaInfo.colorCount].r = fillColor.r;
             palleteColors[m_metaInfo.colorCount].g = fillColor.g;
             palleteColors[m_metaInfo.colorCount].b = fillColor.b;
+            palleteColors[m_metaInfo.colorCount].a = 0;
             m_metaInfo.fillColorIndex = m_metaInfo.colorCount;
             ++m_metaInfo.colorCount;
         } else {
@@ -136,6 +141,7 @@ bool CSX_Parser::preParse(std::string* error)
             palleteColors[firstUnusedIndex].r = fillColor.r;
             palleteColors[firstUnusedIndex].g = fillColor.g;
             palleteColors[firstUnusedIndex].b = fillColor.b;
+            palleteColors[firstUnusedIndex].a = 0;
             m_metaInfo.fillColorIndex = firstUnusedIndex;
         }
     }

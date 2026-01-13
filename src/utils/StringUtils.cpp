@@ -12,6 +12,9 @@ static constexpr bool isSpace(int ch) noexcept {
     return (ch == ' ' || (ch >= '\t' && ch <= '\r'));
 }
 
+static constexpr bool isDigit(int ch) noexcept {
+    return (ch >= '0' && ch <= '9');
+}
 
 static constexpr char toLower(char c) noexcept {
     if (c >= 'A' && c <= 'Z')
@@ -173,4 +176,51 @@ std::u8string_view StringUtils::toUtf8View(std::string_view input) noexcept {
 
 std::string_view StringUtils::fromUtf8View(std::u8string_view input) noexcept {
     return {(char*)input.data(), input.size()};
+}
+
+bool StringUtils::naturalCompare(std::string_view a, std::string_view b) noexcept {
+    size_t i = 0, j = 0;
+
+    while (i < a.size() && j < b.size()) {
+        if (isDigit(a[i]) && isDigit(b[j])) {
+            size_t startA = i;
+            while (i < a.size() && isDigit(a[i])) ++i;
+
+            size_t startB = j;
+            while (j < b.size() && isDigit(b[j])) ++j;
+
+            std::string_view digitsA = a.substr(startA, i - startA);
+            std::string_view digitsB = b.substr(startB, j - startB);
+
+            uint64_t valA = 0;
+            uint64_t valB = 0;
+
+            auto resA = std::from_chars(digitsA.data(), digitsA.data() + digitsA.size(), valA);
+            auto resB = std::from_chars(digitsB.data(), digitsB.data() + digitsB.size(), valB);
+
+            // If both are valid numbers fitting in uint64_t
+            if (resA.ec == std::errc() && resB.ec == std::errc()) {
+                if (valA != valB) {
+                    return valA < valB;
+                }
+                // Values are equal.
+                // Sort by length descending (more leading zeros comes first)
+                if (digitsA.size() != digitsB.size()) {
+                    return digitsA.size() > digitsB.size();
+                }
+            } else {
+                // One or both overflowed uint64_t. Fallback to string comparison.
+                int cmp = digitsA.compare(digitsB);
+                if (cmp != 0) {
+                    return cmp < 0;
+                }
+            }
+        } else {
+            if (a[i] != b[j])
+                return a[i] < b[j];
+            ++i;
+            ++j;
+        }
+    }
+    return a.size() < b.size();
 }

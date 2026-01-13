@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstring>
 
+#include "utils/TracyProfiler.h"
+
 Texture::~Texture() noexcept
 {
     freeTexture();
@@ -25,6 +27,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
 
 Texture Texture::create(SDL_Renderer* renderer, SDL_PixelFormat format, SDL_TextureAccess access, int width, int height, std::string* error) noexcept
 {
+    Tracy_ZoneScoped;
     Texture texture;
     texture.m_texture = SDL_CreateTexture(renderer, format, access, width, height);
     if (!texture.isValid() && error) {
@@ -35,6 +38,7 @@ Texture Texture::create(SDL_Renderer* renderer, SDL_PixelFormat format, SDL_Text
 
 Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface, std::string* error) noexcept
 {
+    Tracy_ZoneScoped;
     Texture texture;
     texture.m_texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture.isValid() && error) {
@@ -45,6 +49,7 @@ Texture Texture::createFromSurface(SDL_Renderer* renderer, SDL_Surface* surface,
 
 bool Texture::updatePixels(const void* pixels, const SDL_Rect* rect, std::string* error) noexcept
 {
+    Tracy_ZoneScoped;
     assert(isValid());
 
     SDL_PropertiesID props = SDL_GetTextureProperties(m_texture);

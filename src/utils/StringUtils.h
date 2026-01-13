@@ -1,9 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <cassert>
+
+#include <algorithm>
 #include <string>
 #include <format>
 #include <span>
+
+#include "utils/Platform.h"
 
 template<typename T>
 concept LineCallback = requires(T callback, std::string_view stringView) {
@@ -41,6 +45,8 @@ public:
 
     template <typename... Args>
     static size_t formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args);
+
+    static bool naturalCompare(std::string_view a, std::string_view b) noexcept;
 };
 
 
@@ -68,12 +74,12 @@ inline void StringUtils::forEachLine(std::string_view buffer, Callback&& callbac
     }
 }
 
-// #include "utils/Platform.h"
-
 template<typename... Args>
 inline size_t StringUtils::formatToBuffer(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) {
-    // static_assert(!BX_COMPILER_GCC || (BX_COMPILER_GCC >= 130300),
-    //               "std::format_to_n have bug. Please update GCC version. More info: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110990");
+    // NOTE: Workaround gcc bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110990)
+    if constexpr(BX_COMPILER_GCC && BX_COMPILER_GCC <= 130300) {
+        std::fill(buffer.begin(), buffer.end(), '\0');
+    }
 
     const size_t bufferSize = buffer.size();
     assert(bufferSize);

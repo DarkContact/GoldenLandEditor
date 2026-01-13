@@ -3,6 +3,8 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_render.h>
 
+#include "utils/RenderUtils.h"
+
 #include "imgui.h"
 #include "stb_image_ext.h"
 
@@ -37,6 +39,13 @@ void CaptureImage(SDL_Renderer* renderer)
 
     SDL_DestroySurface(screenSurface);
     SDL_DestroySurface(rgbaSurface);
+}
+
+
+void VideoMemoryPlot(SDL_Renderer* renderer)
+{
+    TracyPlot("VRAM", (double)RenderUtils::getUsedVideoMemoryBytes(renderer));
+    TracyPlotConfig("VRAM", tracy::PlotFormatType::Memory, true, true, tracy::Color::BlueViolet);
 }
 
 // -- SDL Memory --

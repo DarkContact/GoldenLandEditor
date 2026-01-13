@@ -2,6 +2,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <span>
 
 #include "Types.h"
 
@@ -94,6 +95,7 @@ public:
     SEF_Parser() = delete;
 
     static bool parse(std::string_view sefPath, SEF_Data& data, std::string* error);
+    static bool fastPackParse(std::string_view sefPath, std::span<char> packBuffer, std::string* error);
 
 private:
     static Direction parseDirection(std::string_view dir);

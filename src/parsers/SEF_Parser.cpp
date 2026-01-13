@@ -1,5 +1,7 @@
 #include "SEF_Parser.h"
 
+#include <memory>
+
 #include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
@@ -62,6 +64,61 @@ bool SEF_Parser::parse(std::string_view sefPath, SEF_Data& data, std::string* er
             parseDoorLine(line, data);
         }
     });
+    return true;
+}
+
+bool SEF_Parser::fastPackParse(std::string_view sefPath, std::span<char> packBuffer, std::string* error)
+{
+    Tracy_ZoneScoped;
+    std::unique_ptr<SDL_IOStream, decltype(&SDL_CloseIO)> streamPtr = {
+        SDL_IOFromFile(sefPath.data(), "rb"),
+        SDL_CloseIO
+    };
+
+    if (!streamPtr) {
+        if (error)
+            *error = SDL_GetError();
+        return false;
+    }
+
+    constexpr size_t BLOCK_SIZE = 512;
+    char buffer[BLOCK_SIZE];
+
+    const size_t bytesRead = SDL_ReadIO(streamPtr.get(), buffer, BLOCK_SIZE);
+    if (bytesRead == 0)
+        return false;
+
+    std::string_view bufferView(buffer, bytesRead);
+    size_t keyPos = bufferView.find("pack:");
+    if (keyPos == std::string_view::npos) {
+        if (error)
+            *error = "Pack not found.";
+        return false;
+    }
+
+    size_t startQuote = bufferView.find('"', keyPos);
+    if (startQuote == std::string_view::npos) {
+        if (error)
+            *error = "Start quote not found.";
+        return false;
+    }
+
+    size_t endQuote = bufferView.find('"', startQuote + 1);
+    if (endQuote == std::string_view::npos) {
+        if (error)
+            *error = "End quote not found.";
+        return false;
+    }
+
+    size_t valueLen = endQuote - startQuote - 1;
+    if (valueLen + 1 > packBuffer.size()) {
+        if (error)
+            *error = "Pack buffer too small.";
+        return false;
+    }
+
+    std::memcpy(packBuffer.data(), buffer + startQuote + 1, valueLen);
+    packBuffer[valueLen] = '\0';
     return true;
 }
 

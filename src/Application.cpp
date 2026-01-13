@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include <algorithm>
 #include <format>
 
 #include <SDL3/SDL.h>
@@ -121,10 +122,10 @@ void Application::initImGui(std::string_view fontFilepath, int fontSize) {
 
     // Встраиваемый шрифт
     using namespace std::literals::string_view_literals;
-    auto fontName = "EmbeddedCarlito\0"sv;
+    auto fontName = "EmbeddedCarlito"sv;
 
     ImFontConfig embeddedFontConfig;
-    std::format_to_n(embeddedFontConfig.Name, fontName.size(), "{}", fontName);
+    std::copy(fontName.cbegin(), fontName.cend(), embeddedFontConfig.Name);
     embeddedFontConfig.FontDataOwnedByAtlas = false;
     io.Fonts->AddFontFromMemoryTTF((void*)carlito_ttf, carlito_ttf_size, 0.0f, &embeddedFontConfig);
 
@@ -207,7 +208,7 @@ void Application::mainLoop() {
 
                 bool levelsDisabled = m_rootDirContext.singleLevelNames().empty()
                                       && m_rootDirContext.multiplayerLevelNames().empty();
-                if (ImGui::MenuItem("Levels", NULL, false, !levelsDisabled)) {
+                if (ImGui::MenuItem("Load Level...", NULL, false, !levelsDisabled)) {
                     showLevelsWindow = true;
                 }
                 ImGui::Separator();
@@ -335,6 +336,8 @@ void Application::mainLoop() {
 
         if (showLevelsWindow && !m_rootDirContext.singleLevelNames().empty()) {
             if (auto result = m_levelPicker.update(showLevelsWindow,
+                                                   m_renderer,
+                                                   m_rootDirContext.rootDirectory(),
                                                    m_rootDirContext.singleLevelNames(),
                                                    m_rootDirContext.multiplayerLevelNames(),
                                                    m_rootDirContext.levelHumanNamesDict(),
@@ -417,6 +420,7 @@ void Application::render() {
     ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
+    Tracy_VideoMemoryPlot(m_renderer);
     {
         Tracy_ZoneScopedN("Rendering prepare");
         Tracy_ZoneColor(0xadff2f); // GreenYellow
