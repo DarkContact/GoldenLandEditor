@@ -114,6 +114,7 @@ add_executable(GoldenLandEditor WIN32
     src/utils/Platform.h
     src/utils/RenderUtils.h
     src/utils/RenderUtils.cpp
+    src/Cache.h
 )
 
 target_sources(GoldenLandEditor PRIVATE
