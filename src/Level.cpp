@@ -111,24 +111,32 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
     }
 
     for (int i = 0; i < levelData.lvlData.triggerDescriptions.size(); ++i) {
-        LevelTrigger trigger(levelData.lvlData.triggerDescriptions.at(i));
+        LVL_Description& lvlDescription = levelData.lvlData.triggerDescriptions.at(i);
 
-        if (auto it = std::find_if(levelData.sefData.triggers.begin(),
-                                   levelData.sefData.triggers.end(),
-                                   [&trigger](const SEF_Trigger& sefTrigger) {
-                                        return sefTrigger.techName == trigger.lvlDescription.name;
-                                   });
-            it != levelData.sefData.triggers.cend())
-        {
-            trigger.sefDescription = *it;
-        }
-        std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, trigger.lvlDescription.number);
-        // TODO: Сделать загрузку через cache, т.к. на уровне может быть несколько одинаковых текстур тригеров
-        if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, trigger.texture, error)) {
+        std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, lvlDescription.number);
+        const Texture* triggerTexture = levelData.imgui.triggerCache.load(levelTriggerPath, [&]() -> std::optional<Texture> {
+                                                                              Texture texture;
+                                                                              if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, texture, error)) {
+                                                                                  return std::nullopt;
+                                                                              }
+                                                                              return std::move(texture);
+                                                                          });
+        if (triggerTexture) {
+            LevelTrigger trigger(lvlDescription, *triggerTexture);
+
+            if (auto it = std::find_if(levelData.sefData.triggers.begin(),
+                                       levelData.sefData.triggers.end(),
+                                       [&trigger](const SEF_Trigger& sefTrigger) {
+                                            return sefTrigger.techName == trigger.lvlDescription.name;
+                                       });
+                it != levelData.sefData.triggers.cend())
+            {
+                trigger.sefDescription = *it;
+            }
+            levelData.triggers.push_back(std::move(trigger));
+        } else {
             LogFmt("Loading texture for trigger failed. {}", *error);
-            return {};
         }
-        levelData.triggers.push_back(std::move(trigger));
     }
 
     return std::make_optional(std::move(levelObj));

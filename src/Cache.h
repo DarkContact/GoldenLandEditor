@@ -4,6 +4,7 @@
 #include <string>
 
 #include "utils/TracyProfiler.h"
+#include "utils/DebugLog.h"
 #include "Types.h"
 
 template<typename Callback, typename T>
@@ -20,8 +21,10 @@ public:
     const T* load(std::string_view key, Callback&& callback) {
         Tracy_ZoneScoped;
         Tracy_ZoneText(key.data(), key.size());
-        if (auto it = m_cache.find(key); it != m_cache.end())
+        if (auto it = m_cache.find(key); it != m_cache.end()) {
+            LogFmt("Load from cache: {}", key);
             return &it->second;
+        }
 
         std::optional<T> resource = std::forward<Callback>(callback)();
         if (!resource)

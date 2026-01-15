@@ -9,6 +9,7 @@
 #include "parsers/LVL_Parser.h"
 #include "parsers/LAO_Parser.h"
 #include "Texture.h"
+#include "Cache.h"
 #include "Types.h"
 
 enum class MapTilesMode {
@@ -71,6 +72,8 @@ struct LevelImgui {
     bool hasVisibleAnimations = false;
 
     bool showSounds = false;
+
+    Cache<Texture> triggerCache;
     bool showTriggers = false;
 
     bool showObjectsList = false;
@@ -94,12 +97,13 @@ struct LevelAnimation : public BaseAnimation {
 };
 
 struct LevelTrigger {
-    LevelTrigger(LVL_Description& description) :
-        lvlDescription(description) {}
+    LevelTrigger(LVL_Description& description, const Texture& texture) :
+        lvlDescription(description),
+        texture(texture) {}
 
     LVL_Description& lvlDescription;  // Из lvlData
     std::optional<std::reference_wrapper<SEF_Trigger>> sefDescription;
-    Texture texture;
+    const Texture& texture;
 };
 
 struct LevelData {
