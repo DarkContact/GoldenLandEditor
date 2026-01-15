@@ -268,6 +268,24 @@ void Application::mainLoop() {
                 ImGui::EndMenu();
             }
 
+#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+            if (ImGui::BeginMenu("Debug")) {
+                if (ImGui::MenuItem("Load all levels")) {
+                    for (const auto& levelName : m_rootDirContext.singleLevelNames()) {
+                        std::string error;
+                        auto level = Level::loadLevel(m_renderer, m_rootDirContext.rootDirectory(), levelName, LevelType::kSingle, &error);
+                        if (level) {
+                            m_rootDirContext.levels.push_back(std::move(*level));
+                        } else {
+                            uiError = std::move(error);
+                        }
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+#endif
+
             if (ImGui::BeginMenu("Help")) {
                 if (ImGui::MenuItem("About")) {
                     showAboutWindow = true;

@@ -185,7 +185,7 @@ if(GOLDENLAND_ENABLE_TRACY)
     )
     FetchContent_MakeAvailable(tracy)
 
-    target_compile_definitions(GoldenLandEditor PRIVATE DEBUG_LOG_ENABLE)
+    target_compile_definitions(GoldenLandEditor PRIVATE DEBUG_LOG_ENABLE DEBUG_MENU_ENABLE)
     target_sources(GoldenLandEditor PRIVATE src/utils/TracyProfiler.cpp)
 
     option(TRACY_ENABLE "" ON)
