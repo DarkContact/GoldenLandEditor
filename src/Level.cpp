@@ -114,13 +114,15 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
         LVL_Description& lvlDescription = levelData.lvlData.triggerDescriptions.at(i);
 
         std::string levelTriggerPath = levelTrigger(rootDirectory, levelData.sefData.pack, lvlDescription.number);
-        const Texture* triggerTexture = levelData.imgui.triggerCache.load(levelTriggerPath, [&]() -> std::optional<Texture> {
-                                                                              Texture texture;
-                                                                              if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, texture, error)) {
-                                                                                  return std::nullopt;
-                                                                              }
-                                                                              return std::move(texture);
-                                                                          });
+        const Texture* triggerTexture
+                = levelData.imgui.triggerCache.load(levelTriggerPath,
+                                                    [&]() -> std::optional<Texture> {
+                                                        Texture texture;
+                                                        if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, texture, error)) {
+                                                            return std::nullopt;
+                                                        }
+                                                        return std::move(texture);
+                                                    });
         if (triggerTexture) {
             LevelTrigger trigger(lvlDescription, *triggerTexture);
 

@@ -144,19 +144,21 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                                     std::string animationPath = std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath);
                                     SDL_Color transparentColor = {255, 0, 255, 255};
 
-                                    const std::vector<Texture>* textures = m_animationLoader.load(animationPath, [&]() -> std::optional<std::vector<Texture>> {
-                                        std::vector<Texture> result;
-                                        if (!TextureLoader::loadCountAnimationFromFile(animationPath,
-                                                                                       animDesc.framesCount,
-                                                                                       renderer,
-                                                                                       result,
-                                                                                       (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
-                                                                                       &m_uiError))
-                                        {
-                                            return std::nullopt;
-                                        }
-                                        return std::move(result);
-                                    });
+                                    const std::vector<Texture>* textures
+                                            = m_animationLoader.load(animationPath,
+                                                                     [&]() -> std::optional<std::vector<Texture>> {
+                                                                         std::vector<Texture> result;
+                                                                         if (!TextureLoader::loadCountAnimationFromFile(animationPath,
+                                                                             animDesc.framesCount,
+                                                                             renderer,
+                                                                             result,
+                                                                             (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
+                                                                             &m_uiError))
+                                                                         {
+                                                                             return std::nullopt;
+                                                                         }
+                                                                         return std::move(result);
+                                                                     });
                                     if (!textures) break;
 
                                     animation.setTextures(*textures);
