@@ -6,9 +6,9 @@
 #include <SDL3/SDL_blendmode.h>
 #include "imgui.h"
 
-#include "Texture.h"
 #include "parsers/MDF_Parser.h"
-#include "utils/AnimationCachedLoader.h"
+#include "Texture.h"
+#include "Cache.h"
 
 struct SDL_Renderer;
 
@@ -144,7 +144,7 @@ private:
     std::string mdfInfoString(const MDF_Data& data);
 
     int m_selectedIndex = -1;
-    AnimationCachedLoader m_animationLoader;
+    Cache<std::vector<Texture>> m_animationLoader;
     std::vector<std::vector<MagicAnimation>> m_animationLayers;
     std::vector<LayerInfo> m_layerInfos;
     std::string m_mdfDataInfo;

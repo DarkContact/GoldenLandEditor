@@ -93,8 +93,6 @@ add_executable(GoldenLandEditor WIN32
     src/windows/MdfViewer.cpp
     src/utils/IoUtils.h
     src/utils/IoUtils.cpp
-    src/utils/AnimationCachedLoader.h
-    src/utils/AnimationCachedLoader.cpp
     src/parsers/CS_Parser.h
     src/parsers/CS_Parser.cpp
     src/windows/CsViewer.h

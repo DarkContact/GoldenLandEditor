@@ -159,6 +159,19 @@ bool TextureLoader::loadHeightAnimationFromCsxFile(std::string_view fileName, in
     return loadAnimationFromCsxFile(fileName, IntParam::kHeight, height, false, renderer, outTextures, error);
 }
 
+bool TextureLoader::loadCountAnimationFromFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error)
+{
+    if (fileName.ends_with(".csx")) {
+        return TextureLoader::loadCountAnimationFromCsxFile(fileName, count, renderer, outTextures, error);
+    } else if (fileName.ends_with(".bmp")) {
+        return TextureLoader::loadCountAnimationFromBmpFile(fileName, count, renderer, outTextures, transparentColor, error);
+    } else {
+        if (error)
+            *error = "Format unsupported!";
+        return false;
+    }
+}
+
 bool TextureLoader::loadCountAnimationFromCsxFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error)
 {
     Tracy_ZoneScoped;

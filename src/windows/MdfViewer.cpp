@@ -7,7 +7,6 @@
 
 #include "embedded_resources.h"
 #include "parsers/MDF_Parser.h"
-#include "utils/AnimationCachedLoader.h"
 #include "utils/TextureLoader.h"
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
@@ -144,19 +143,29 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                                     std::string animationPath = std::format("{}/magic/bitmap/{}", rootDirectory, animDesc.animationPath);
                                     SDL_Color transparentColor = {255, 0, 255, 255};
-                                    auto textures = m_animationLoader.loadAnimationCount(animationPath,
-                                                                                       animDesc.framesCount,
-                                                                                       renderer,
-                                                                                       (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
-                                                                                       &m_uiError);
-                                    animation.setTextures(textures);
+
+                                    const std::vector<Texture>* textures = m_animationLoader.load(animationPath, [&]() -> std::optional<std::vector<Texture>> {
+                                        std::vector<Texture> result;
+                                        bool isOk = TextureLoader::loadCountAnimationFromFile(animationPath,
+                                                                                              animDesc.framesCount,
+                                                                                              renderer,
+                                                                                              result,
+                                                                                              (animDesc.maskAnimationPath.empty() ? &transparentColor : nullptr),
+                                                                                              &m_uiError);
+                                        if (!isOk)
+                                            return std::nullopt;
+
+                                        return std::move(result);
+                                    });
+                                    if (!textures) break;
+
+                                    animation.setTextures(*textures);
 
                                     layerInfo.animationInfo[animationIndex].width = animation.width();
                                     layerInfo.animationInfo[animationIndex].height = animation.height();
                                     layerInfo.maxWidth = std::max(animation.width(), layerInfo.maxWidth);
                                     layerInfo.maxHeight = std::max(animation.height(), layerInfo.maxHeight);
 
-                                    if (textures.empty()) break;
                                     ++animationIndex;
                                 }
                                 ++layerIndex;
@@ -177,6 +186,7 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         // Right
         int animationMaxTime = 0;
         if (!m_animationLayers.empty() && m_uiError.empty()) {
+            Tracy_ZoneScopedN("ShowMdf");
             ImGui::BeginGroup();
             {
                 ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 3), 0, ImGuiWindowFlags_HorizontalScrollbar);
