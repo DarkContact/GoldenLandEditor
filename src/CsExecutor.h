@@ -56,6 +56,7 @@ private:
     void fatalError(const std::string& message) const;
 
     int RS_GetPersonParameterI(std::string_view person, std::string_view param);
+    int D_CloseDialog(int param);
 
     std::span<const CS_Node> m_nodes;
     UMapStringVar_t m_globalVars;

@@ -303,7 +303,14 @@ void Application::mainLoop() {
                         CS_Data csData;
 
                         std::string csPath = std::format("{}/{}", m_rootDirContext.rootDirectory(), csFile);
-                        CS_Parser::parse(csPath, csData, &csError);
+                        LogFmt("Cs file processing: {}", csPath);
+                        bool isOkParse = CS_Parser::parse(csPath, csData, &csError);
+
+                        if (!isOkParse) {
+                            LogFmt("CS_Parser error: {}", csError);
+                            testResults.push_back({csFile, "IncorrectFormat", csError, 100.0f});
+                            continue;
+                        }
 
                         try {
                             CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());

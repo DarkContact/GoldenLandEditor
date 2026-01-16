@@ -238,7 +238,7 @@ bool CsExecutor::next()
             } else if (rNode.opcode == kNumberLiteral) {
                 rValue = (int)rNode.value; // TODO: Корректное приведение типов
             } else if (rNode.opcode == kFunc) {
-                rValue = funcOpcode(rNode);
+                rValue = funcOpcode(rNode); // TODO: D_CloseDialog должен прерывать выполнение (m_currentStatus = kEnd;)
             } else {
                 fatalError( std::format("[currentNode.opcode: assign] [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
             }
@@ -250,7 +250,7 @@ bool CsExecutor::next()
                 fatalError( std::format("[currentNode.opcode: assign] [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
             }
 
-            LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+            //LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
             m_executedNodeIndexes.insert(currentNode.a);
             m_executedNodeIndexes.insert(currentNode.b);
             m_currentNodeIndex = currentNode.d;
@@ -278,7 +278,14 @@ void CsExecutor::userInput(uint8_t answer) {
     CS_Node sayNode = m_dialogFuncs[0];
     assert((uint32_t)sayNode.value == kD_Say);
 
-    assert(answer < m_dialogFuncs.size());
+    // Мы застряли на вводе, т.к. ответить юзеру нечем
+    // Пример: l91.p216_fisherman_hermit.d216.age.cs (goldland2)
+    if (answer >= m_dialogFuncs.size()) {
+        Log("[WARNING] UserInput without answers!");
+        m_currentStatus = kWaitUser;
+        return;
+    }
+
     CS_Node answerNode = m_dialogFuncs[answer];
     assert((uint32_t)answerNode.value == kD_Answer);
 
@@ -324,8 +331,8 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
     } else {
         fatalError( std::format("logicalOpcode [node.opcode: {}]", csOpcodeToString(node.opcode)) );
     }
-    LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
-    //LogFmt("isLeftValue: {}, isRightValue: {}, isTrue: {}", isLeftValue, isRightValue, isTrue);
+    // LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+    // LogFmt("isLeftValue: {}, isRightValue: {}, isTrue: {}", isLeftValue, isRightValue, isTrue);
     m_executedNodeIndexes.insert(node.a);
     m_executedNodeIndexes.insert(node.b);
     return isTrue;
@@ -349,6 +356,7 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     if (rNode.opcode == kStringVarName) {
         rValue = m_scriptVars[rNode.text];
     } else if (rNode.opcode == kNumberLiteral) {
+        // NOTE: Приведение типа равного lValue
         std::visit([&rValue, rNode](auto&& lv){
             using T = std::decay_t<decltype(lv)>;
             if constexpr (std::is_same_v<T, std::string>) {
@@ -375,8 +383,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     } else if (node.opcode == 11) {
         isTrue = (lValue < rValue);
     }
-    LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
-    //LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
+    // LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+    // LogFmt("lValue: {}, rValue: {}, isTrue: {}", lValue, rValue, isTrue);
     m_executedNodeIndexes.insert(node.a);
     m_executedNodeIndexes.insert(node.b);
     return isTrue;
@@ -390,10 +398,17 @@ int CsExecutor::funcOpcode(const CS_Node& node)
         m_dialogFuncs.emplace_back(node);
     }
 
-    if (funcValue == kRS_GetPersonParameterI) {
-        std::string_view arg0 = m_nodes[node.args[0]].text;
-        std::string_view arg1 = m_nodes[node.args[1]].text;
-        return RS_GetPersonParameterI(arg0, arg1);
+    switch (funcValue) {
+        case kRS_GetPersonParameterI: {
+            std::string_view arg0 = m_nodes[node.args[0]].text;
+            std::string_view arg1 = m_nodes[node.args[1]].text;
+            return RS_GetPersonParameterI(arg0, arg1);
+        }
+
+        case kD_CloseDialog: {
+            int arg0 = m_nodes[node.args[0]].value;
+            return D_CloseDialog(arg0);
+        }
     }
 
     for (auto arg : node.args) {
@@ -416,6 +431,10 @@ int CsExecutor::RS_GetPersonParameterI(std::string_view person, std::string_view
             return it->second;
         }
     }
+    return 0;
+}
+
+int CsExecutor::D_CloseDialog(int param) {
     return 0;
 }
 
