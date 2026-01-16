@@ -154,7 +154,7 @@ bool CsExecutorViewer::isNodeExecuted(int index) const
     return false;
 }
 
-int CsExecutorViewer::executedPercent() const
+float CsExecutorViewer::executedPercent() const
 {
     if (m_pExecutor) {
         return m_pExecutor->executedPercent();

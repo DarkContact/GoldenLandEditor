@@ -20,7 +20,7 @@ public:
                 const UMapStringVar_t& globalVars);
 
     bool isNodeExecuted(int index) const;
-    int executedPercent() const;
+    float executedPercent() const;
 
 private:
     std::unique_ptr<CsExecutor> m_pExecutor = nullptr;

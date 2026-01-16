@@ -149,7 +149,7 @@ void CsViewer::update(bool& showWindow,
         }
 
         ImGui::SameLine();
-        ImGui::Text("Executed: %d%%", m_csExecutorViewer.executedPercent());
+        ImGui::Text("Executed: %.2f%%", m_csExecutorViewer.executedPercent());
 
         ImGui::EndChild();
 

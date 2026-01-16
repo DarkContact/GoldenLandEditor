@@ -437,7 +437,7 @@ bool CsExecutor::isNodeExecuted(int index) const {
     return m_executedNodeIndexes.contains(index);
 }
 
-int CsExecutor::executedPercent() const {
+float CsExecutor::executedPercent() const {
     return ((float)m_executedNodeIndexes.size() / (float)m_nodes.size()) * 100.0f;
 }
 

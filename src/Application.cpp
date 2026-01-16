@@ -180,7 +180,12 @@ void Application::mainLoop() {
     bool showAboutWindow = false;
 
 #if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
-    static std::vector<std::pair<std::string, std::string>> testResult;
+    struct TestResult {
+        std::string filepath;
+        std::string status;
+        float percent;
+    };
+    static std::vector<TestResult> testResults;
 #endif
 
     while (!m_done)
@@ -288,8 +293,8 @@ void Application::mainLoop() {
                 }
 
                 if (ImGui::MenuItem("Test all dialogs")) {
-                    testResult.clear();
-                    testResult.reserve(m_rootDirContext.csFiles().size());
+                    testResults.clear();
+                    testResults.reserve(m_rootDirContext.csFiles().size());
                     for (const auto& csFile : m_rootDirContext.csFiles()) {
                         std::string csError;
                         CS_Data csData;
@@ -306,9 +311,7 @@ void Application::mainLoop() {
                                 executor.userInput(1);
                             }
                         }
-                        testResult.push_back({ csFile, std::format("Status: {} ({} %)",
-                                               executor.currentStatusString(),
-                                               executor.executedPercent()) });
+                        testResults.push_back({csFile, executor.currentStatusString(), executor.executedPercent()});
                     }
                 }
 
@@ -375,7 +378,7 @@ void Application::mainLoop() {
             }
 
 #if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
-            if (!testResult.empty()) {
+            if (!testResults.empty()) {
                 if (ImGui::Begin("Dialog test result")) {
                     if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
 
@@ -384,14 +387,22 @@ void Application::mainLoop() {
                         ImGui::TableSetupColumn("Result");
                         ImGui::TableHeadersRow();
 
-                        for (const auto& [filename, result] : testResult) {
+                        for (const auto& [filename, status, percent] : testResults) {
                             ImGui::TableNextRow();
 
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(filename.data(), filename.data() + filename.size());
 
                             ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(result.data(), result.data() + result.size());
+                            ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f);
+                            if (percent <= 60.0f) {
+                                color = ImVec4(0.9f, 0.1f, 0.1f, 1.0f);
+                            } else if (percent <= 80.0f) {
+                                color = ImVec4(0.9f, 0.9f, 0.1f, 1.0f);
+                            } else if (percent <= 100.0f) {
+                                color = ImVec4(0.1f, 0.9f, 0.1f, 1.0f);
+                            }
+                            ImGui::TextColored(color, "%s", std::format("Status: {} ({:.2f} %)", status, percent).c_str());
                         }
                         ImGui::EndTable();
                     }

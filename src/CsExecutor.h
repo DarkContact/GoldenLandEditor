@@ -44,7 +44,7 @@ public:
     const char* currentStatusString() const;
 
     bool isNodeExecuted(int index) const;
-    int executedPercent() const;
+    float executedPercent() const;
 
 private:
     void readScriptVariables();
