@@ -183,6 +183,7 @@ void Application::mainLoop() {
     struct TestResult {
         std::string filepath;
         std::string status;
+        std::string errorMessage;
         float percent;
     };
     static std::vector<TestResult> testResults;
@@ -302,16 +303,20 @@ void Application::mainLoop() {
                         std::string csPath = std::format("{}/{}", m_rootDirContext.rootDirectory(), csFile);
                         CS_Parser::parse(csPath, csData, &csError);
 
-                        CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
-                        while (executor.currentStatus() != CsExecutor::kEnd
-                               && executor.currentStatus() != CsExecutor::kInfinity)
-                        {
-                            while (executor.next()) {}
-                            if (executor.currentStatus() == CsExecutor::kWaitUser) {
-                                executor.userInput(1);
+                        try {
+                            CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
+                            while (executor.currentStatus() != CsExecutor::kEnd
+                                   && executor.currentStatus() != CsExecutor::kInfinity)
+                            {
+                                while (executor.next()) {}
+                                if (executor.currentStatus() == CsExecutor::kWaitUser) {
+                                    executor.userInput(1);
+                                }
                             }
+                            testResults.push_back({csFile, executor.currentStatusString(), {},  executor.executedPercent()});
+                        } catch (const std::exception& ex) {
+                            testResults.push_back({csFile, "FatalError", ex.what(), 0.0f});
                         }
-                        testResults.push_back({csFile, executor.currentStatusString(), executor.executedPercent()});
                     }
                 }
 
@@ -380,32 +385,54 @@ void Application::mainLoop() {
 #if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
             if (!testResults.empty()) {
                 if (ImGui::Begin("Dialog test result")) {
-                    if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+                    int fatals = 0;
+                    int lowPercent = 0;
+                    if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders)) {
 
-                        ImGui::TableSetupScrollFreeze(0, 1);
                         ImGui::TableSetupColumn("Dialog");
                         ImGui::TableSetupColumn("Result");
                         ImGui::TableHeadersRow();
 
-                        for (const auto& [filename, status, percent] : testResults) {
+                        int id = 0;
+                        for (const auto& [filename, status, errorMessage, percent] : testResults) {
                             ImGui::TableNextRow();
 
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(filename.data(), filename.data() + filename.size());
 
+                            ImGui::PushID(id++);
+                            if (ImGui::BeginPopupContextItem("filename context menu")) {
+                                if (ImGui::MenuItem("Copy")) {
+                                    ImGui::SetClipboardText(filename.data());
+                                }
+                                ImGui::EndPopup();
+                            }
+                            ImGui::PopID();
+
                             ImGui::TableNextColumn();
                             ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-                            if (percent <= 60.0f) {
-                                color = ImVec4(0.9f, 0.1f, 0.1f, 1.0f);
-                            } else if (percent <= 80.0f) {
+                            if (percent == 0.0f) {
+                                color = ImVec4(0.98f, 0.0f, 0.0f, 1.0f);
+                                fatals++;
+                            } else if (percent <= 50.0f) {
+                                color = ImVec4(0.8f, 0.1f, 0.1f, 1.0f);
+                                lowPercent++;
+                            } else if (percent <= 75.0f) {
                                 color = ImVec4(0.9f, 0.9f, 0.1f, 1.0f);
                             } else if (percent <= 100.0f) {
                                 color = ImVec4(0.1f, 0.9f, 0.1f, 1.0f);
                             }
                             ImGui::TextColored(color, "%s", std::format("Status: {} ({:.2f} %)", status, percent).c_str());
+                            if (!errorMessage.empty()) {
+                                ImGui::Text("%s", errorMessage.c_str());
+                            }
                         }
                         ImGui::EndTable();
                     }
+
+                    ImGui::Text("Total: %zu", testResults.size());
+                    ImGui::Text("Fatals: %d", fatals);
+                    ImGui::Text("Low percent: %d", lowPercent);
                 }
                 ImGui::End();
             }
