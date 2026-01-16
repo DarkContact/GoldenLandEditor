@@ -289,7 +289,6 @@ void CsExecutor::userInput(uint8_t answer) {
     m_dialogFuncs.clear();
 
     m_currentStatus = kRestart;
-    m_counter = 0;
     m_currentNodeIndex = 0;
 }
 

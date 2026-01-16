@@ -298,8 +298,17 @@ void Application::mainLoop() {
                         CS_Parser::parse(csPath, csData, &csError);
 
                         CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
-                        while (executor.next()) {}
-                        testResult.push_back({csFile, std::format("{} %", executor.executedPercent())});
+                        while (executor.currentStatus() != CsExecutor::kEnd
+                               && executor.currentStatus() != CsExecutor::kInfinity)
+                        {
+                            while (executor.next()) {}
+                            if (executor.currentStatus() == CsExecutor::kWaitUser) {
+                                executor.userInput(1);
+                            }
+                        }
+                        testResult.push_back({ csFile, std::format("Status: {} ({} %)",
+                                               executor.currentStatusString(),
+                                               executor.executedPercent()) });
                     }
                 }
 
