@@ -9,8 +9,9 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "Settings.h"
 #include "embedded_resources.h"
+#include "CsExecutor.h"
+#include "Settings.h"
 #include "utils/ImGuiWidgets.h"
 #include "utils/TracyProfiler.h"
 #include "utils/Platform.h"
@@ -178,6 +179,10 @@ void Application::mainLoop() {
     bool showSettingsWindow = false;
     bool showAboutWindow = false;
 
+#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+    static std::vector<std::pair<std::string, std::string>> testResult;
+#endif
+
     while (!m_done)
     {
         bool noWait = true;
@@ -282,6 +287,22 @@ void Application::mainLoop() {
                     }
                 }
 
+                if (ImGui::MenuItem("Test all dialogs")) {
+                    testResult.clear();
+                    testResult.reserve(m_rootDirContext.csFiles().size());
+                    for (const auto& csFile : m_rootDirContext.csFiles()) {
+                        std::string csError;
+                        CS_Data csData;
+
+                        std::string csPath = std::format("{}/{}", m_rootDirContext.rootDirectory(), csFile);
+                        CS_Parser::parse(csPath, csData, &csError);
+
+                        CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
+                        while (executor.next()) {}
+                        testResult.push_back({csFile, std::format("{} %", executor.executedPercent())});
+                    }
+                }
+
                 ImGui::EndMenu();
             }
 #endif
@@ -343,6 +364,32 @@ void Application::mainLoop() {
                     ImGui::TextUnformatted(aboutMessage.data(), aboutMessage.data() + aboutMessage.size());
                 });
             }
+
+#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+            if (!testResult.empty()) {
+                if (ImGui::Begin("Dialog test result")) {
+                    if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+
+                        ImGui::TableSetupScrollFreeze(0, 1);
+                        ImGui::TableSetupColumn("Dialog");
+                        ImGui::TableSetupColumn("Result");
+                        ImGui::TableHeadersRow();
+
+                        for (const auto& [filename, result] : testResult) {
+                            ImGui::TableNextRow();
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(filename.data(), filename.data() + filename.size());
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(result.data(), result.data() + result.size());
+                        }
+                        ImGui::EndTable();
+                    }
+                }
+                ImGui::End();
+            }
+#endif
         }
 
         // NOTE: Для генерации озвучки
