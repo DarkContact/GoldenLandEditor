@@ -1,6 +1,7 @@
 #include "CsExecutor.h"
 
 #include <algorithm>
+#include <exception>
 #include <cassert>
 #include <format>
 
@@ -169,8 +170,7 @@ std::vector<std::string> CsExecutor::funcsInfo() const {
             } else if (node.opcode == kStringVarName) {
                 offset += StringUtils::formatToBuffer(std::span<char>(argsInfo + offset, kArgsInfoSize - offset), "{}, ", m_scriptVars.at(node.text));
             } else {
-                LogFmt("[currentNode.opcode: {}]", csOpcodeToString(node.opcode));
-                assert(false);
+                fatalError( std::format("[currentNode.opcode: {}]", csOpcodeToString(node.opcode)) );
             }
         }
 
@@ -240,16 +240,14 @@ bool CsExecutor::next()
             } else if (rNode.opcode == kFunc) {
                 rValue = funcOpcode(rNode);
             } else {
-                LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
-                assert(false);
+                fatalError( std::format("[currentNode.opcode: assign] [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
             }
 
             const CS_Node& lNode = m_nodes[currentNode.a];
             if (lNode.opcode == kStringVarName) {
                 m_scriptVars[lNode.text] = rValue;
             } else {
-                LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
-                assert(false);
+                fatalError( std::format("[currentNode.opcode: assign] [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
             }
 
             LogFmt("[currentNode.opcode: assign] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
@@ -257,15 +255,16 @@ bool CsExecutor::next()
             m_executedNodeIndexes.insert(currentNode.b);
             m_currentNodeIndex = currentNode.d;
         } else {
+            std::string errorMessage;
             if (currentNode.a == -1 || currentNode.b == -1) {
-                LogFmt("[currentNode.opcode: {}]", csOpcodeToString(currentNode.opcode));
+                errorMessage = std::format("[currentNode.opcode: {}]", csOpcodeToString(currentNode.opcode));
             } else {
                 const CS_Node& lNode = m_nodes[currentNode.a];
                 const CS_Node& rNode = m_nodes[currentNode.b];
-                LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}",
-                       csOpcodeToString(currentNode.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
+                errorMessage = std::format("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}",
+                                           csOpcodeToString(currentNode.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
             }
-            assert(false);
+            fatalError(errorMessage);
         }
 
     }
@@ -304,8 +303,7 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
     } else if (lNode.opcode == kFunc) {
         isLeftValue = funcOpcode(lNode);
     } else {
-        LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
-        assert(false);
+        fatalError( std::format("logicalOpcode [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
     }
 
     if (csOpcodeToGroup(rNode.opcode) == kComparison) {
@@ -315,8 +313,7 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
     } else if (rNode.opcode == kFunc) {
         isRightValue = funcOpcode(rNode);
     } else {
-        LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
-        assert(false);
+        fatalError( std::format("logicalOpcode [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
     }
 
     bool isTrue = false;
@@ -325,7 +322,7 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
     } else if (node.opcode == kLogicAnd) {
         isTrue = isLeftValue && isRightValue;
     } else {
-        assert(false);
+        fatalError( std::format("logicalOpcode [node.opcode: {}]", csOpcodeToString(node.opcode)) );
     }
     LogFmt("[currentNode.opcode: {}] lNode.opcode: {}, rNode.opcode: {}", csOpcodeToString(node.opcode), csOpcodeToString(lNode.opcode), csOpcodeToString(rNode.opcode));
     //LogFmt("isLeftValue: {}, isRightValue: {}, isTrue: {}", isLeftValue, isRightValue, isTrue);
@@ -342,8 +339,7 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     } else if (lNode.opcode == kNumberLiteral) {
         lValue = lNode.value;
     } else {
-        LogFmt("[lNode.opcode: {}]", csOpcodeToString(lNode.opcode));
-        assert(false);
+        fatalError( std::format("compareOpcode [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
     }
 
     const CS_Node& rNode = m_nodes[node.b];
@@ -360,8 +356,7 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
             }
         }, lValue);
     } else {
-        LogFmt("[rNode.opcode: {}]", csOpcodeToString(rNode.opcode));
-        assert(false);
+        fatalError( std::format("compareOpcode [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
     }
 
     bool isTrue = false;
@@ -404,6 +399,12 @@ int CsExecutor::funcOpcode(const CS_Node& node)
         m_executedNodeIndexes.insert(arg);
     }
     return 0;
+}
+
+void CsExecutor::fatalError(const std::string& message) const
+{
+    Log(message);
+    throw std::runtime_error{message};
 }
 
 int CsExecutor::RS_GetPersonParameterI(std::string_view person, std::string_view param) {

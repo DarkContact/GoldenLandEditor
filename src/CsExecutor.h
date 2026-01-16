@@ -53,6 +53,8 @@ private:
     bool compareOpcode(const CS_Node& node);
     int funcOpcode(const CS_Node& node);
 
+    void fatalError(const std::string& message) const;
+
     int RS_GetPersonParameterI(std::string_view person, std::string_view param);
 
     std::span<const CS_Node> m_nodes;
