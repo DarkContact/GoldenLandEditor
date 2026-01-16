@@ -338,6 +338,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
         lValue = m_scriptVars[lNode.text];
     } else if (lNode.opcode == kNumberLiteral) {
         lValue = lNode.value;
+    } else if (lNode.opcode == kNumberVarName) {
+        lValue = lNode.value; // Корректно?
     } else {
         fatalError( std::format("compareOpcode [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
     }

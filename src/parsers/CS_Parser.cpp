@@ -105,6 +105,12 @@ bool CS_Parser::parse(std::string_view csPath, CS_Data& data, std::string* error
         CS_Node node;
 
         node.opcode = readInt32(fileData, offset);
+        if (!csOpcodeIsValid(node.opcode)) {
+            if (error)
+                *error = std::format("Incorrect opcode: {}", node.opcode);
+            return false;
+        }
+
         if (node.opcode >= 0 && node.opcode <= 20 || node.opcode == kAssign) {
             node.a = readInt32(fileData, offset);
             node.b = readInt32(fileData, offset);

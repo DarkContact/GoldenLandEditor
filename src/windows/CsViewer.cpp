@@ -53,25 +53,27 @@ void CsViewer::update(bool& showWindow,
                     m_funcNodes.clear();
 
                     std::string csPath = std::format("{}/{}", rootDirectory, csFile);
-                    CS_Parser::parse(csPath, m_csData, &m_csError);
+                    bool isOk = CS_Parser::parse(csPath, m_csData, &m_csError);
 
-                    // Заполнение данных для фильтрации функций
-                    m_funcNodes.resize(m_csData.nodes.size(), false);
-                    for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
-                        const auto& node = m_csData.nodes[i];
-                        if (node.opcode == kFunc) {
-                            m_funcNodes[i] = true;
-                            for (int j = 0; j < node.args.size(); ++j) {
-                                int32_t idx = node.args[j];
-                                if (idx == -1) break;
+                    if (isOk) {
+                        // Заполнение данных для фильтрации функций
+                        m_funcNodes.resize(m_csData.nodes.size(), false);
+                        for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
+                            const auto& node = m_csData.nodes[i];
+                            if (node.opcode == kFunc) {
+                                m_funcNodes[i] = true;
+                                for (int j = 0; j < node.args.size(); ++j) {
+                                    int32_t idx = node.args[j];
+                                    if (idx == -1) break;
 
-                                m_funcNodes[++i] = true;
+                                    m_funcNodes[++i] = true;
+                                }
                             }
                         }
-                    }
 
-                    needResetScroll = true;
-                    needUpdate = true;
+                        needResetScroll = true;
+                        needUpdate = true;
+                    }
                 }
             }
             ImGui::EndChild();

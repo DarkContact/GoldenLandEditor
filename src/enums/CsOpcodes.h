@@ -24,3 +24,4 @@ enum OpcodeGroup {
 
 const char* csOpcodeToString(int32_t opcode) noexcept;
 OpcodeGroup csOpcodeToGroup(int32_t opcode) noexcept;
+bool csOpcodeIsValid(int32_t opcode) noexcept;

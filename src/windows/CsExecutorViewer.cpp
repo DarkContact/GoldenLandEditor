@@ -23,7 +23,7 @@ void CsExecutorViewer::update(bool& showWindow,
         needUpdate = false;
     }
 
-    if (showWindow && m_pExecutor) {
+    if (showWindow && m_pExecutor && !nodes.empty()) {
         ImGui::SetNextWindowSize({600, 500}, ImGuiCond_FirstUseEver);
         char titleBuffer[512];
         StringUtils::formatToBuffer(titleBuffer, "{}###CsExecutorViewer", title);
