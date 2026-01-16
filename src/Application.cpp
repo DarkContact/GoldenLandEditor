@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include <filesystem>
 #include <algorithm>
 #include <format>
 
@@ -12,8 +13,9 @@
 #include "embedded_resources.h"
 #include "CsExecutor.h"
 #include "Settings.h"
-#include "utils/ImGuiWidgets.h"
 #include "utils/TracyProfiler.h"
+#include "utils/ImGuiWidgets.h"
+#include "utils/FileUtils.h"
 #include "utils/Platform.h"
 #include "utils/DebugLog.h"
 
@@ -404,6 +406,15 @@ void Application::mainLoop() {
                             if (ImGui::BeginPopupContextItem("filename context menu")) {
                                 if (ImGui::MenuItem("Copy")) {
                                     ImGui::SetClipboardText(filename.data());
+                                }
+                                if (ImGui::MenuItem("Explorer")) {
+                                    std::string dialogFile = std::format("{}/{}", m_rootDirContext.rootDirectory(), filename);
+                                    std::array<std::string_view, 1> files = {dialogFile};
+                                    std::string error;
+                                    std::filesystem::path dialogFilePath(StringUtils::toUtf8View(dialogFile));
+                                    if (!FileUtils::openFolderAndSelectItems(StringUtils::fromUtf8View(dialogFilePath.parent_path().u8string()), files, &error)) {
+                                        Log(error);
+                                    }
                                 }
                                 ImGui::EndPopup();
                             }
