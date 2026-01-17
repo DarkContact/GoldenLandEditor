@@ -18,6 +18,7 @@ option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
 option(GOLDENLAND_ENABLE_FPS_LIMIT          "Enable FPS limit in app" ON)
+option(GOLDENLAND_ENABLE_DEBUG_MENU         "Enable debug menu"       OFF)
 option(GOLDENLAND_BUILD_TESTS               "Build tests"             OFF)
 
 # SDL3 Hint
@@ -185,7 +186,7 @@ if(GOLDENLAND_ENABLE_TRACY)
     )
     FetchContent_MakeAvailable(tracy)
 
-    target_compile_definitions(GoldenLandEditor PRIVATE DEBUG_LOG_ENABLE DEBUG_MENU_ENABLE)
+    target_compile_definitions(GoldenLandEditor PRIVATE DEBUG_LOG_ENABLE)
     target_sources(GoldenLandEditor PRIVATE src/utils/TracyProfiler.cpp)
 
     option(TRACY_ENABLE "" ON)
@@ -246,4 +247,16 @@ if(GOLDENLAND_BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     add_subdirectory(test)
+endif()
+
+if(GOLDENLAND_ENABLE_DEBUG_MENU)
+    target_sources(GoldenLandEditor PRIVATE
+        src/utils/DialogTests.h
+        src/utils/DialogTests.cpp)
+
+    set_property(
+        SOURCE src/Application.cpp
+        APPEND PROPERTY COMPILE_DEFINITIONS
+            DEBUG_MENU_ENABLE
+    )
 endif()

@@ -1,6 +1,6 @@
 #include "Application.h"
 
-#include <filesystem>
+
 #include <algorithm>
 #include <format>
 
@@ -11,13 +11,21 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 #include "embedded_resources.h"
-#include "CsExecutor.h"
+
 #include "Settings.h"
 #include "utils/TracyProfiler.h"
 #include "utils/ImGuiWidgets.h"
-#include "utils/FileUtils.h"
+
 #include "utils/Platform.h"
 #include "utils/DebugLog.h"
+
+#ifdef DEBUG_MENU_ENABLE
+  #include <filesystem>
+
+  #include "CsExecutor.h"
+  #include "utils/FileUtils.h"
+  #include "utils/DialogTests.h"
+#endif
 
 Application::Application() {
     Settings settings("settings.ini");
@@ -181,7 +189,7 @@ void Application::mainLoop() {
     bool showSettingsWindow = false;
     bool showAboutWindow = false;
 
-#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+#ifdef DEBUG_MENU_ENABLE
     struct TestResult {
         std::string filepath;
         std::string status;
@@ -281,7 +289,7 @@ void Application::mainLoop() {
                 ImGui::EndMenu();
             }
 
-#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+#ifdef DEBUG_MENU_ENABLE
             if (ImGui::BeginMenu("Debug")) {
                 if (ImGui::MenuItem("Load all levels")) {
                     for (const auto& levelName : m_rootDirContext.singleLevelNames()) {
@@ -296,67 +304,10 @@ void Application::mainLoop() {
                 }
 
                 if (ImGui::MenuItem("Test all dialogs")) {
-                    enum Instruction {
-                        kExec,
-                        kUserInputAndExec,
-                        kSetVariable,
-                        kSoftRestart,
-                        kHardRestart
-                    };
-
-                    struct DialogInstruction {
-                        Instruction inst;
-                        int value = 0;
-                        std::string text;
-                    };
-
                     testResults.clear();
                     testResults.reserve(m_rootDirContext.csFiles().size());
 
-                    std::unordered_map<std::string, std::vector<DialogInstruction>> manualCases = {
-                        {
-                            "scripts\\dialogs\\common\\l0.pt26_armor_traider.age.cs",
-                            std::vector<DialogInstruction>{
-                                { kExec },
-                                { kUserInputAndExec, 1 },
-
-                                { kHardRestart },
-                                { kExec },
-                                { kUserInputAndExec, 2 },
-
-                                { kHardRestart },
-                                { kSetVariable, 1, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 1 },
-
-                                { kHardRestart },
-                                { kSetVariable, 1, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 2 },
-
-                                { kHardRestart },
-                                { kSetVariable, 2, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 1 },
-
-                                { kHardRestart },
-                                { kSetVariable, 2, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 2 },
-
-                                { kHardRestart },
-                                { kSetVariable, 3, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 1 },
-
-                                { kHardRestart },
-                                { kSetVariable, 3, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInputAndExec, 2 },
-                            }
-                        }
-                    };
-
+                    std::unordered_map<std::string, std::vector<DialogInstruction>> manualCases = getManualDialogTestData();
                     for (const auto& csFile : m_rootDirContext.csFiles()) {
                         std::string csError;
                         CS_Data csData;
@@ -514,7 +465,7 @@ void Application::mainLoop() {
                 });
             }
 
-#if !defined(NDEBUG) || defined(DEBUG_MENU_ENABLE)
+#ifdef DEBUG_MENU_ENABLE
             if (!testResults.empty()) {
                 if (ImGui::Begin("Dialog test result")) {
                     int fatals = 0;
