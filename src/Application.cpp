@@ -298,7 +298,7 @@ void Application::mainLoop() {
                 if (ImGui::MenuItem("Test all dialogs")) {
                     enum Instruction {
                         kExec,
-                        kUserInput,
+                        kUserInputAndExec,
                         kSetVariable,
                         kSoftRestart,
                         kHardRestart
@@ -318,49 +318,41 @@ void Application::mainLoop() {
                             "scripts\\dialogs\\common\\l0.pt26_armor_traider.age.cs",
                             std::vector<DialogInstruction>{
                                 { kExec },
-                                { kUserInput, 1 },
-                                { kExec },
+                                { kUserInputAndExec, 1 },
 
                                 { kHardRestart },
                                 { kExec },
-                                { kUserInput, 2 },
-                                { kExec },
-
-                                { kHardRestart },
-                                { kSetVariable, 1, "armor_traider_povtor" },
-                                { kExec },
-                                { kUserInput, 1 },
-                                { kExec },
+                                { kUserInputAndExec, 2 },
 
                                 { kHardRestart },
                                 { kSetVariable, 1, "armor_traider_povtor" },
                                 { kExec },
-                                { kUserInput, 2 },
+                                { kUserInputAndExec, 1 },
+
+                                { kHardRestart },
+                                { kSetVariable, 1, "armor_traider_povtor" },
                                 { kExec },
+                                { kUserInputAndExec, 2 },
 
                                 { kHardRestart },
                                 { kSetVariable, 2, "armor_traider_povtor" },
                                 { kExec },
-                                { kUserInput, 1 },
-                                { kExec },
+                                { kUserInputAndExec, 1 },
 
                                 { kHardRestart },
                                 { kSetVariable, 2, "armor_traider_povtor" },
                                 { kExec },
-                                { kUserInput, 2 },
-                                { kExec },
+                                { kUserInputAndExec, 2 },
 
                                 { kHardRestart },
                                 { kSetVariable, 3, "armor_traider_povtor" },
                                 { kExec },
-                                { kUserInput, 1 },
-                                { kExec },
+                                { kUserInputAndExec, 1 },
 
                                 { kHardRestart },
                                 { kSetVariable, 3, "armor_traider_povtor" },
                                 { kExec },
-                                { kUserInput, 2 },
-                                { kExec }
+                                { kUserInputAndExec, 2 },
                             }
                         }
                     };
@@ -389,9 +381,10 @@ void Application::mainLoop() {
                                         break;
                                     }
 
-                                    case kUserInput: {
+                                    case kUserInputAndExec: {
                                         assert(executor.currentStatus() == CsExecutor::kWaitUser);
                                         executor.userInput(inst.value);
+                                        while (executor.next());
                                         break;
                                     }
 
