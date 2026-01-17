@@ -201,6 +201,11 @@ std::array<int, 11> CsExecutor::dialogsData() const
     return result;
 }
 
+
+int CsExecutor::dialogsAnswerCount() const {
+    return m_dialogFuncs.size() - 1;
+}
+
 bool CsExecutor::next()
 {
     // Защита от бесконечного выполнения
