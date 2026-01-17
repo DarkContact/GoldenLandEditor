@@ -357,6 +357,8 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
         lValue = lNode.value;
     } else if (lNode.opcode == kNumberVarName) {
         lValue = lNode.value; // Корректно?
+    } else if (lNode.opcode == kFunc) {
+        lValue = funcOpcode(lNode);
     } else {
         fatalError( std::format("compareOpcode [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
     }
