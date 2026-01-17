@@ -409,6 +409,7 @@ void Application::mainLoop() {
                 if (ImGui::Begin("Dialog test result")) {
                     int fatals = 0;
                     int lowPercent = 0;
+                    float totalPercents = 0.0f;
                     if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders)) {
 
                         ImGui::TableSetupColumn("Dialog");
@@ -457,10 +458,15 @@ void Application::mainLoop() {
                             if (!errorMessage.empty()) {
                                 ImGui::Text("%s", errorMessage.c_str());
                             }
+
+                            totalPercents += percent;
                         }
                         ImGui::EndTable();
                     }
 
+                    ImGui::Text("Total percents: %.2f / %.2f (%.2f %%)", totalPercents, testResults.size() * 100.0f,
+                                (totalPercents / (testResults.size() * 100.0f)) * 100.0f);
+                    ImGui::Separator();
                     ImGui::Text("Total: %zu", testResults.size());
                     ImGui::Text("Fatals: %d", fatals);
                     ImGui::Text("Low percent: %d", lowPercent);
