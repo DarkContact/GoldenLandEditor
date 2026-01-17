@@ -296,14 +296,81 @@ void Application::mainLoop() {
                 }
 
                 if (ImGui::MenuItem("Test all dialogs")) {
+                    enum Instruction {
+                        kExec,
+                        kUserInput,
+                        kSetVariable,
+                        kSoftRestart,
+                        kHardRestart
+                    };
+
+                    struct DialogInstruction {
+                        Instruction inst;
+                        int value = 0;
+                        std::string text;
+                    };
+
                     testResults.clear();
                     testResults.reserve(m_rootDirContext.csFiles().size());
+
+                    std::unordered_map<std::string, std::vector<DialogInstruction>> manualCases = {
+                        {
+                            "scripts\\dialogs\\common\\l0.pt26_armor_traider.age.cs",
+                            std::vector<DialogInstruction>{
+                                { kExec },
+                                { kUserInput, 1 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kExec },
+                                { kUserInput, 2 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 1, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 1 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 1, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 2 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 2, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 1 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 2, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 2 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 3, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 1 },
+                                { kExec },
+
+                                { kHardRestart },
+                                { kSetVariable, 3, "armor_traider_povtor" },
+                                { kExec },
+                                { kUserInput, 2 },
+                                { kExec }
+                            }
+                        }
+                    };
+
                     for (const auto& csFile : m_rootDirContext.csFiles()) {
                         std::string csError;
                         CS_Data csData;
 
                         std::string csPath = std::format("{}/{}", m_rootDirContext.rootDirectory(), csFile);
-                        LogFmt("Cs file processing: {}", csPath);
+                        LogFmt("Cs file processing: {}", csFile);
                         bool isOkParse = CS_Parser::parse(csPath, csData, &csError);
 
                         if (!isOkParse) {
@@ -312,44 +379,82 @@ void Application::mainLoop() {
                             continue;
                         }
 
-                        // Алгоритм тестирования диалогов:
-                        // 1. Пытаемся прокликать первые варианты ответа
-                        //    Если попали в бесконечный цикл выбираем последний ответ и выходим
-                        // 2. Делаем 10 попыток проклика первых ответов после завершения диалога
-                        //    (Т.к. меняются переменные и возможны новые пути выполнения)
-                        try {
-                            CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
-                            float executedPercent = executor.executedPercent();
-                            uint8_t answer = 1;
-                            int tryCount = 10;
+                        CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
+                        if (auto it = manualCases.find(csFile); it != manualCases.end()) {
+                            const std::vector<DialogInstruction>& instructions = it->second;
+                            for (const auto& inst : instructions) {
+                                switch (inst.inst) {
+                                    case kExec: {
+                                        while (executor.next());
+                                        break;
+                                    }
 
-                            while (tryCount) {
-                                while (executor.currentStatus() != CsExecutor::kEnd
-                                       && executor.currentStatus() != CsExecutor::kInfinity)
-                                {
-                                    while (executor.next()) {}
+                                    case kUserInput: {
+                                        assert(executor.currentStatus() == CsExecutor::kWaitUser);
+                                        executor.userInput(inst.value);
+                                        break;
+                                    }
 
-                                    if (executedPercent == executor.executedPercent()) { // Прогресс остановился, вероятно попали в цикл
-                                        if (executor.dialogsAnswersCount() >= 2) {
-                                            answer = executor.dialogsAnswersCount();
+                                    case kSetVariable: {
+                                        if (auto it = executor.scriptVars().find(inst.text); it != executor.scriptVars().end()) {
+                                            it->second = inst.value;
                                         } else {
-                                            answer = 1;
+                                            LogFmt("kSetVariable variable '{}' not found", inst.text);
                                         }
+                                        break;
                                     }
 
-                                    if (executor.currentStatus() == CsExecutor::kWaitUser) {
-                                        executor.userInput(answer);
+                                    case kSoftRestart: {
+                                        executor.restart(false);
+                                        break;
                                     }
 
-                                    executedPercent = executor.executedPercent();
+                                    case kHardRestart: {
+                                        executor.restart(true);
+                                        break;
+                                    }
                                 }
-                                executor.restart(false);
-                                tryCount--;
                             }
-
                             testResults.push_back({csFile, executor.currentStatusString(), {}, executor.executedPercent()});
-                        } catch (const std::exception& ex) {
-                            testResults.push_back({csFile, "FatalError", ex.what(), 0.0f});
+                        } else {
+                            // Алгоритм тестирования диалогов:
+                            // 1. Пытаемся прокликать первые варианты ответа
+                            //    Если попали в бесконечный цикл выбираем последний ответ и выходим
+                            // 2. Делаем 10 попыток проклика первых ответов после завершения диалога
+                            //    (Т.к. меняются переменные и возможны новые пути выполнения)
+                            try {
+                                float executedPercent = executor.executedPercent();
+                                uint8_t answer = 1;
+                                int tryCount = 10;
+
+                                while (tryCount) {
+                                    while (executor.currentStatus() != CsExecutor::kEnd
+                                           && executor.currentStatus() != CsExecutor::kInfinity)
+                                    {
+                                        while (executor.next()) {}
+
+                                        if (executedPercent == executor.executedPercent()) { // Прогресс остановился, вероятно попали в цикл
+                                            if (executor.dialogsAnswersCount() >= 2) {
+                                                answer = executor.dialogsAnswersCount();
+                                            } else {
+                                                answer = 1;
+                                            }
+                                        }
+
+                                        if (executor.currentStatus() == CsExecutor::kWaitUser) {
+                                            executor.userInput(answer);
+                                        }
+
+                                        executedPercent = executor.executedPercent();
+                                    }
+                                    executor.restart(false);
+                                    tryCount--;
+                                }
+
+                                testResults.push_back({csFile, executor.currentStatusString(), {}, executor.executedPercent()});
+                            } catch (const std::exception& ex) {
+                                testResults.push_back({csFile, "FatalError", ex.what(), 0.0f});
+                            }
                         }
                     }
                 }

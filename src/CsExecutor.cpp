@@ -483,6 +483,11 @@ int CsExecutor::funcOpcode(const CS_Node& node)
         m_dialogFuncs.emplace_back(node);
     }
 
+    for (auto arg : node.args) {
+        if (arg == -1) break;
+        m_executedNodeIndexes.insert(arg);
+    }
+
     switch (funcValue) {
         case kRS_GetPersonParameterI: {
             std::string_view arg0 = m_nodes[node.args[0]].text;
@@ -494,11 +499,6 @@ int CsExecutor::funcOpcode(const CS_Node& node)
             int arg0 = m_nodes[node.args[0]].value;
             return D_CloseDialog(arg0);
         }
-    }
-
-    for (auto arg : node.args) {
-        if (arg == -1) break;
-        m_executedNodeIndexes.insert(arg);
     }
     return 0;
 }
