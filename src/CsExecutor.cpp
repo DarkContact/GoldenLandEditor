@@ -245,7 +245,12 @@ bool CsExecutor::next()
             } else if (rNode.opcode == kFunc) {
                 rValue = funcOpcode(rNode); // TODO: D_CloseDialog должен прерывать выполнение (m_currentStatus = kEnd;)
             } else {
-                fatalError( std::format("[currentNode.opcode: assign] [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
+                OpcodeGroup group = csOpcodeToGroup(rNode.opcode);
+                if (group == kArithmetic) {
+                    rValue = arithmeticOpcode(rNode);
+                } else {
+                    fatalError( std::format("[currentNode.opcode: assign] [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
+                }
             }
 
             const CS_Node& lNode = m_nodes[currentNode.a];
@@ -365,13 +370,19 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
         std::visit([&rValue, rNode](auto&& lv){
             using T = std::decay_t<decltype(lv)>;
             if constexpr (std::is_same_v<T, std::string>) {
+                LogFmt("rValue string: {}", rNode.text);
                 rValue = rNode.value;
             } else {
                 rValue = (T)rNode.value;
             }
         }, lValue);
     } else {
-        fatalError( std::format("compareOpcode [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
+        OpcodeGroup group = csOpcodeToGroup(rNode.opcode);
+        if (group == kArithmetic) {
+            rValue = arithmeticOpcode(rNode);
+        } else {
+            fatalError( std::format("compareOpcode [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
+        }
     }
 
     bool isTrue = false;
@@ -393,6 +404,73 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     m_executedNodeIndexes.insert(node.a);
     m_executedNodeIndexes.insert(node.b);
     return isTrue;
+}
+
+Variable_t CsExecutor::arithmeticOpcode(const CS_Node& node)
+{
+    const CS_Node& lNode = m_nodes[node.a];
+    Variable_t lValue;
+    if (lNode.opcode == kStringVarName) {
+        lValue = m_scriptVars[lNode.text];
+    } else if (lNode.opcode == kNumberLiteral) {
+        lValue = lNode.value;
+    } else if (lNode.opcode == kNumberVarName) {
+        lValue = lNode.value; // Корректно?
+    } else {
+        fatalError( std::format("arithmeticOpcode [lNode.opcode: {}]", csOpcodeToString(lNode.opcode)) );
+    }
+
+    const CS_Node& rNode = m_nodes[node.b];
+    Variable_t rValue;
+    if (rNode.opcode == kStringVarName) {
+        rValue = m_scriptVars[rNode.text];
+    } else if (rNode.opcode == kNumberLiteral) {
+        // NOTE: Приведение типа равного lValue
+        std::visit([&rValue, rNode](auto&& lv){
+            using T = std::decay_t<decltype(lv)>;
+            if constexpr (std::is_same_v<T, std::string>) {
+                LogFmt("rValue string: {}", rNode.text);
+                rValue = rNode.value;
+            } else {
+                rValue = (T)rNode.value;
+            }
+        }, lValue);
+    } else {
+        fatalError( std::format("arithmeticOpcode [rNode.opcode: {}]", csOpcodeToString(rNode.opcode)) );
+    }
+
+    m_executedNodeIndexes.insert(node.a);
+    m_executedNodeIndexes.insert(node.b);
+    return applyBinaryOp(lValue, rValue, node.opcode);
+}
+
+Variable_t CsExecutor::applyBinaryOp(const Variable_t& lhs, const Variable_t& rhs, int opcode) {
+    return std::visit(
+                [&](const auto& l, const auto& r) -> Variable_t {
+        using L = std::decay_t<decltype(l)>;
+        using R = std::decay_t<decltype(r)>;
+
+        // Disallow strings
+        if constexpr (std::is_same_v<L, std::string> || std::is_same_v<R, std::string>) {
+            fatalError("Invalid operation on string");
+        } else {
+            switch (opcode) {
+                case 14: return l + r;
+                case 15: return l - r;
+                case 16: return l * r;
+                case 17: return l / r;
+                case 18: {
+                    if constexpr (std::is_integral_v<L> && std::is_integral_v<R>)
+                        return l % r;
+                    else
+                        fatalError("Modulo requires integers");
+                }
+                default: fatalError("Unknown opcode");
+            }
+        }
+        return 0.0;
+    },
+    lhs, rhs);
 }
 
 int CsExecutor::funcOpcode(const CS_Node& node)

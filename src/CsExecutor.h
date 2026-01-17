@@ -52,6 +52,8 @@ private:
 
     bool logicalOpcode(const CS_Node& node);
     bool compareOpcode(const CS_Node& node);
+    Variable_t arithmeticOpcode(const CS_Node& node);
+    Variable_t applyBinaryOp(const Variable_t& lhs, const Variable_t& rhs, int opcode);
     int funcOpcode(const CS_Node& node);
 
     void fatalError(const std::string& message) const;
