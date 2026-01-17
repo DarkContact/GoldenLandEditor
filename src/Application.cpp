@@ -312,29 +312,41 @@ void Application::mainLoop() {
                             continue;
                         }
 
+                        // Алгоритм тестирования диалогов:
+                        // 1. Пытаемся прокликать первые варианты ответа
+                        //    Если попали в бесконечный цикл выбираем последний ответ и выходим
+                        // 2. Делаем 10 попыток проклика первых ответов после завершения диалога
+                        //    (Т.к. меняются переменные и возможны новые пути выполнения)
                         try {
                             CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
                             float executedPercent = executor.executedPercent();
                             uint8_t answer = 1;
-                            while (executor.currentStatus() != CsExecutor::kEnd
-                                   && executor.currentStatus() != CsExecutor::kInfinity)
-                            {
-                                while (executor.next()) {}
+                            int tryCount = 10;
 
-                                if (executedPercent == executor.executedPercent()) { // Прогресс остановился, вероятно попали в цикл
-                                    if (executor.dialogsAnswerCount() >= 2) {
-                                        answer = executor.dialogsAnswerCount();
-                                    } else {
-                                        answer = 1;
+                            while (tryCount) {
+                                while (executor.currentStatus() != CsExecutor::kEnd
+                                       && executor.currentStatus() != CsExecutor::kInfinity)
+                                {
+                                    while (executor.next()) {}
+
+                                    if (executedPercent == executor.executedPercent()) { // Прогресс остановился, вероятно попали в цикл
+                                        if (executor.dialogsAnswersCount() >= 2) {
+                                            answer = executor.dialogsAnswersCount();
+                                        } else {
+                                            answer = 1;
+                                        }
                                     }
-                                }
 
-                                if (executor.currentStatus() == CsExecutor::kWaitUser) {
-                                    executor.userInput(answer);
-                                }
+                                    if (executor.currentStatus() == CsExecutor::kWaitUser) {
+                                        executor.userInput(answer);
+                                    }
 
-                                executedPercent = executor.executedPercent();
+                                    executedPercent = executor.executedPercent();
+                                }
+                                executor.restart(false);
+                                tryCount--;
                             }
+
                             testResults.push_back({csFile, executor.currentStatusString(), {}, executor.executedPercent()});
                         } catch (const std::exception& ex) {
                             testResults.push_back({csFile, "FatalError", ex.what(), 0.0f});

@@ -202,7 +202,7 @@ std::array<int, 11> CsExecutor::dialogsData() const
 }
 
 
-int CsExecutor::dialogsAnswerCount() const {
+int CsExecutor::dialogsAnswersCount() const {
     return m_dialogFuncs.size() - 1;
 }
 

@@ -38,7 +38,7 @@ public:
     std::vector<std::string> variablesInfo() const;
     std::vector<std::string> funcsInfo() const;
     std::array<int, 11> dialogsData() const;
-    int dialogsAnswerCount() const;
+    int dialogsAnswersCount() const;
 
     UMapStringVar_t& scriptVars();
     ExecuteStatus currentStatus() const;
