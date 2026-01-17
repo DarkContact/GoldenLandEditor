@@ -15,7 +15,7 @@ void CsExecutorViewer::update(bool& showWindow,
                               std::string_view title,
                               std::span<const CS_Node> nodes,
                               const std::map<int, std::string>& dialogsPhrases,
-                              const UMapStringVar_t& globalVars)
+                              const StringHashTable<AgeVariable_t>& globalVars)
 {
     if (needUpdate) {
         m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);

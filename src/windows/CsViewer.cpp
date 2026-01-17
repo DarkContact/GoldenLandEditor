@@ -19,7 +19,7 @@ void CsViewer::update(bool& showWindow,
                       std::string_view rootDirectory,
                       const std::vector<std::string>& csFiles,
                       const std::map<int, std::string>& dialogPhrases,
-                      const UMapStringVar_t& globalVars)
+                      const StringHashTable<AgeVariable_t>& globalVars)
 {
     Tracy_ZoneScoped;
     if (showWindow && !csFiles.empty()) {

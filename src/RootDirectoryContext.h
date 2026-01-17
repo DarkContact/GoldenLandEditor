@@ -52,5 +52,5 @@ private:
 
     StringHashTable<std::string> m_levelHumanNamesDict;
     std::map<int, std::string> m_dialogPhrases;
-    UMapStringVar_t m_globalVars;
+    StringHashTable<AgeVariable_t> m_globalVars;
 };

@@ -165,12 +165,12 @@ std::map<int, std::string> Resources::dialogPhrases() const
     return sdbDialogs.strings;
 }
 
-UMapStringVar_t Resources::globalVars() const
+StringHashTable<AgeVariable_t> Resources::globalVars() const
 {
     Tracy_ZoneScoped;
     std::string error;
     std::string varsPath = std::format("{}/dialogs_special/zlato_vars.scr", m_mainDirectories[Scripts]);
-    UMapStringVar_t globalVars;
+    StringHashTable<AgeVariable_t> globalVars;
     if (!CsExecutor::readGlobalVariables(varsPath, globalVars, &error))
         LogFmt("Load zlato_vars.scr error: {}", error);
 

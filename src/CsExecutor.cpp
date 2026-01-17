@@ -1,7 +1,7 @@
 #include "CsExecutor.h"
 
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 #include <cassert>
 #include <format>
 
@@ -12,7 +12,7 @@
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 
-CsExecutor::CsExecutor(std::span<const CS_Node> nodes, const UMapStringVar_t& globalVars) :
+CsExecutor::CsExecutor(std::span<const CS_Node> nodes, const StringHashTable<AgeVariable_t>& globalVars) :
     m_nodes(nodes),
     m_globalVars(globalVars)
 {
@@ -53,7 +53,7 @@ bool parse3(std::string_view line,
     return true;
 }
 
-bool CsExecutor::readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error)
+bool CsExecutor::readGlobalVariables(std::string_view varsPath, StringHashTable<AgeVariable_t>& globalVars, std::string* error)
 {
     auto fileData = FileUtils::loadFile(varsPath, error);
     if (fileData.empty()) {
@@ -73,7 +73,7 @@ bool CsExecutor::readGlobalVariables(std::string_view varsPath, UMapStringVar_t&
             return;
         }
 
-        Variable_t varValue;
+        AgeVariable_t varValue;
         if (type == "int") {
             varValue = StringUtils::toInt(value);
         } else if (type == "DWORD") {
@@ -237,7 +237,7 @@ bool CsExecutor::next()
             m_currentNodeIndex = currentNode.c;
         } else if (currentNode.opcode == kAssign) {
             const CS_Node& rNode = m_nodes[currentNode.b];
-            Variable_t rValue;
+            AgeVariable_t rValue;
             if (rNode.opcode == kStringVarName) {
                 rValue = m_scriptVars[rNode.text];
             } else if (rNode.opcode == kNumberLiteral) {
@@ -350,7 +350,7 @@ bool CsExecutor::logicalOpcode(const CS_Node& node) {
 
 bool CsExecutor::compareOpcode(const CS_Node& node) {
     const CS_Node& lNode = m_nodes[node.a];
-    Variable_t lValue;
+    AgeVariable_t lValue;
     if (lNode.opcode == kStringVarName) {
         lValue = m_scriptVars[lNode.text];
     } else if (lNode.opcode == kNumberLiteral) {
@@ -364,7 +364,7 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     }
 
     const CS_Node& rNode = m_nodes[node.b];
-    Variable_t rValue;
+    AgeVariable_t rValue;
     if (rNode.opcode == kStringVarName) {
         rValue = m_scriptVars[rNode.text];
     } else if (rNode.opcode == kNumberLiteral) {
@@ -408,10 +408,10 @@ bool CsExecutor::compareOpcode(const CS_Node& node) {
     return isTrue;
 }
 
-Variable_t CsExecutor::arithmeticOpcode(const CS_Node& node)
+AgeVariable_t CsExecutor::arithmeticOpcode(const CS_Node& node)
 {
     const CS_Node& lNode = m_nodes[node.a];
-    Variable_t lValue;
+    AgeVariable_t lValue;
     if (lNode.opcode == kStringVarName) {
         lValue = m_scriptVars[lNode.text];
     } else if (lNode.opcode == kNumberLiteral) {
@@ -423,7 +423,7 @@ Variable_t CsExecutor::arithmeticOpcode(const CS_Node& node)
     }
 
     const CS_Node& rNode = m_nodes[node.b];
-    Variable_t rValue;
+    AgeVariable_t rValue;
     if (rNode.opcode == kStringVarName) {
         rValue = m_scriptVars[rNode.text];
     } else if (rNode.opcode == kNumberLiteral) {
@@ -446,9 +446,9 @@ Variable_t CsExecutor::arithmeticOpcode(const CS_Node& node)
     return applyBinaryOp(lValue, rValue, node.opcode);
 }
 
-Variable_t CsExecutor::applyBinaryOp(const Variable_t& lhs, const Variable_t& rhs, int opcode) {
+AgeVariable_t CsExecutor::applyBinaryOp(const AgeVariable_t& lhs, const AgeVariable_t& rhs, int opcode) {
     return std::visit(
-                [&](const auto& l, const auto& r) -> Variable_t {
+                [&](const auto& l, const auto& r) -> AgeVariable_t {
         using L = std::decay_t<decltype(l)>;
         using R = std::decay_t<decltype(r)>;
 
@@ -548,6 +548,6 @@ float CsExecutor::executedPercent() const {
     return ((float)m_executedNodeIndexes.size() / (float)m_nodes.size()) * 100.0f;
 }
 
-UMapStringVar_t& CsExecutor::scriptVars() {
+StringHashTable<AgeVariable_t>& CsExecutor::scriptVars() {
     return m_scriptVars;
 }

@@ -16,9 +16,9 @@ enum VarType {
 
 class CsExecutor {
 public:
-    CsExecutor(std::span<const CS_Node> nodes, const UMapStringVar_t& globalVars);
+    CsExecutor(std::span<const CS_Node> nodes, const StringHashTable<AgeVariable_t>& globalVars);
 
-    static bool readGlobalVariables(std::string_view varsPath, UMapStringVar_t& globalVars, std::string* error);
+    static bool readGlobalVariables(std::string_view varsPath, StringHashTable<AgeVariable_t>& globalVars, std::string* error);
 
     void restart(bool resetAll);
 
@@ -40,7 +40,7 @@ public:
     std::array<int, 11> dialogsData() const;
     int dialogsAnswersCount() const;
 
-    UMapStringVar_t& scriptVars();
+    StringHashTable<AgeVariable_t>& scriptVars();
     ExecuteStatus currentStatus() const;
     const char* currentStatusString() const;
 
@@ -52,8 +52,8 @@ private:
 
     bool logicalOpcode(const CS_Node& node);
     bool compareOpcode(const CS_Node& node);
-    Variable_t arithmeticOpcode(const CS_Node& node);
-    Variable_t applyBinaryOp(const Variable_t& lhs, const Variable_t& rhs, int opcode);
+    AgeVariable_t arithmeticOpcode(const CS_Node& node);
+    AgeVariable_t applyBinaryOp(const AgeVariable_t& lhs, const AgeVariable_t& rhs, int opcode);
     int funcOpcode(const CS_Node& node);
 
     void fatalError(const std::string& message) const;
@@ -62,8 +62,8 @@ private:
     int D_CloseDialog(int param);
 
     std::span<const CS_Node> m_nodes;
-    UMapStringVar_t m_globalVars;
-    UMapStringVar_t m_scriptVars;
+    StringHashTable<AgeVariable_t> m_globalVars;
+    StringHashTable<AgeVariable_t> m_scriptVars;
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
 

@@ -17,7 +17,7 @@ public:
                 std::string_view rootDirectory,
                 const std::vector<std::string>& csFiles,
                 const std::map<int, std::string>& dialogPhrases,
-                const UMapStringVar_t& globalVars);
+                const StringHashTable<AgeVariable_t>& globalVars);
 
     void injectPlaySoundAndGeneratePhrases(std::string_view saveRootDirectory, std::string_view rootDirectory, const std::vector<std::string>& csFiles);
 

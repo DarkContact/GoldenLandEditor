@@ -96,8 +96,7 @@ template <typename Value>
 using StringHashTable = std::unordered_map<std::string, Value,
                         StringViewHash, StringViewEqual>;
 
-using Variable_t = std::variant<int32_t, uint32_t, double, std::string>;
-using UMapStringVar_t = StringHashTable<Variable_t>;
+using AgeVariable_t = std::variant<int32_t, uint32_t, double, std::string>;
 
 template <typename R>
 concept FormattableRange =
@@ -142,8 +141,8 @@ private:
 };
 
 template <>
-struct std::formatter<Variable_t> : std::formatter<std::string_view> {
-    auto format(const Variable_t& v, std::format_context& ctx) const {
+struct std::formatter<AgeVariable_t> : std::formatter<std::string_view> {
+    auto format(const AgeVariable_t& v, std::format_context& ctx) const {
         char buffer[1024];
 
         std::visit([&buffer](auto&& arg) {

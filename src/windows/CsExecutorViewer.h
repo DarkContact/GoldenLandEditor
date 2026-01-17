@@ -17,7 +17,7 @@ public:
                 std::string_view title,
                 std::span<const CS_Node> nodes,
                 const std::map<int, std::string>& dialogsPhrases,
-                const UMapStringVar_t& globalVars);
+                const StringHashTable<AgeVariable_t>& globalVars);
 
     bool isNodeExecuted(int index) const;
     float executedPercent() const;
