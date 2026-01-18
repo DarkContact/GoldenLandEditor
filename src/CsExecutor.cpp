@@ -9,6 +9,7 @@
 #include "enums/CsOpcodes.h"
 
 #include "utils/StringUtils.h"
+#include "utils/Formatters.h"
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
 

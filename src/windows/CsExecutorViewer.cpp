@@ -7,6 +7,7 @@
 #include "misc/cpp/imgui_stdlib.h"
 
 #include "utils/StringUtils.h"
+#include "utils/Formatters.h"
 
 CsExecutorViewer::CsExecutorViewer() {}
 

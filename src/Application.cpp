@@ -1,6 +1,5 @@
 #include "Application.h"
 
-
 #include <algorithm>
 #include <format>
 
@@ -24,6 +23,7 @@
 
   #include "CsExecutor.h"
   #include "utils/FileUtils.h"
+  #include "utils/StringUtils.h"
   #include "utils/DialogTests.h"
 #endif
 

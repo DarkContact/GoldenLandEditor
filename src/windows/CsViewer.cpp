@@ -5,11 +5,12 @@
 
 #include "enums/CsFunctions.h"
 #include "enums/CsOpcodes.h"
-#include "utils/DebugLog.h"
-#include "utils/FileUtils.h"
-#include "utils/TracyProfiler.h"
-#include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
+#include "parsers/CS_Parser.h"
+#include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
+#include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 
 #include "CsExecutorViewer.h"
 
