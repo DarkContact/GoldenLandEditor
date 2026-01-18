@@ -8,7 +8,8 @@
 #include "parsers/SDB_Parser.h"
 #include "parsers/LVL_Parser.h"
 #include "parsers/LAO_Parser.h"
-#include "Texture.h"
+#include "graphics/Texture.h"
+#include "graphics/Animation.h"
 #include "Cache.h"
 #include "Types.h"
 
@@ -89,7 +90,7 @@ struct LevelImgui {
     ImVec2 selectionHighlightSize = ImVec2(0, 0);
 };
 
-struct LevelAnimation : public BaseAnimation {
+struct LevelAnimation : public Animation {
     LevelAnimation(LVL_Description& description) :
         description(description) {}
 

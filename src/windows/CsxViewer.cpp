@@ -6,11 +6,10 @@
 #include <SDL3/SDL_render.h>
 #include "imgui.h"
 
-#include "utils/TextureLoader.h"
+#include "graphics/TextureLoader.h"
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
-#include "Texture.h"
 
 CsxViewer::CsxViewer() {}
 

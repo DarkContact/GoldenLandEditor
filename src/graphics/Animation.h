@@ -1,0 +1,44 @@
+#pragma once
+#include <cstdint>
+#include <vector>
+
+#include <SDL3/SDL_timer.h>
+
+#include "Texture.h"
+
+struct Animation {
+    std::vector<Texture> textures;
+    uint32_t delayMs = 0;
+
+    const Texture& currentTexture() const {
+        return textures[currentFrame];
+    }
+
+    void update(uint64_t timeMs = SDL_GetTicks()) {
+        if (lastUpdateTimeMs == 0) {
+            lastUpdateTimeMs = timeMs;
+            return;
+        }
+
+        if (timeMs - lastUpdateTimeMs >= delayMs) {
+            nextFrame();
+            lastUpdateTimeMs = timeMs;
+        }
+    }
+
+    void stop() {
+        currentFrame = 0;
+        lastUpdateTimeMs = 0;
+    }
+
+protected:
+    void nextFrame() {
+        ++currentFrame;
+        if (currentFrame == textures.size()) {
+            currentFrame = 0;
+        }
+    }
+
+    uint32_t currentFrame = 0;
+    uint64_t lastUpdateTimeMs = 0;
+};

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <format>
 
-#include "utils/TextureLoader.h"
+#include "graphics/TextureLoader.h"
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"

@@ -62,8 +62,11 @@ add_executable(GoldenLandEditor WIN32
     src/Level.cpp
     src/utils/StringUtils.h
     src/utils/StringUtils.cpp
-    src/utils/TextureLoader.h
-    src/utils/TextureLoader.cpp
+    src/graphics/Texture.h
+    src/graphics/Texture.cpp
+    src/graphics/TextureLoader.h
+    src/graphics/TextureLoader.cpp
+    src/graphics/Animation.h
     src/parsers/CSX_Parser.h
     src/parsers/CSX_Parser.cpp
     src/windows/CsxViewer.h
@@ -79,8 +82,6 @@ add_executable(GoldenLandEditor WIN32
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
-    src/Texture.h
-    src/Texture.cpp
     src/utils/DebugLog.h
     src/utils/DebugLog.cpp
     src/parsers/LAO_Parser.h

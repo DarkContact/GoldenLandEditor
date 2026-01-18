@@ -4,7 +4,7 @@
 #include <vector>
 #include <span>
 
-#include "Texture.h"
+#include "graphics/Texture.h"
 #include "Types.h"
 
 struct SDL_Renderer;

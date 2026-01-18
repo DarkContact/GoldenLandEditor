@@ -7,7 +7,7 @@
 #include "imgui.h"
 
 #include "parsers/MDF_Parser.h"
-#include "Texture.h"
+#include "graphics/Texture.h"
 #include "Cache.h"
 
 struct SDL_Renderer;

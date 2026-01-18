@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <SDL3/SDL_iostream.h>
+
 #include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"

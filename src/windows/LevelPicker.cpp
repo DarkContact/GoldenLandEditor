@@ -7,9 +7,9 @@
 #include "imgui_internal.h"
 
 #include "embedded_resources.h"
+#include "graphics/TextureLoader.h"
 #include "parsers/SEF_Parser.h"
 #include "utils/TracyProfiler.h"
-#include "utils/TextureLoader.h"
 #include "utils/StringUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"

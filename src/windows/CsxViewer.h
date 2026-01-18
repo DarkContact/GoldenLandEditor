@@ -3,7 +3,8 @@
 #include <string>
 
 #include "imgui.h"
-#include "Texture.h"
+
+#include "graphics/Texture.h"
 
 struct SDL_Renderer;
 
