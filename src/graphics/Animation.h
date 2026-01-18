@@ -2,8 +2,6 @@
 #include <cstdint>
 #include <vector>
 
-#include <SDL3/SDL_timer.h>
-
 #include "Texture.h"
 
 struct Animation {
@@ -14,7 +12,7 @@ struct Animation {
         return textures[currentFrame];
     }
 
-    void update(uint64_t timeMs = SDL_GetTicks()) {
+    void update(uint64_t timeMs/* = SDL_GetTicks()*/) {
         if (lastUpdateTimeMs == 0) {
             lastUpdateTimeMs = timeMs;
             return;

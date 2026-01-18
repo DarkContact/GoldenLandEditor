@@ -66,6 +66,7 @@ add_executable(GoldenLandEditor WIN32
     src/graphics/Texture.cpp
     src/graphics/TextureLoader.h
     src/graphics/TextureLoader.cpp
+    src/graphics/TimedAnimation.h
     src/graphics/Animation.h
     src/parsers/CSX_Parser.h
     src/parsers/CSX_Parser.cpp
