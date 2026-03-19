@@ -20,7 +20,7 @@ public:
 
     StringHashTable<std::string> levelHumanNameDictionary() const;
     std::map<int, std::string> dialogPhrases() const;
-    UMapStringVar_t globalVars() const;
+    StringHashTable<AgeVariable_t> globalVars() const;
 
 private:
     std::vector<std::string> filesWithExtension(std::initializer_list<int> indices, std::string_view extension) const;

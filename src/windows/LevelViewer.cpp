@@ -6,10 +6,11 @@
 #include "imgui_internal.h"
 #include "imgui.h"
 
+#include "utils/TracyProfiler.h"
 #include "utils/ImGuiWidgets.h"
+#include "utils/StringUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/DebugLog.h"
-#include "utils/TracyProfiler.h"
 
 LevelViewer::LevelViewer() {}
 
@@ -1423,10 +1424,7 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
 
         if (!isVisibleInWindow(triggerBox)) { continue; }
 
-        ImGui::SetCursorScreenPos(triggerPosition);
-
         int alpha = 64;
-        int blendMode = SDL_BLENDMODE_BLEND;
         bool isTransition = false;
         bool isVisible = false;
         bool isActive = false;
@@ -1434,13 +1432,13 @@ void LevelViewer::drawTriggers(Level& level, ImVec2 drawPosition)
             isTransition = trigger.sefDescription->get().isTransition.value_or(false);
             isVisible = trigger.sefDescription->get().isVisible.value_or(true);
             isActive = trigger.sefDescription->get().isActive;
+
             if (isTransition) {
                 alpha = 255;
-                blendMode = SDL_BLENDMODE_ADD;
             }
         }
 
-        SDL_SetTextureBlendMode(trigger.texture.get(), blendMode);
+        ImGui::SetCursorScreenPos(triggerPosition);
         ImVec4 tintColor{1, 1, 1, alpha / 255.0f};
         ImGui::ImageWithBg((ImTextureID)trigger.texture.get(),
                            ImVec2(trigger.texture->w, trigger.texture->h),

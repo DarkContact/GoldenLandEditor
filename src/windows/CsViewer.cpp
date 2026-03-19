@@ -5,11 +5,12 @@
 
 #include "enums/CsFunctions.h"
 #include "enums/CsOpcodes.h"
-#include "utils/DebugLog.h"
-#include "utils/FileUtils.h"
-#include "utils/TracyProfiler.h"
-#include "parsers/CS_Parser.h"
 #include "parsers/SDB_Parser.h"
+#include "parsers/CS_Parser.h"
+#include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
+#include "utils/FileUtils.h"
+#include "utils/DebugLog.h"
 
 #include "CsExecutorViewer.h"
 
@@ -19,7 +20,7 @@ void CsViewer::update(bool& showWindow,
                       std::string_view rootDirectory,
                       const std::vector<std::string>& csFiles,
                       const std::map<int, std::string>& dialogPhrases,
-                      const UMapStringVar_t& globalVars)
+                      const StringHashTable<AgeVariable_t>& globalVars)
 {
     Tracy_ZoneScoped;
     if (showWindow && !csFiles.empty()) {
@@ -53,25 +54,27 @@ void CsViewer::update(bool& showWindow,
                     m_funcNodes.clear();
 
                     std::string csPath = std::format("{}/{}", rootDirectory, csFile);
-                    CS_Parser::parse(csPath, m_csData, &m_csError);
+                    bool isOk = CS_Parser::parse(csPath, m_csData, &m_csError);
 
-                    // Заполнение данных для фильтрации функций
-                    m_funcNodes.resize(m_csData.nodes.size(), false);
-                    for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
-                        const auto& node = m_csData.nodes[i];
-                        if (node.opcode == kFunc) {
-                            m_funcNodes[i] = true;
-                            for (int j = 0; j < node.args.size(); ++j) {
-                                int32_t idx = node.args[j];
-                                if (idx == -1) break;
+                    if (isOk) {
+                        // Заполнение данных для фильтрации функций
+                        m_funcNodes.resize(m_csData.nodes.size(), false);
+                        for (size_t i = 0; i < m_csData.nodes.size(); ++i) {
+                            const auto& node = m_csData.nodes[i];
+                            if (node.opcode == kFunc) {
+                                m_funcNodes[i] = true;
+                                for (int j = 0; j < node.args.size(); ++j) {
+                                    int32_t idx = node.args[j];
+                                    if (idx == -1) break;
 
-                                m_funcNodes[++i] = true;
+                                    m_funcNodes[++i] = true;
+                                }
                             }
                         }
-                    }
 
-                    needResetScroll = true;
-                    needUpdate = true;
+                        needResetScroll = true;
+                        needUpdate = true;
+                    }
                 }
             }
             ImGui::EndChild();
@@ -149,7 +152,7 @@ void CsViewer::update(bool& showWindow,
         }
 
         ImGui::SameLine();
-        ImGui::Text("Executed: %d%%", m_csExecutorViewer.executedPercent());
+        ImGui::Text("Executed: %.2f%%", m_csExecutorViewer.executedPercent());
 
         ImGui::EndChild();
 

@@ -18,6 +18,7 @@ option(GOLDENLAND_ENABLE_DEPENDENCY_HINTS   "Enable dependency hints" ON)
 option(GOLDENLAND_ENABLE_STATIC_RUNTIME     "Enable static runtime"   OFF)
 option(GOLDENLAND_ENABLE_COPY_DLL           "Enable copy dll to exe"  OFF)
 option(GOLDENLAND_ENABLE_FPS_LIMIT          "Enable FPS limit in app" ON)
+option(GOLDENLAND_ENABLE_DEBUG_MENU         "Enable debug menu"       OFF)
 option(GOLDENLAND_BUILD_TESTS               "Build tests"             OFF)
 
 # SDL3 Hint
@@ -61,8 +62,12 @@ add_executable(GoldenLandEditor WIN32
     src/Level.cpp
     src/utils/StringUtils.h
     src/utils/StringUtils.cpp
-    src/utils/TextureLoader.h
-    src/utils/TextureLoader.cpp
+    src/graphics/Texture.h
+    src/graphics/Texture.cpp
+    src/graphics/TextureLoader.h
+    src/graphics/TextureLoader.cpp
+    src/graphics/TimedAnimation.h
+    src/graphics/Animation.h
     src/parsers/CSX_Parser.h
     src/parsers/CSX_Parser.cpp
     src/windows/CsxViewer.h
@@ -78,8 +83,6 @@ add_executable(GoldenLandEditor WIN32
     src/windows/SdbViewer.h
     src/windows/SdbViewer.cpp
     src/utils/TracyProfiler.h
-    src/Texture.h
-    src/Texture.cpp
     src/utils/DebugLog.h
     src/utils/DebugLog.cpp
     src/parsers/LAO_Parser.h
@@ -93,8 +96,6 @@ add_executable(GoldenLandEditor WIN32
     src/windows/MdfViewer.cpp
     src/utils/IoUtils.h
     src/utils/IoUtils.cpp
-    src/utils/AnimationCachedLoader.h
-    src/utils/AnimationCachedLoader.cpp
     src/parsers/CS_Parser.h
     src/parsers/CS_Parser.cpp
     src/windows/CsViewer.h
@@ -114,6 +115,8 @@ add_executable(GoldenLandEditor WIN32
     src/utils/Platform.h
     src/utils/RenderUtils.h
     src/utils/RenderUtils.cpp
+    src/Cache.h
+    src/utils/Formatters.h
 )
 
 target_sources(GoldenLandEditor PRIVATE
@@ -247,4 +250,16 @@ if(GOLDENLAND_BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     add_subdirectory(test)
+endif()
+
+if(GOLDENLAND_ENABLE_DEBUG_MENU)
+    target_sources(GoldenLandEditor PRIVATE
+        src/utils/DialogTests.h
+        src/utils/DialogTests.cpp)
+
+    set_property(
+        SOURCE src/Application.cpp
+        APPEND PROPERTY COMPILE_DEFINITIONS
+            DEBUG_MENU_ENABLE
+    )
 endif()

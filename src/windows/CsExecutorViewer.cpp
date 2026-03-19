@@ -7,6 +7,7 @@
 #include "misc/cpp/imgui_stdlib.h"
 
 #include "utils/StringUtils.h"
+#include "utils/Formatters.h"
 
 CsExecutorViewer::CsExecutorViewer() {}
 
@@ -15,7 +16,7 @@ void CsExecutorViewer::update(bool& showWindow,
                               std::string_view title,
                               std::span<const CS_Node> nodes,
                               const std::map<int, std::string>& dialogsPhrases,
-                              const UMapStringVar_t& globalVars)
+                              const StringHashTable<AgeVariable_t>& globalVars)
 {
     if (needUpdate) {
         m_pExecutor = std::make_unique<CsExecutor>(nodes, globalVars);
@@ -23,7 +24,7 @@ void CsExecutorViewer::update(bool& showWindow,
         needUpdate = false;
     }
 
-    if (showWindow && m_pExecutor) {
+    if (showWindow && m_pExecutor && !nodes.empty()) {
         ImGui::SetNextWindowSize({600, 500}, ImGuiCond_FirstUseEver);
         char titleBuffer[512];
         StringUtils::formatToBuffer(titleBuffer, "{}###CsExecutorViewer", title);
@@ -154,7 +155,7 @@ bool CsExecutorViewer::isNodeExecuted(int index) const
     return false;
 }
 
-int CsExecutorViewer::executedPercent() const
+float CsExecutorViewer::executedPercent() const
 {
     if (m_pExecutor) {
         return m_pExecutor->executedPercent();

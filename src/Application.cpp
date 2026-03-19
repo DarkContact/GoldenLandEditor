@@ -9,12 +9,23 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-#include "Settings.h"
 #include "embedded_resources.h"
-#include "utils/ImGuiWidgets.h"
+
+#include "Settings.h"
 #include "utils/TracyProfiler.h"
+#include "utils/ImGuiWidgets.h"
+
 #include "utils/Platform.h"
 #include "utils/DebugLog.h"
+
+#ifdef DEBUG_MENU_ENABLE
+  #include <filesystem>
+
+  #include "CsExecutor.h"
+  #include "utils/FileUtils.h"
+  #include "utils/StringUtils.h"
+  #include "utils/DialogTests.h"
+#endif
 
 Application::Application() {
     Settings settings("settings.ini");
@@ -178,6 +189,16 @@ void Application::mainLoop() {
     bool showSettingsWindow = false;
     bool showAboutWindow = false;
 
+#ifdef DEBUG_MENU_ENABLE
+    struct TestResult {
+        std::string filepath;
+        std::string status;
+        std::string errorMessage;
+        float percent;
+    };
+    static std::vector<TestResult> testResults;
+#endif
+
     while (!m_done)
     {
         bool noWait = true;
@@ -268,6 +289,124 @@ void Application::mainLoop() {
                 ImGui::EndMenu();
             }
 
+#ifdef DEBUG_MENU_ENABLE
+            if (ImGui::BeginMenu("Debug")) {
+                if (ImGui::MenuItem("Load all levels")) {
+                    for (const auto& levelName : m_rootDirContext.singleLevelNames()) {
+                        std::string error;
+                        auto level = Level::loadLevel(m_renderer, m_rootDirContext.rootDirectory(), levelName, LevelType::kSingle, &error);
+                        if (level) {
+                            m_rootDirContext.levels.push_back(std::move(*level));
+                        } else {
+                            uiError = std::move(error);
+                        }
+                    }
+                }
+
+                if (ImGui::MenuItem("Test all dialogs")) {
+                    testResults.clear();
+                    testResults.reserve(m_rootDirContext.csFiles().size());
+
+                    std::unordered_map<std::string, std::vector<DialogInstruction>> manualCases = getManualDialogTestData();
+                    for (const auto& csFile : m_rootDirContext.csFiles()) {
+                        std::string csError;
+                        CS_Data csData;
+
+                        std::string csPath = std::format("{}/{}", m_rootDirContext.rootDirectory(), csFile);
+                        LogFmt("Cs file processing: {}", csFile);
+                        bool isOkParse = CS_Parser::parse(csPath, csData, &csError);
+
+                        if (!isOkParse) {
+                            LogFmt("CS_Parser error: {}", csError);
+                            testResults.push_back({csFile, "IncorrectFormat", csError, 100.0f});
+                            continue;
+                        }
+
+                        CsExecutor executor(csData.nodes, m_rootDirContext.globalVars());
+                        if (auto it = manualCases.find(csFile); it != manualCases.end()) {
+                            const std::vector<DialogInstruction>& instructions = it->second;
+                            for (const auto& inst : instructions) {
+                                switch (inst.inst) {
+                                    case kExec: {
+                                        while (executor.next());
+                                        break;
+                                    }
+
+                                    case kUserInputAndExec: {
+                                        assert(executor.currentStatus() == CsExecutor::kWaitUser);
+                                        executor.userInput(inst.value);
+                                        while (executor.next());
+                                        break;
+                                    }
+
+                                    case kSetVariable: {
+                                        if (auto it = executor.scriptVars().find(inst.text); it != executor.scriptVars().end()) {
+                                            it->second = inst.value;
+                                        } else {
+                                            LogFmt("kSetVariable variable '{}' not found", inst.text);
+                                        }
+                                        break;
+                                    }
+
+                                    case kSoftRestart: {
+                                        executor.restart(false);
+                                        break;
+                                    }
+
+                                    case kHardRestart: {
+                                        executor.restart(true);
+                                        break;
+                                    }
+                                }
+                            }
+                            testResults.push_back({csFile, executor.currentStatusString(), {}, executor.executedPercent()});
+                        } else {
+                            // Алгоритм тестирования диалогов:
+                            // 1. Пытаемся прокликать первые варианты ответа
+                            //    Если попали в бесконечный цикл выбираем последний ответ и выходим
+                            // 2. Делаем 10 попыток проклика первых ответов после завершения диалога
+                            //    (Т.к. меняются переменные и возможны новые пути выполнения)
+                            try {
+                                float executedPercent = executor.executedPercent();
+                                uint8_t answer = 1;
+                                int tryCount = 10;
+
+                                while (tryCount) {
+                                    while (executor.currentStatus() != CsExecutor::kEnd
+                                           && executor.currentStatus() != CsExecutor::kInfinity)
+                                    {
+                                        while (executor.next()) {}
+
+                                        if (executedPercent == executor.executedPercent()) { // Прогресс остановился, вероятно попали в цикл
+                                            if (executor.dialogsAnswersCount() >= 2) {
+                                                answer = executor.dialogsAnswersCount();
+                                            } else {
+                                                answer = 1;
+                                            }
+                                        }
+
+                                        if (executor.currentStatus() == CsExecutor::kWaitUser) {
+                                            executor.userInput(answer);
+                                        }
+
+                                        executedPercent = executor.executedPercent();
+                                    }
+                                    executor.restart(false);
+                                    tryCount--;
+                                }
+
+                                testResults.push_back({csFile, executor.currentStatusString(), {}, executor.executedPercent()});
+                            } catch (const std::exception& ex) {
+                                testResults.push_back({csFile, "FatalError", ex.what(), 0.0f});
+                            }
+                        }
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+#endif
+
             if (ImGui::BeginMenu("Help")) {
                 if (ImGui::MenuItem("About")) {
                     showAboutWindow = true;
@@ -325,6 +464,77 @@ void Application::mainLoop() {
                     ImGui::TextUnformatted(aboutMessage.data(), aboutMessage.data() + aboutMessage.size());
                 });
             }
+
+#ifdef DEBUG_MENU_ENABLE
+            if (!testResults.empty()) {
+                if (ImGui::Begin("Dialog test result")) {
+                    int fatals = 0;
+                    int lowPercent = 0;
+                    float totalPercents = 0.0f;
+                    if (ImGui::BeginTable("Main Table", 2, ImGuiTableFlags_Borders)) {
+
+                        ImGui::TableSetupColumn("Dialog");
+                        ImGui::TableSetupColumn("Result");
+                        ImGui::TableHeadersRow();
+
+                        int id = 0;
+                        for (const auto& [filename, status, errorMessage, percent] : testResults) {
+                            ImGui::TableNextRow();
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(filename.data(), filename.data() + filename.size());
+
+                            ImGui::PushID(id++);
+                            if (ImGui::BeginPopupContextItem("filename context menu")) {
+                                if (ImGui::MenuItem("Copy")) {
+                                    ImGui::SetClipboardText(filename.data());
+                                }
+                                if (ImGui::MenuItem("Explorer")) {
+                                    std::string dialogFile = std::format("{}/{}", m_rootDirContext.rootDirectory(), filename);
+                                    std::array<std::string_view, 1> files = {dialogFile};
+                                    std::string error;
+                                    std::filesystem::path dialogFilePath(StringUtils::toUtf8View(dialogFile));
+                                    if (!FileUtils::openFolderAndSelectItems(StringUtils::fromUtf8View(dialogFilePath.parent_path().u8string()), files, &error)) {
+                                        Log(error);
+                                    }
+                                }
+                                ImGui::EndPopup();
+                            }
+                            ImGui::PopID();
+
+                            ImGui::TableNextColumn();
+                            ImVec4 color(1.0f, 1.0f, 1.0f, 1.0f);
+                            if (percent == 0.0f) {
+                                color = ImVec4(0.98f, 0.0f, 0.0f, 1.0f);
+                                fatals++;
+                            } else if (percent <= 50.0f) {
+                                color = ImVec4(0.8f, 0.1f, 0.1f, 1.0f);
+                                lowPercent++;
+                            } else if (percent <= 75.0f) {
+                                color = ImVec4(0.9f, 0.9f, 0.1f, 1.0f);
+                            } else if (percent <= 100.0f) {
+                                color = ImVec4(0.1f, 0.9f, 0.1f, 1.0f);
+                            }
+                            ImGui::TextColored(color, "%s", std::format("Status: {} ({:.2f} %)", status, percent).c_str());
+                            if (!errorMessage.empty()) {
+                                ImGui::Text("%s", errorMessage.c_str());
+                            }
+
+                            totalPercents += percent;
+                        }
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::Text("Total percents: %.2f / %.2f (%.2f %%)", totalPercents, testResults.size() * 100.0f,
+                                (totalPercents / (testResults.size() * 100.0f)) * 100.0f);
+                    ImGui::Separator();
+                    ImGui::Text("Total: %zu", testResults.size());
+                    ImGui::Text("Fatals: %d", fatals);
+                    ImGui::Text("Low percent: %d", lowPercent);
+                }
+                ImGui::End();
+            }
+#endif
         }
 
         // NOTE: Для генерации озвучки

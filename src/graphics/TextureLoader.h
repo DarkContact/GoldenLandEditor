@@ -21,6 +21,8 @@ public:
     static bool saveCsxAsBmpFile(std::string_view fileNameCsx, std::string_view fileNameBmp, SDL_Renderer* renderer, std::string* error = nullptr);
 
     static bool loadHeightAnimationFromCsxFile(std::string_view fileName, int height, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error = nullptr);
+
+    static bool loadCountAnimationFromFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error = nullptr);
     static bool loadCountAnimationFromCsxFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, std::string* error = nullptr);
     static bool loadCountAnimationFromBmpFile(std::string_view fileName, int count, SDL_Renderer* renderer, std::vector<Texture>& outTextures, const SDL_Color* transparentColor, std::string* error = nullptr);
 

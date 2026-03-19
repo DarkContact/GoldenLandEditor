@@ -17,10 +17,10 @@ public:
                 std::string_view title,
                 std::span<const CS_Node> nodes,
                 const std::map<int, std::string>& dialogsPhrases,
-                const UMapStringVar_t& globalVars);
+                const StringHashTable<AgeVariable_t>& globalVars);
 
     bool isNodeExecuted(int index) const;
-    int executedPercent() const;
+    float executedPercent() const;
 
 private:
     std::unique_ptr<CsExecutor> m_pExecutor = nullptr;
