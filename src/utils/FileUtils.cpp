@@ -1,5 +1,6 @@
 #include "FileUtils.h"
 
+#include <cstring>
 #include <cassert>
 
 #include <algorithm>

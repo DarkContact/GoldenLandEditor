@@ -1,5 +1,6 @@
 #include "SEF_Parser.h"
 
+#include <cstring>
 #include <memory>
 
 #include <SDL3/SDL_iostream.h>
