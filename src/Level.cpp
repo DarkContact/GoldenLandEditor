@@ -121,6 +121,7 @@ std::optional<Level> Level::loadLevel(SDL_Renderer* renderer, std::string_view r
                                                         if (!TextureLoader::loadTextureFromCsxFile(levelTriggerPath, renderer, texture, error)) {
                                                             return std::nullopt;
                                                         }
+                                                        SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_ADD);
                                                         return std::move(texture);
                                                     });
         if (triggerTexture) {
