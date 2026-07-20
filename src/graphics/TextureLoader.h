@@ -37,4 +37,6 @@ private:
                                          SDL_Renderer* renderer,
                                          std::vector<Texture>& outTextures,
                                          std::string* error);
+
+    static void setTextureModes(Texture& texture);
 };

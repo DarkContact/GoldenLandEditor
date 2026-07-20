@@ -86,6 +86,7 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
         }
     }
 
+    setTextureModes(texture);
     outTexture = std::move(texture);
     return true;
 }
@@ -111,7 +112,7 @@ bool TextureLoader::loadTextureFromCsxFile(std::string_view fileName, SDL_Render
         return false;
 
     //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
-    SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
+    setTextureModes(texture);
     outTexture = std::move(texture);
 
     return true;
@@ -209,6 +210,7 @@ bool TextureLoader::loadCountAnimationFromBmpFile(std::string_view fileName, int
         if (!texture)
             return false;
 
+        setTextureModes(texture);
         outTextures.push_back(std::move(texture));
         return true;
     }
@@ -247,6 +249,7 @@ bool TextureLoader::loadCountAnimationFromBmpFile(std::string_view fileName, int
         if (!texture)
             return false;
 
+        setTextureModes(texture);
         outTextures.push_back(std::move(texture));
         yOffset += frameHeight;
     }
@@ -322,7 +325,7 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName,
             }
 
             //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
-            SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
+            setTextureModes(texture);
             outTextures.push_back(std::move(texture));
         }
     }
@@ -350,8 +353,14 @@ bool TextureLoader::loadAnimationFromCsxFile(std::string_view fileName,
         }
 
         //SDL_SetTexturePalette(texture.get(), csxParser.metaInfo().pallete);
-        SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
+        setTextureModes(texture);
         outTextures.push_back(std::move(texture));
     }
     return true;
+}
+
+void TextureLoader::setTextureModes(Texture& texture)
+{
+    SDL_SetTextureBlendMode(texture.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetTextureScaleMode(texture.get(), SDL_SCALEMODE_NEAREST); // Важно для встройки Intel. Без этого флага даёт артефакты при выводе INDEX8 текстур.
 }
