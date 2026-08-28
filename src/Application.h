@@ -10,6 +10,7 @@
 #include "windows/SdbViewer.h"
 #include "windows/MdfViewer.h"
 #include "windows/CsViewer.h"
+#include "windows/PadViewer.h"
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -48,6 +49,7 @@ private:
     SdbViewer m_sdbViewer;
     MdfViewer m_mdfViewer;
     CsViewer m_csViewer;
+    PadViewer m_padViewer;
 
     bool m_done = false;
 

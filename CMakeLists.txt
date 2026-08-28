@@ -117,6 +117,8 @@ add_executable(GoldenLandEditor WIN32
     src/utils/RenderUtils.cpp
     src/Cache.h
     src/utils/Formatters.h
+    src/windows/PadViewer.h
+    src/windows/PadViewer.cpp
 )
 
 target_sources(GoldenLandEditor PRIVATE

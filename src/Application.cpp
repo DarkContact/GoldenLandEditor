@@ -245,6 +245,9 @@ void Application::mainLoop() {
                 if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles().empty())) {
                     m_rootDirContext.showCsWindow = true;
                 }
+                if (ImGui::MenuItem("PAD Viewer", NULL, false, !m_rootDirContext.padFiles().empty())) {
+                    m_rootDirContext.showPadWindow = true;
+                }
 
                 ImGui::EndDisabled();
                 ImGui::EndMenu();
@@ -453,6 +456,8 @@ void Application::mainLoop() {
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles(),
                               m_rootDirContext.dialogPhrases(), m_rootDirContext.globalVars());
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
+            m_padViewer.update(m_rootDirContext.showPadWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.padFiles());
 
             if (showSettingsWindow) {
                 m_fontSettings->update(showSettingsWindow);

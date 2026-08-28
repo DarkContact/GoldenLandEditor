@@ -22,6 +22,7 @@ public:
     const auto& sdbFiles() const { return m_sdbFiles; }
     const auto& mdfFiles() const { return m_mdfFiles; }
     const auto& csFiles() const { return m_csFiles; }
+    const auto& padFiles() const { return m_padFiles; }
 
     const auto& levelHumanNamesDict() const { return m_levelHumanNamesDict; }
     const auto& dialogPhrases() const { return m_dialogPhrases; }
@@ -34,6 +35,7 @@ public:
     bool showSdbWindow = false;
     bool showMdfWindow = false;
     bool showCsWindow = false;
+    bool showPadWindow = false;
 
 private:
     void asyncLoadResources(std::string_view rootDirectory);
@@ -49,6 +51,7 @@ private:
     std::vector<std::string> m_sdbFiles;
     std::vector<std::string> m_mdfFiles;
     std::vector<std::string> m_csFiles;
+    std::vector<std::string> m_padFiles;
 
     StringHashTable<std::string> m_levelHumanNamesDict;
     std::map<int, std::string> m_dialogPhrases;

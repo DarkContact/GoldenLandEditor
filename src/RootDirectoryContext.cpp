@@ -15,6 +15,7 @@ void RootDirectoryContext::setRootDirectoryAndReload(std::string_view rootDirect
     showSdbWindow = false;
     showMdfWindow = false;
     showCsWindow = false;
+    showPadWindow = false;
 
     asyncLoadResources(rootDirectory); // TODO: Запись rootDirectory в ini файл настроек
 }
@@ -26,7 +27,8 @@ bool RootDirectoryContext::isEmptyContext() const {
             m_csxFiles.empty() &&
             m_sdbFiles.empty() &&
             m_mdfFiles.empty() &&
-            m_csFiles.empty();
+            m_csFiles.empty() &&
+            m_padFiles.empty();
 
     return m_rootDirectory.empty() || emptyResources;
 }
@@ -45,6 +47,7 @@ void RootDirectoryContext::asyncLoadResources(std::string_view rootDirectory) {
             context->m_sdbFiles = resources.sdbFiles();
             context->m_mdfFiles = resources.mdfFiles();
             context->m_csFiles = resources.csFiles();
+            context->m_padFiles = resources.padFiles();
         }
         {
             Tracy_ZoneScopedN("NaturalSort");
@@ -55,6 +58,7 @@ void RootDirectoryContext::asyncLoadResources(std::string_view rootDirectory) {
             std::sort(context->m_sdbFiles.begin(), context->m_sdbFiles.end(), StringUtils::naturalCompare);
             std::sort(context->m_mdfFiles.begin(), context->m_mdfFiles.end(), StringUtils::naturalCompare);
             std::sort(context->m_csFiles.begin(), context->m_csFiles.end(), StringUtils::naturalCompare);
+            std::sort(context->m_padFiles.begin(), context->m_padFiles.end(), StringUtils::naturalCompare);
         }
 
         context->m_levelHumanNamesDict = resources.levelHumanNameDictionary();
