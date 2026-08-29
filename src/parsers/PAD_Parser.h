@@ -4,8 +4,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 
-enum class PAD_AnimationTypeMask : uint32_t {
+enum PAD_AnimationTypeMask : uint32_t {
     rt_stay =   0x00000001,
     rt_fun =    0x00000002,
     tb_stay =   0x00000004,
@@ -48,6 +49,23 @@ struct PAD_Data {
     std::vector<PAD_AnimationTypeMask> animations;
     std::vector<uint8_t> animationData;
     // TODO: Какие-то данные в хвосте
+
+    static constexpr std::array<PAD_AnimationTypeMask, 14> typeMasks = {
+        PAD_AnimationTypeMask::rt_stay,
+        PAD_AnimationTypeMask::rt_fun,
+        PAD_AnimationTypeMask::tb_stay,
+        PAD_AnimationTypeMask::tb_fun,
+        PAD_AnimationTypeMask::tb_go,
+        PAD_AnimationTypeMask::rt_go,
+        PAD_AnimationTypeMask::cast,
+        PAD_AnimationTypeMask::suffer,
+        PAD_AnimationTypeMask::die,
+        PAD_AnimationTypeMask::ss_attack,
+        PAD_AnimationTypeMask::hits0,
+        PAD_AnimationTypeMask::hits1,
+        PAD_AnimationTypeMask::hits2,
+        PAD_AnimationTypeMask::hits3
+    };
 };
 
 class PAD_Parser {

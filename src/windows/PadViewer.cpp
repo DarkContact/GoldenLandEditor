@@ -1,13 +1,17 @@
 #include "PadViewer.h"
 
-#include "utils/TracyProfiler.h"
+#include <algorithm>
 #include <format>
+
+#include "utils/TracyProfiler.h"
+#include "utils/IoUtils.h"
 
 PadViewer::PadViewer() {}
 
 void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& padFiles)
 {
     Tracy_ZoneScoped;
+    using namespace IoUtils;
 
     if (showWindow && !padFiles.empty()) {
         m_onceWhenClose = false;
@@ -44,10 +48,28 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         if (!padFiles.empty() && m_padData) {
             ImGui::BeginGroup();
 
-            ImGui::Text("Size: %zu, Mask: %u", m_padData->animationData.size(), m_padData->animationMask);
-            for (auto animation : m_padData->animations) {
-                ImGui::Text("%s", animationTypeMaskToString(animation).data());
-            }
+                ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+
+                ImGui::Text("Size: %zu, Mask: %u", m_padData->animationData.size(), m_padData->animationMask);
+                for (auto animation : m_padData->animations) {
+                    ImGui::Text("%s", animationTypeMaskToString(animation).data());
+                }
+
+                ImGui::Separator();
+
+
+
+                for (size_t offset = 0; offset < m_padData->animationData.size();) {
+                    uint32_t value = readUInt32(m_padData->animationData, offset);
+
+                    bool isHighlight = std::ranges::any_of(m_padData->animations, [value](uint32_t x) { return x == value; });
+
+                    const ImGuiStyle& style = ImGui::GetStyle();
+                    ImVec4 textColor = isHighlight ? ImVec4(1.0f, 0.95f, 0.0f, 1.0f) : style.Colors[ImGuiCol_Text];
+                    ImGui::TextColored(textColor, "[i:%zu] %u", (offset / 4) - 1, value);
+                }
+
+                ImGui::EndChild();
 
             ImGui::EndGroup();
         } else if (m_selectedIndex >= 0) {

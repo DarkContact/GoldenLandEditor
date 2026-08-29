@@ -27,9 +27,9 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
     uint32_t size = readUInt32(fileData, offset);
     result->animationMask = readUInt32(fileData, offset);
 
-    for (uint32_t i = 1; i != static_cast<uint32_t>(PAD_AnimationTypeMask::hits3); i <<= 1) {
-        if ((result->animationMask & i) == 0) continue;
-        result->animations.push_back(static_cast<PAD_AnimationTypeMask>(i));
+    for (uint32_t typeMask : PAD_Data::typeMasks) {
+        if ((result->animationMask & typeMask) == 0) continue;
+        result->animations.push_back(static_cast<PAD_AnimationTypeMask>(typeMask));
     }
 
     assert(12 + size <= fileData.size());
