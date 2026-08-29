@@ -1,0 +1,36 @@
+#include "PAD_Parser.h"
+
+#include <cassert>
+
+#include "utils/IoUtils.h"
+#include "utils/FileUtils.h"
+
+
+std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* error)
+{
+    using namespace IoUtils;
+
+    auto fileData = FileUtils::loadFile(path, error);
+    if (fileData.empty()) {
+        return {};
+    }
+
+    // Проверка заголовка "PAD "
+    size_t offset = 0;
+    if (readString(fileData, 4, offset) != "PAD ") {
+        if (error)
+            *error = "Incorrect PAD file. Missing 'PAD '";
+        return {};
+    }
+
+    std::optional<PAD_Data> result = PAD_Data();
+    uint32_t size = readUInt32(fileData, offset);
+    result->animationMask = readUInt32(fileData, offset);
+
+    assert(12 + size <= fileData.size());
+
+    result->animationData.assign(fileData.begin() + 12,
+                                 fileData.begin() + 12 + size);
+
+    return result;
+}

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "imgui.h"
+#include "parsers/PAD_Parser.h"
 
 struct SDL_Renderer;
 
@@ -18,4 +19,6 @@ private:
     int m_selectedIndex = -1;
     bool m_onceWhenClose = true;
     ImGuiTextFilter m_textFilter;
+    std::string m_error;
+    std::optional<PAD_Data> m_padData;
 };
