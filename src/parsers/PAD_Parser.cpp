@@ -25,14 +25,16 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
 
     std::optional<PAD_Data> result = PAD_Data();
     uint32_t size = readUInt32(fileData, offset);
-    result->animationMask = readUInt32(fileData, offset);
+    result->animationMasks = readUInt32(fileData, offset);
 
     for (uint32_t typeMask : PAD_Data::typeMasks) {
-        if ((result->animationMask & typeMask) == 0) continue;
+        if ((result->animationMasks & typeMask) == 0) continue;
         result->animations.push_back(static_cast<PAD_AnimationTypeMask>(typeMask));
     }
 
     assert(12 + size <= fileData.size());
+    std::span<uint8_t> animationData(fileData.begin() + 12,
+                                     fileData.begin() + 12 + size);
 
     result->animationData.assign(fileData.begin() + 12,
                                  fileData.begin() + 12 + size);

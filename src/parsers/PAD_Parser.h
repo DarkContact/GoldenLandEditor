@@ -43,9 +43,22 @@ static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {
     }
     return "unknown";
 }
+struct PAD_Animation {
+    PAD_AnimationTypeMask type;
+    uint32_t size;
+    uint32_t delay; // ?
+    uint32_t framesPerRow;
+    uint32_t p05; // HeightOffset
+    uint32_t p06;
+    uint32_t p07;
+    uint32_t p08;
+    uint32_t p09;
+    uint32_t p10;
+    std::vector<std::pair<uint16_t, uint16_t>> offsetsAndSizes;
+};
 
 struct PAD_Data {
-    uint32_t animationMask;
+    uint32_t animationMasks;
     std::vector<PAD_AnimationTypeMask> animations;
     std::vector<uint8_t> animationData;
     // TODO: Какие-то данные в хвосте
