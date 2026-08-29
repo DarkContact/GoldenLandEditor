@@ -42,7 +42,14 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
         // Right
         if (!padFiles.empty() && m_padData) {
+            ImGui::BeginGroup();
+
             ImGui::Text("Size: %zu, Mask: %u", m_padData->animationData.size(), m_padData->animationMask);
+            for (auto animation : m_padData->animations) {
+                ImGui::Text("%s", animationTypeMaskToString(animation).data());
+            }
+
+            ImGui::EndGroup();
         } else if (m_selectedIndex >= 0) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", m_error.c_str());
         }

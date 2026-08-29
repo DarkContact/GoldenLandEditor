@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-enum class PAD_AnimationTypeMask {
+enum class PAD_AnimationTypeMask : uint32_t {
     rt_stay =   0x00000001,
     rt_fun =    0x00000002,
     tb_stay =   0x00000004,
@@ -23,8 +23,29 @@ enum class PAD_AnimationTypeMask {
     hits3 =     0x00080000,
 };
 
+static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {
+    switch (type) {
+        case PAD_AnimationTypeMask::rt_stay: return "rt_stay";
+        case PAD_AnimationTypeMask::rt_fun: return "rt_fun";
+        case PAD_AnimationTypeMask::tb_stay: return "tb_stay";
+        case PAD_AnimationTypeMask::tb_fun: return "tb_fun";
+        case PAD_AnimationTypeMask::tb_go: return "tb_go";
+        case PAD_AnimationTypeMask::rt_go: return "rt_go";
+        case PAD_AnimationTypeMask::cast: return "cast";
+        case PAD_AnimationTypeMask::suffer: return "suffer";
+        case PAD_AnimationTypeMask::die: return "die";
+        case PAD_AnimationTypeMask::ss_attack: return "ss_attack";
+        case PAD_AnimationTypeMask::hits0: return "hits0";
+        case PAD_AnimationTypeMask::hits1: return "hits1";
+        case PAD_AnimationTypeMask::hits2: return "hits2";
+        case PAD_AnimationTypeMask::hits3: return "hits3";
+    }
+    return "unknown";
+}
+
 struct PAD_Data {
     uint32_t animationMask;
+    std::vector<PAD_AnimationTypeMask> animations;
     std::vector<uint8_t> animationData;
     // TODO: Какие-то данные в хвосте
 };
