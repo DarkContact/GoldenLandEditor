@@ -1,10 +1,11 @@
 #include "PAD_Parser.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include "utils/IoUtils.h"
+#include "utils/DebugLog.h"
 #include "utils/FileUtils.h"
-
 
 std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* error)
 {
@@ -24,20 +25,74 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
     }
 
     std::optional<PAD_Data> result = PAD_Data();
-    uint32_t size = readUInt32(fileData, offset);
+    uint32_t animationSize = readUInt32(fileData, offset);
     result->animationMasks = readUInt32(fileData, offset);
 
     for (uint32_t typeMask : PAD_Data::typeMasks) {
         if ((result->animationMasks & typeMask) == 0) continue;
-        result->animations.push_back(static_cast<PAD_AnimationTypeMask>(typeMask));
+        result->animationTypes.push_back(static_cast<PAD_AnimationTypeMask>(typeMask));
     }
 
-    assert(12 + size <= fileData.size());
-    std::span<uint8_t> animationData(fileData.begin() + 12,
-                                     fileData.begin() + 12 + size);
+    assert(offset + animationSize <= fileData.size());
+    while (offset < animationSize)
+    {
+        LogFmt("offset: {}", offset);
+
+        uint32_t animationType = readUInt32(fileData, offset);
+        bool isValidMask = std::ranges::any_of(PAD_Data::typeMasks, [animationType](uint32_t x) { return x == animationType; });
+        if (!isValidMask) {
+            LogFmt("Invalid Mask: {}", animationType);
+            continue;
+        }
+        bool isCorrectMask = (result->animationMasks & animationType) != 0;
+        if (!isCorrectMask) {
+            LogFmt("Incorrect Mask: {}", animationType);
+            continue;
+        }
+        bool isAlreadyHaveMask = std::ranges::any_of(result->animations, [animationType](const PAD_Animation& x) { return x.type == animationType; });
+        if (isAlreadyHaveMask) {
+            LogFmt("Is already have mask: {}", animationType);
+            continue;
+        }
+
+        PAD_Animation animation;
+        animation.type = static_cast<PAD_AnimationTypeMask>(animationType);
+        animation.size = readInt32(fileData, offset);
+        LogFmt("animation.size: {}", animation.size);
+
+        size_t animationOffset = 4;
+        animation.delay = readInt32(fileData, offset);
+        animation.framesPerRow = readInt32(fileData, offset);
+        animation.p05 = readInt32(fileData, offset);
+        animation.p06 = readInt32(fileData, offset);
+        animation.p07 = readInt32(fileData, offset);
+        animation.p08 = readInt32(fileData, offset);
+        animation.p09 = readInt32(fileData, offset);
+        animation.p10 = readInt32(fileData, offset);
+        animation.p11 = readInt32(fileData, offset);
+        animationOffset += 9 * 4;
+        while (animationOffset < animation.size) {
+            uint16_t lVal = readInt16(fileData, offset);
+            uint16_t rVal = readInt16(fileData, offset);
+            animation.offsets.push_back({lVal, rVal});
+            animationOffset += 4;
+        }
+        result->animations.push_back(std::move(animation));
+    }
 
     result->animationData.assign(fileData.begin() + 12,
-                                 fileData.begin() + 12 + size);
+                                 fileData.begin() + 12 + animationSize);
+
+    // Как будто ничего полезного
+    offset = 12 + animationSize;
+    if (offset < fileData.size()) {
+        result->endSize = readInt32(fileData, offset);
+    }
+
+    if (result->endSize > 0) {
+        result->endData.assign(fileData.begin() + 12 + animationSize + 4,
+                               fileData.begin() + 12 + animationSize + 4 + result->endSize);
+    }
 
     return result;
 }

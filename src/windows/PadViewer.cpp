@@ -51,7 +51,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 ImGui::BeginChild("item view", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
 
                 ImGui::Text("Size: %zu, Masks: %u", m_padData->animationData.size(), m_padData->animationMasks);
-                for (auto animation : m_padData->animations) {
+                for (auto animation : m_padData->animationTypes) {
                     ImGui::Text("%s", animationTypeMaskToString(animation).data());
                 }
 
@@ -65,7 +65,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     uint16_t value16L = readUInt16(m_padData->animationData, offset);
                     uint16_t value16R = readUInt16(m_padData->animationData, offset);
 
-                    bool isHighlight = std::ranges::any_of(m_padData->animations, [value](uint32_t x) { return x == value; });
+                    bool isHighlight = std::ranges::any_of(m_padData->animationTypes, [value](uint32_t x) { return x == value; });
 
                     const ImGuiStyle& style = ImGui::GetStyle();
                     ImVec4 textColor = isHighlight ? ImVec4(1.0f, 0.95f, 0.0f, 1.0f) : style.Colors[ImGuiCol_Text];
@@ -74,6 +74,14 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     } else {
                         ImGui::TextColored(textColor, "[i:%zu] %u", (offset / 4) - 1, value);
                     }
+                }
+
+                ImGui::Separator();
+
+                ImGui::Text("%d", m_padData->endSize);
+                for (size_t offset = 0; offset < m_padData->endData.size();) {
+                    uint32_t value = readUInt32(m_padData->endData, offset);
+                    ImGui::Text("[i:%zu] %u", (offset / 4) - 1, value);
                 }
 
                 ImGui::EndChild();

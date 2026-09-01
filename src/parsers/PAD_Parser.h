@@ -45,23 +45,28 @@ static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {
 }
 struct PAD_Animation {
     PAD_AnimationTypeMask type;
-    uint32_t size;
-    uint32_t delay; // ?
-    uint32_t framesPerRow;
-    uint32_t p05; // HeightOffset
-    uint32_t p06;
-    uint32_t p07;
-    uint32_t p08;
-    uint32_t p09;
-    uint32_t p10;
-    std::vector<std::pair<uint16_t, uint16_t>> offsetsAndSizes;
+    int32_t size;
+    int32_t delay; // ?
+    int32_t framesPerRow;
+    int32_t p05; // Widht
+    int32_t p06; // Height
+    int32_t p07; // ShadowWidth
+    int32_t p08; // ShadowHeight
+    int32_t p09;
+    int32_t p10;
+    int32_t p11;
+    std::vector<std::pair<uint16_t, uint16_t>> offsets;
 };
 
 struct PAD_Data {
     uint32_t animationMasks;
-    std::vector<PAD_AnimationTypeMask> animations;
-    std::vector<uint8_t> animationData;
-    // TODO: Какие-то данные в хвосте
+    std::vector<PAD_Animation> animations;
+
+    std::vector<PAD_AnimationTypeMask> animationTypes; // TODO: Удалить - только для визуализации
+    std::vector<uint8_t> animationData; // TODO: Удалить - только для визуализации
+
+    int32_t endSize = 0;
+    std::vector<uint8_t> endData;
 
     static constexpr std::array<PAD_AnimationTypeMask, 14> typeMasks = {
         PAD_AnimationTypeMask::rt_stay,
