@@ -1,14 +1,15 @@
 #pragma once
+#include <unordered_map>
 #include <vector>
 #include <string>
 
 #include "imgui.h"
 #include "parsers/PAD_Parser.h"
 
+class Texture;
 struct SDL_Renderer;
 
-class PadViewer
-{
+class PadViewer {
 public:
     PadViewer();
 
@@ -21,4 +22,6 @@ private:
     ImGuiTextFilter m_textFilter;
     std::string m_error;
     std::optional<PAD_Data> m_padData;
+
+    std::unordered_map<PAD_AnimationTypeMask, std::pair<Texture, Texture>> m_animationTextures;
 };

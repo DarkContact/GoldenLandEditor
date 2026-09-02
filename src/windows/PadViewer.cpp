@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <format>
 
+#include "graphics/TextureLoader.h"
+#include "graphics/Texture.h"
+
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
@@ -37,10 +40,32 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     {
                         m_selectedIndex = i;
 
+                        m_animationTextures.clear();
                         m_padData = PAD_Parser::parse(std::format("{}/{}", rootDirectory, selectedPadFile), &m_error);
 
                         std::string_view padDir = StringUtils::parentPath(selectedPadFile);
-                        // TODO: Загрузка графики
+                        for (const auto& animation : m_padData->animations) {
+                            auto animationName = animationTypeMaskToString(animation.type);
+
+                            auto animationFilename = std::format("{}/{}/animation/{}.csx", rootDirectory, padDir, animationName);
+                            auto shadowFilename = std::format("{}/{}/shadows/{}.csx", rootDirectory, padDir, animationName);
+
+                            Texture animationTexture;
+                            std::string animationError;
+                            bool isAnimationOk = TextureLoader::loadTextureFromCsxFile(animationFilename, renderer, animationTexture, &animationError);
+                            if (!isAnimationOk) {
+                                LogFmt("AnimationError: {}", animationError);
+                            }
+
+                            Texture shadowTexture;
+                            std::string shadowError;
+                            bool isShadowOk = TextureLoader::loadTextureFromCsxFile(shadowFilename, renderer, shadowTexture, &shadowError);
+                            if (!isShadowOk) {
+                                LogFmt("ShadowError: {}", shadowError);
+                            }
+
+                            m_animationTextures.insert( {animation.type, std::pair<Texture, Texture>{std::move(animationTexture), std::move(shadowTexture)}} );
+                        }
 
                         needResetScroll = true;
                     }
@@ -63,6 +88,13 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 }
 
                 ImGui::Separator();
+
+                for (const auto& [_, textures] : m_animationTextures) {
+                    const auto& [anim, shadow] = textures;
+
+                    ImGui::Image((ImTextureID)anim.get(), ImVec2(anim->w, anim->h));
+                    ImGui::Image((ImTextureID)shadow.get(), ImVec2(shadow->w, shadow->h));
+                }
 
                 for (size_t offset = 0; offset < m_padData->animationData.size();) {
                     size_t startOffset = offset;
@@ -108,6 +140,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         m_textFilter.Clear();
         m_error.clear();
         m_padData = {};
+        m_animationTextures.clear();
     }
 }
 

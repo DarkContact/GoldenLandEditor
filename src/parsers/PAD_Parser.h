@@ -68,7 +68,8 @@ struct PAD_Data {
     int32_t endSize = 0;
     std::vector<uint8_t> endData;
 
-    static constexpr std::array<PAD_AnimationTypeMask, 14> typeMasks = {
+    static constexpr int kTypeMasksCount = 14;
+    static constexpr std::array<PAD_AnimationTypeMask, kTypeMasksCount> typeMasks = {
         PAD_AnimationTypeMask::rt_stay,
         PAD_AnimationTypeMask::rt_fun,
         PAD_AnimationTypeMask::tb_stay,
