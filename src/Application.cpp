@@ -25,6 +25,7 @@
   #include "utils/FileUtils.h"
   #include "utils/StringUtils.h"
   #include "utils/DialogTests.h"
+  #include "parsers/PAD_Parser.h"
 #endif
 
 Application::Application() {
@@ -301,6 +302,16 @@ void Application::mainLoop() {
                         if (level) {
                             m_rootDirContext.levels.push_back(std::move(*level));
                         } else {
+                            uiError = std::move(error);
+                        }
+                    }
+                }
+
+                if (ImGui::MenuItem("Load all PADS")) {
+                    for (const auto& padFile : m_rootDirContext.padFiles()) {
+                        std::string error;
+                        auto padData = PAD_Parser::parse(std::format("{}/{}", m_rootDirContext.rootDirectory(), padFile), &error);
+                        if (!padData) {
                             uiError = std::move(error);
                         }
                     }

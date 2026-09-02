@@ -4,6 +4,8 @@
 #include <format>
 
 #include "utils/TracyProfiler.h"
+#include "utils/StringUtils.h"
+#include "utils/DebugLog.h"
 #include "utils/IoUtils.h"
 
 PadViewer::PadViewer() {}
@@ -28,12 +30,17 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 ImGui::BeginChild("file list");
                 for (int i = 0; i < static_cast<int>(padFiles.size()); ++i)
                 {
-                    if (m_textFilter.PassFilter(padFiles[i].c_str())
-                        && ImGui::Selectable(padFiles[i].c_str(), m_selectedIndex == i))
+                    std::string_view selectedPadFile = padFiles[i];
+
+                    if (m_textFilter.PassFilter(selectedPadFile.data())
+                        && ImGui::Selectable(selectedPadFile.data(), m_selectedIndex == i))
                     {
                         m_selectedIndex = i;
 
-                        m_padData = PAD_Parser::parse(std::format("{}/{}", rootDirectory, padFiles[i]), &m_error);
+                        m_padData = PAD_Parser::parse(std::format("{}/{}", rootDirectory, selectedPadFile), &m_error);
+
+                        std::string_view padDir = StringUtils::parentPath(selectedPadFile);
+                        // TODO: Загрузка графики
 
                         needResetScroll = true;
                     }

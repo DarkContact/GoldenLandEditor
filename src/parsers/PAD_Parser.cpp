@@ -42,17 +42,17 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
         bool isValidMask = std::ranges::any_of(PAD_Data::typeMasks, [animationType](uint32_t x) { return x == animationType; });
         if (!isValidMask) {
             LogFmt("Invalid Mask: {}", animationType);
-            continue;
+            break;
         }
         bool isCorrectMask = (result->animationMasks & animationType) != 0;
         if (!isCorrectMask) {
             LogFmt("Incorrect Mask: {}", animationType);
-            continue;
+            break;
         }
         bool isAlreadyHaveMask = std::ranges::any_of(result->animations, [animationType](const PAD_Animation& x) { return x.type == animationType; });
         if (isAlreadyHaveMask) {
             LogFmt("Is already have mask: {}", animationType);
-            continue;
+            break;
         }
 
         PAD_Animation animation;
