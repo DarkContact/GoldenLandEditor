@@ -48,10 +48,10 @@ struct PAD_Animation {
     int32_t size;
     int32_t delay; // ?
     int32_t framesPerRow;
-    int32_t p05; // Widht
-    int32_t p06; // Height
-    int32_t p07; // ShadowWidth
-    int32_t p08; // ShadowHeight
+    int32_t width;
+    int32_t height;
+    int32_t p07; // ShadowWidth ?
+    int32_t p08; // ShadowHeight ?
     int32_t p09;
     int32_t p10;
     int32_t p11;

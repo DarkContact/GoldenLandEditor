@@ -63,8 +63,8 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
         size_t animationOffset = 4;
         animation.delay = readInt32(fileData, offset);
         animation.framesPerRow = readInt32(fileData, offset);
-        animation.p05 = readInt32(fileData, offset);
-        animation.p06 = readInt32(fileData, offset);
+        animation.width = readInt32(fileData, offset);
+        animation.height = readInt32(fileData, offset);
         animation.p07 = readInt32(fileData, offset);
         animation.p08 = readInt32(fileData, offset);
         animation.p09 = readInt32(fileData, offset);

@@ -120,11 +120,21 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 //     ImGui::Text("[i:%zu] %u", (offset / 4) - 1, value);
                 // }
 
-                PAD_AnimationTypeMask currentAnimationType = m_padData->animations[m_selectedAnimationIndex].type;
+                PAD_Animation& currentAnimation = m_padData->animations[m_selectedAnimationIndex];
+                PAD_AnimationTypeMask currentAnimationType = currentAnimation.type;
 
+                ImVec2 startPos = ImGui::GetCursorScreenPos();
                 const auto& [anim, shadow] = m_animationTextures[currentAnimationType];
                 ImGui::ImageWithBg((ImTextureID)anim.get(), ImVec2(anim->w, anim->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
                 ImGui::ImageWithBg((ImTextureID)shadow.get(), ImVec2(shadow->w, shadow->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
+
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+                for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
+                    ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.width * frame, startPos.y);
+                    ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.width, chunkTopLeft.y + currentAnimation.height);
+                    drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
+                }
 
                 ImGui::EndChild();
 
