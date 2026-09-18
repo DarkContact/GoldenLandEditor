@@ -28,11 +28,6 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
     uint32_t animationSize = readUInt32(fileData, offset);
     result->animationMasks = readUInt32(fileData, offset);
 
-    for (uint32_t typeMask : PAD_Data::typeMasks) {
-        if ((result->animationMasks & typeMask) == 0) continue;
-        result->animationTypes.push_back(static_cast<PAD_AnimationTypeMask>(typeMask));
-    }
-
     assert(offset + animationSize <= fileData.size());
     while (offset < animationSize)
     {
@@ -65,10 +60,10 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
         animation.framesPerRow = readInt32(fileData, offset);
         animation.width = readInt32(fileData, offset);
         animation.height = readInt32(fileData, offset);
-        animation.p07 = readInt32(fileData, offset);
-        animation.p08 = readInt32(fileData, offset);
-        animation.p09 = readInt32(fileData, offset);
-        animation.p10 = readInt32(fileData, offset);
+        animation.anchorX = readInt32(fileData, offset);
+        animation.anchorY = readInt32(fileData, offset);
+        animation.movementX = readFloat(fileData, offset);
+        animation.movementY = readFloat(fileData, offset);
         animation.p11 = readInt32(fileData, offset);
         animationOffset += 9 * 4;
         while (animationOffset < animation.size) {
@@ -79,9 +74,6 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
         }
         result->animations.push_back(std::move(animation));
     }
-
-    result->animationData.assign(fileData.begin() + 12,
-                                 fileData.begin() + 12 + animationSize);
 
     // Как будто ничего полезного
     offset = 12 + animationSize;

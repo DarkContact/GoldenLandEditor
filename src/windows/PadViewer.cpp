@@ -88,38 +88,6 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     ImGui::SetScrollY(0.0f);
                 }
 
-                // ImGui::Text("Size: %zu, Masks: %u", m_padData->animationData.size(), m_padData->animationMasks);
-                // for (auto animation : m_padData->animationTypes) {
-                //     ImGui::Text("%s", animationTypeMaskToString(animation).data());
-                // }
-
-                // for (size_t offset = 0; offset < m_padData->animationData.size();) {
-                //     size_t startOffset = offset;
-                //     uint32_t value = readUInt32(m_padData->animationData, offset);
-
-                //     offset = startOffset;
-                //     uint16_t value16L = readUInt16(m_padData->animationData, offset);
-                //     uint16_t value16R = readUInt16(m_padData->animationData, offset);
-
-                //     bool isHighlight = std::ranges::any_of(m_padData->animationTypes, [value](uint32_t x) { return x == value; });
-
-                //     const ImGuiStyle& style = ImGui::GetStyle();
-                //     ImVec4 textColor = isHighlight ? ImVec4(1.0f, 0.95f, 0.0f, 1.0f) : style.Colors[ImGuiCol_Text];
-                //     if (value > std::numeric_limits<uint16_t>::max()) {
-                //         ImGui::TextColored(textColor, "[i:%zu] %u, %u", (offset / 4) - 1, value16L, value16R);
-                //     } else {
-                //         ImGui::TextColored(textColor, "[i:%zu] %u", (offset / 4) - 1, value);
-                //     }
-                // }
-
-                // ImGui::Separator();
-
-                // ImGui::Text("%d", m_padData->endSize);
-                // for (size_t offset = 0; offset < m_padData->endData.size();) {
-                //     uint32_t value = readUInt32(m_padData->endData, offset);
-                //     ImGui::Text("[i:%zu] %u", (offset / 4) - 1, value);
-                // }
-
                 PAD_Animation& currentAnimation = m_padData->animations[m_selectedAnimationIndex];
                 PAD_AnimationTypeMask currentAnimationType = currentAnimation.type;
 
@@ -130,10 +98,30 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
 
+                // For Animation
                 for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
                     ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.width * frame, startPos.y);
                     ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.width, chunkTopLeft.y + currentAnimation.height);
                     drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
+
+                    drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+                }
+
+                // // For Shadow
+                // for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
+                //     ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.width * frame, startPos.y);
+                //     ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.width, chunkTopLeft.y + currentAnimation.height);
+                //     drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
+
+                //     drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+                // }
+
+                ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
+                ImGui::Text("p11: %d", currentAnimation.p11);
+
+                int i = 0;
+                for (auto [x, y] : currentAnimation.offsets) {
+                    ImGui::Text("[i: %d] x:%u, y:%u", i++, x, y);
                 }
 
                 ImGui::EndChild();
