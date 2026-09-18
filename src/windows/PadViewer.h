@@ -22,6 +22,8 @@ private:
     ImGuiTextFilter m_textFilter;
     std::string m_error;
     std::optional<PAD_Data> m_padData;
+    int m_selectedAnimationIndex = -1;
+    ImVec4 m_bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 
     std::unordered_map<PAD_AnimationTypeMask, std::pair<Texture, Texture>> m_animationTextures;
 };
