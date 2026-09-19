@@ -6,7 +6,7 @@
 #include <vector>
 #include <array>
 
-enum PAD_AnimationTypeMask : uint32_t {
+enum class PAD_AnimationTypeMask : uint32_t {
     rt_stay =   0x00000001,
     rt_fun =    0x00000002,
     tb_stay =   0x00000004,
@@ -22,6 +22,36 @@ enum PAD_AnimationTypeMask : uint32_t {
     hits1 =     0x00020000,
     hits2 =     0x00040000,
     hits3 =     0x00080000,
+};
+
+enum class PAD_AnimationDirection : uint32_t {
+    up = 0,
+    up_left,
+    left,
+    down_left,
+    down,
+    down_right,
+    right,
+    up_right
+};
+
+enum class PAD_AnimationDirectionGo : uint32_t {
+    up = 0,
+    up_up_left,       // 22.5°
+    up_left,          // 45°
+    left_up_left,     // 67.5°
+    left,             // 90°
+    left_down_left,   // 112.5°
+    down_left,        // 135°
+    down_down_left,   // 157.5°
+    down,             // 180°
+    down_down_right,  // 202.5°
+    down_right,       // 225°
+    right_down_right, // 247.5°
+    right,            // 270°
+    right_up_right,   // 292.5°
+    up_right,         // 315°
+    up_up_right       // 337.5°
 };
 
 static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {

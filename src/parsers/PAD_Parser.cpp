@@ -32,7 +32,7 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
     while (offset < dataSize)
     {
         uint32_t animationType = readUInt32(fileData, offset);
-        bool isValidMask = std::ranges::any_of(PAD_Data::typeMasks, [animationType](uint32_t x) { return x == animationType; });
+        bool isValidMask = std::ranges::any_of(PAD_Data::typeMasks, [animationType](PAD_AnimationTypeMask x) { return static_cast<uint32_t>(x) == animationType; });
         if (!isValidMask) {
             LogFmt("Invalid Mask: {}", animationType);
             break;
@@ -42,7 +42,7 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
             LogFmt("Incorrect Mask: {}", animationType);
             break;
         }
-        bool isAlreadyHaveMask = std::ranges::any_of(result->animations, [animationType](const PAD_Animation& x) { return x.type == animationType; });
+        bool isAlreadyHaveMask = std::ranges::any_of(result->animations, [animationType](const PAD_Animation& x) { return static_cast<uint32_t>(x.type) == animationType; });
         if (isAlreadyHaveMask) {
             LogFmt("Is already have mask: {}", animationType);
             break;
