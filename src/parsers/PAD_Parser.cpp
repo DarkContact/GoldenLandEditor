@@ -50,11 +50,9 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
 
         PAD_Animation animation;
         animation.type = static_cast<PAD_AnimationTypeMask>(animationType);
-        LogFmt("Type: {}", animationTypeMaskToString(animation.type));
         int32_t offsetAnimationStart = offset;
         int32_t animationSize = readInt32(fileData, offset);
 
-        size_t animationOffset = 4;
         animation.delay = readInt32(fileData, offset);
         animation.framesPerRow = readInt32(fileData, offset);
         animation.frameWidth = readInt32(fileData, offset);
@@ -66,7 +64,6 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
 
         uint32_t tableSize = readUInt32(fileData, offset);
         animation.rowCount = tableSize / 8 / animation.framesPerRow;
-        animationOffset += 9 * 4;
 
         size_t endOffset = offsetAnimationStart + animationSize;
 
@@ -85,8 +82,6 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
             }
 
             animation.crops.emplace_back(std::move(frames));
-            animationOffset += 8;
-
             assert(offset <= endOffset);
         }
 
@@ -97,13 +92,25 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
 
         uint32_t shadowTableSize = readUInt32(fileData, offset);
         animation.shadowRowCount = shadowTableSize / 8 / animation.framesPerRow;
-        LogFmt("ShadowTableSize: {}", shadowTableSize);
-        LogFmt("ShadowRowCount: {}", animation.shadowRowCount);
 
-        LogFmt("Offset: {}", offset);
-        LogFmt("EndOffset: {}", endOffset);
-        assert(offset <= endOffset);
-        offset = endOffset;
+        animation.shadowCrops.reserve(animation.shadowRowCount);
+        for (uint32_t row = 0; row < animation.shadowRowCount; ++row) {
+            std::vector<PAD_CropsFrame> frames;
+            frames.reserve(animation.framesPerRow);
+
+            for (uint32_t f = 0; f < animation.framesPerRow; ++f) {
+                PAD_CropsFrame frame;
+                frame.x = readInt16(fileData, offset);
+                frame.y = readInt16(fileData, offset);
+                frame.width = readInt16(fileData, offset);
+                frame.height = readInt16(fileData, offset);
+                frames.emplace_back(std::move(frame));
+            }
+
+            animation.shadowCrops.emplace_back(std::move(frames));
+            assert(offset <= endOffset);
+        }
+        assert(offset == endOffset);
 
         result->animations.push_back(std::move(animation));
     }

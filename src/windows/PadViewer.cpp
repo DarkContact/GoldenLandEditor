@@ -118,7 +118,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     }
                 }
 
-                // // For Shadow
+                // For Shadow
                 for (int row = 0; row < currentAnimation.shadowRowCount; ++row) {
                     for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
                         ImVec2 chunkTopLeft = ImVec2(startPosShadow.x + currentAnimation.shadowFrame.width * frame, startPosShadow.y + currentAnimation.shadowFrame.height * row);
@@ -126,13 +126,18 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
 
                         drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.shadowFrame.anchorX, chunkTopLeft.y + currentAnimation.shadowFrame.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+
+                        const auto& cropRow = currentAnimation.shadowCrops[row];
+                        const auto& cropFrame = cropRow[frame];
+
+                        ImVec2 cropChuckTopLeft = ImVec2(chunkTopLeft.x + cropFrame.x, chunkTopLeft.y + cropFrame.y);
+                        ImVec2 cropChuckBottomRight = ImVec2(cropChuckTopLeft.x + cropFrame.width, cropChuckTopLeft.y + cropFrame.height);
+                        drawList->AddRect(cropChuckTopLeft, cropChuckBottomRight, IM_COL32(0, 220, 0, 255));
                     }
                 }
 
-                ImGui::Text("frame w: %d, h: %d", currentAnimation.frameWidth, currentAnimation.frameHeight);
+                ImGui::Text("delay: %d", currentAnimation.delay);
                 ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
-
-                ImGui::Text("shadowFrame w: %d, h: %d", currentAnimation.shadowFrame.width, currentAnimation.shadowFrame.height);
 
                 ImGui::EndChild();
 

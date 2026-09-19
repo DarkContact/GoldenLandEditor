@@ -68,11 +68,11 @@ struct PAD_Animation {
     int32_t anchorY;
     float movementX;
     float movementY;
+    int32_t rowCount;
     std::vector<std::vector<PAD_CropsFrame>> crops;
     PAD_ShadowFrame shadowFrame;
-
-    int32_t rowCount;
     int32_t shadowRowCount;
+    std::vector<std::vector<PAD_CropsFrame>> shadowCrops;
 };
 
 struct PAD_Data {
