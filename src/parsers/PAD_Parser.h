@@ -43,6 +43,21 @@ static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {
     }
     return "unknown";
 }
+
+struct PAD_CropsFrame {
+    int16_t x;
+    int16_t y;
+    int16_t width;
+    int16_t height;
+};
+
+struct PAD_ShadowFrame {
+    int32_t width;
+    int32_t height;
+    int32_t anchorX;
+    int32_t anchorY;
+};
+
 struct PAD_Animation {
     PAD_AnimationTypeMask type;
     int32_t delay;
@@ -53,7 +68,11 @@ struct PAD_Animation {
     int32_t anchorY;
     float movementX;
     float movementY;
-    std::vector<std::pair<uint16_t, uint16_t>> offsets;
+    std::vector<std::vector<PAD_CropsFrame>> crops;
+    PAD_ShadowFrame shadowFrame;
+
+    int32_t rowCount;
+    int32_t shadowRowCount;
 };
 
 struct PAD_Data {

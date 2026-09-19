@@ -91,37 +91,48 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 PAD_Animation& currentAnimation = m_padData->animations[m_selectedAnimationIndex];
                 PAD_AnimationTypeMask currentAnimationType = currentAnimation.type;
 
-                ImVec2 startPos = ImGui::GetCursorScreenPos();
                 const auto& [anim, shadow] = m_animationTextures[currentAnimationType];
+                ImVec2 startPosAnim = ImGui::GetCursorScreenPos();
                 ImGui::ImageWithBg((ImTextureID)anim.get(), ImVec2(anim->w, anim->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
+
+                ImVec2 startPosShadow = ImGui::GetCursorScreenPos();
                 ImGui::ImageWithBg((ImTextureID)shadow.get(), ImVec2(shadow->w, shadow->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
 
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
 
                 // For Animation
-                for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
-                    ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.frameWidth * frame, startPos.y);
-                    ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.frameWidth, chunkTopLeft.y + currentAnimation.frameHeight);
-                    drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
+                for (int row = 0; row < currentAnimation.rowCount; ++row) {
+                    for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
+                        ImVec2 chunkTopLeft = ImVec2(startPosAnim.x + currentAnimation.frameWidth * frame, startPosAnim.y + currentAnimation.frameHeight * row);
+                        ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.frameWidth, chunkTopLeft.y + currentAnimation.frameHeight);
+                        drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
 
-                    drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+                        drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+
+                        const auto& cropRow = currentAnimation.crops[row];
+                        const auto& cropFrame = cropRow[frame];
+
+                        ImVec2 cropChuckTopLeft = ImVec2(chunkTopLeft.x + cropFrame.x, chunkTopLeft.y + cropFrame.y);
+                        ImVec2 cropChuckBottomRight = ImVec2(cropChuckTopLeft.x + cropFrame.width, cropChuckTopLeft.y + cropFrame.height);
+                        drawList->AddRect(cropChuckTopLeft, cropChuckBottomRight, IM_COL32(0, 220, 0, 255));
+                    }
                 }
 
                 // // For Shadow
-                // for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
-                //     ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.width * frame, startPos.y);
-                //     ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.width, chunkTopLeft.y + currentAnimation.height);
-                //     drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
+                for (int row = 0; row < currentAnimation.shadowRowCount; ++row) {
+                    for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
+                        ImVec2 chunkTopLeft = ImVec2(startPosShadow.x + currentAnimation.shadowFrame.width * frame, startPosShadow.y + currentAnimation.shadowFrame.height * row);
+                        ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.shadowFrame.width, chunkTopLeft.y + currentAnimation.shadowFrame.height);
+                        drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
 
-                //     drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
-                // }
+                        drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.shadowFrame.anchorX, chunkTopLeft.y + currentAnimation.shadowFrame.anchorY}, 2, IM_COL32(228, 0, 0, 255));
+                    }
+                }
 
+                ImGui::Text("frame w: %d, h: %d", currentAnimation.frameWidth, currentAnimation.frameHeight);
                 ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
 
-                int i = 0;
-                for (auto [x, y] : currentAnimation.offsets) {
-                    ImGui::Text("[i: %d] x:%u, y:%u", i++, x, y);
-                }
+                ImGui::Text("shadowFrame w: %d, h: %d", currentAnimation.shadowFrame.width, currentAnimation.shadowFrame.height);
 
                 ImGui::EndChild();
 
