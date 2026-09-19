@@ -100,8 +100,8 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                 // For Animation
                 for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
-                    ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.width * frame, startPos.y);
-                    ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.width, chunkTopLeft.y + currentAnimation.height);
+                    ImVec2 chunkTopLeft = ImVec2(startPos.x + currentAnimation.frameWidth * frame, startPos.y);
+                    ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.frameWidth, chunkTopLeft.y + currentAnimation.frameHeight);
                     drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
 
                     drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
@@ -117,7 +117,6 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 // }
 
                 ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
-                ImGui::Text("p11: %d", currentAnimation.p11);
 
                 int i = 0;
                 for (auto [x, y] : currentAnimation.offsets) {

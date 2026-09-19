@@ -25,21 +25,19 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
     }
 
     std::optional<PAD_Data> result = PAD_Data();
-    uint32_t animationSize = readUInt32(fileData, offset);
-    result->animationMasks = readUInt32(fileData, offset);
+    uint32_t dataSize = readUInt32(fileData, offset);
+    uint32_t animationMasks = readUInt32(fileData, offset);
 
-    assert(offset + animationSize <= fileData.size());
-    while (offset < animationSize)
+    assert(offset + dataSize <= fileData.size());
+    while (offset < dataSize)
     {
-        LogFmt("offset: {}", offset);
-
         uint32_t animationType = readUInt32(fileData, offset);
         bool isValidMask = std::ranges::any_of(PAD_Data::typeMasks, [animationType](uint32_t x) { return x == animationType; });
         if (!isValidMask) {
             LogFmt("Invalid Mask: {}", animationType);
             break;
         }
-        bool isCorrectMask = (result->animationMasks & animationType) != 0;
+        bool isCorrectMask = (animationMasks & animationType) != 0;
         if (!isCorrectMask) {
             LogFmt("Incorrect Mask: {}", animationType);
             break;
@@ -52,21 +50,19 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
 
         PAD_Animation animation;
         animation.type = static_cast<PAD_AnimationTypeMask>(animationType);
-        animation.size = readInt32(fileData, offset);
-        LogFmt("animation.size: {}", animation.size);
+        int32_t animationSize = readInt32(fileData, offset);
 
         size_t animationOffset = 4;
         animation.delay = readInt32(fileData, offset);
         animation.framesPerRow = readInt32(fileData, offset);
-        animation.width = readInt32(fileData, offset);
-        animation.height = readInt32(fileData, offset);
+        animation.frameWidth = readInt32(fileData, offset);
+        animation.frameHeight = readInt32(fileData, offset);
         animation.anchorX = readInt32(fileData, offset);
         animation.anchorY = readInt32(fileData, offset);
         animation.movementX = readFloat(fileData, offset);
         animation.movementY = readFloat(fileData, offset);
-        animation.p11 = readInt32(fileData, offset);
-        animationOffset += 9 * 4;
-        while (animationOffset < animation.size) {
+        animationOffset += 8 * 4;
+        while (animationOffset < animationSize) {
             uint16_t lVal = readInt16(fileData, offset);
             uint16_t rVal = readInt16(fileData, offset);
             animation.offsets.push_back({lVal, rVal});
@@ -75,16 +71,7 @@ std::optional<PAD_Data> PAD_Parser::parse(std::string_view path, std::string* er
         result->animations.push_back(std::move(animation));
     }
 
-    // Как будто ничего полезного
-    offset = 12 + animationSize;
-    if (offset < fileData.size()) {
-        result->endSize = readInt32(fileData, offset);
-    }
-
-    if (result->endSize > 0) {
-        result->endData.assign(fileData.begin() + 12 + animationSize + 4,
-                               fileData.begin() + 12 + animationSize + 4 + result->endSize);
-    }
+    // TODO: Разобраться что за данные в конце файла
 
     return result;
 }
