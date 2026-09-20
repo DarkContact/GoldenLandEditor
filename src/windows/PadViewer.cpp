@@ -90,14 +90,17 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 }
 
                 PAD_Animation& currentAnimation = m_padData->animations[m_selectedAnimationIndex];
-                PAD_AnimationTypeMask currentAnimationType = currentAnimation.type;
+                PAD_AnimationTypeMask currentAnimationType = currentAnimation.type; 
 
-                const auto& [anim, shadow] = m_animationTextures[currentAnimationType];
-                ImVec2 startPosAnim = ImGui::GetCursorScreenPos();
-                ImGui::ImageWithBg((ImTextureID)anim.get(), ImVec2(anim->w, anim->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
+                auto& [personTexture, shadowTexture] = m_animationTextures[currentAnimationType];
+                m_personAnimation.setAnimation(&personTexture, &shadowTexture, &currentAnimation);
+                m_personAnimation.update(m_animationCurrentTime, m_animationDirectionIndex);
+
+                /*ImVec2 startPosAnim = ImGui::GetCursorScreenPos();
+                ImGui::ImageWithBg((ImTextureID)personTexture.get(), ImVec2(personTexture->w, personTexture->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
 
                 ImVec2 startPosShadow = ImGui::GetCursorScreenPos();
-                ImGui::ImageWithBg((ImTextureID)shadow.get(), ImVec2(shadow->w, shadow->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
+                ImGui::ImageWithBg((ImTextureID)shadowTexture.get(), ImVec2(shadowTexture->w, shadowTexture->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
 
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -138,7 +141,23 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 }
 
                 ImGui::Text("delay: %d", currentAnimation.delay);
-                ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
+                ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);*/
+
+                ImVec2 startPersonAnimation = ImGui::GetCursorScreenPos();
+                ImGui::ImageWithBg((ImTextureID)personTexture.get(),
+                                   ImVec2(currentAnimation.frameWidth, currentAnimation.frameHeight),
+                                   m_personAnimation.personUvTopLeft(),
+                                   m_personAnimation.personUvBottomRight(),
+                                   m_bgColor);
+
+                ImGui::SetCursorScreenPos({startPersonAnimation.x + m_personAnimation.shadowOffset().x,
+                                          startPersonAnimation.y + m_personAnimation.shadowOffset().y});
+
+                // TODO: Добавить полупрозрачность тени
+                ImGui::ImageWithBg((ImTextureID)shadowTexture.get(),
+                                   ImVec2(currentAnimation.shadowFrame.width, currentAnimation.shadowFrame.height),
+                                   m_personAnimation.shadowUvTopLeft(),
+                                   m_personAnimation.shadowUvBottomRight());
 
                 ImGui::EndChild();
 

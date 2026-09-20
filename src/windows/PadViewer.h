@@ -5,6 +5,7 @@
 
 #include "imgui.h"
 #include "parsers/PAD_Parser.h"
+#include "graphics/PersonAnimation.h"
 
 class Texture;
 struct SDL_Renderer;
@@ -28,6 +29,7 @@ private:
 
     bool m_playAnimation = true;
     int m_animationCurrentTime = 0;
+    PersonAnimation m_personAnimation;
 
     std::unordered_map<PAD_AnimationTypeMask, std::pair<Texture, Texture>> m_animationTextures;
 };

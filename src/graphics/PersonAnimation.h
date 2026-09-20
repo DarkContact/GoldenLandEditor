@@ -13,9 +13,6 @@ public:
         m_shadowTexture = shadowTexture;
         m_animation = animation;
 
-        m_shadowOffset.x = m_animation->anchorX - m_animation->shadowFrame.anchorX;
-        m_shadowOffset.y = m_animation->anchorY - m_animation->shadowFrame.anchorY;
-
         m_currentFrame = 0;
         m_currentTimeMs = 0;
 
@@ -23,8 +20,6 @@ public:
         calculateUvPoints();
     }
 
-    Texture* personTexture() const { return m_personTexture; }
-    Texture* shadowTexture() const { return m_shadowTexture; }
     ImVec2 shadowOffset() const { return m_shadowOffset; }
 
     ImVec2 personUvTopLeft() const { return m_personUvTopLeft; }
@@ -39,10 +34,17 @@ public:
         assert(m_animation);
 
         m_currentTimeMs = currentTimeMs;
-        m_currentFrame = m_currentTimeMs / m_animation->delay;
+        uint32_t currentFrame = m_currentTimeMs / m_animation->delay;
 
+        bool isChangeFrame = m_currentFrame != currentFrame;
+        bool isChangeDirection = m_directionIndex != directionIndex;
+
+        m_currentFrame = currentFrame;
         m_directionIndex = directionIndex;
-        calculateUvPoints();
+
+        if (isChangeFrame || isChangeDirection) {
+            calculateUvPoints();
+        }
     }
 
 private:
@@ -67,25 +69,32 @@ private:
         uint32_t shadowX = m_animation->shadowFrame.width * m_currentFrame;
         uint32_t shadowY = m_animation->shadowFrame.height * rowShadow;
 
-        m_personUvTopLeft.x = personX / m_personTexture->get()->w;
-        m_personUvTopLeft.y = personY / m_personTexture->get()->h;
+        m_personUvTopLeft.x = personX / static_cast<float>(m_personTexture->get()->w);
+        m_personUvTopLeft.y = personY / static_cast<float>(m_personTexture->get()->h);
 
-        m_personUvBottomRight.x = (personX + m_animation->frameWidth) / m_personTexture->get()->w;
-        m_personUvBottomRight.y = (personY + m_animation->frameHeight) / m_personTexture->get()->h;
+        m_personUvBottomRight.x = (personX + m_animation->frameWidth) / static_cast<float>(m_personTexture->get()->w);
+        m_personUvBottomRight.y = (personY + m_animation->frameHeight) / static_cast<float>(m_personTexture->get()->h);
 
         if (isPersonMirrorX) {
             std::swap(m_personUvTopLeft.x, m_personUvBottomRight.x);
         }
 
-        m_shadowUvTopLeft.x = shadowX / m_shadowTexture->get()->w;
-        m_shadowUvTopLeft.y = shadowY / m_shadowTexture->get()->h;
+        m_shadowUvTopLeft.x = shadowX / static_cast<float>(m_shadowTexture->get()->w);
+        m_shadowUvTopLeft.y = shadowY / static_cast<float>(m_shadowTexture->get()->h);
 
-        m_shadowUvBottomRight.x = (shadowX + m_animation->shadowFrame.width) / m_shadowTexture->get()->w;
-        m_shadowUvBottomRight.y = (shadowY + m_animation->shadowFrame.height) / m_shadowTexture->get()->h;
+        m_shadowUvBottomRight.x = (shadowX + m_animation->shadowFrame.width) / static_cast<float>(m_shadowTexture->get()->w);
+        m_shadowUvBottomRight.y = (shadowY + m_animation->shadowFrame.height) / static_cast<float>(m_shadowTexture->get()->h);
+
+        if (isPersonMirrorX) {
+            m_shadowOffset.x = m_animation->anchorX - m_animation->shadowFrame.anchorX; // TODO: Исправить положение тени при отражении
+        } else {
+            m_shadowOffset.x = m_animation->anchorX - m_animation->shadowFrame.anchorX;
+        }
+        m_shadowOffset.y = m_animation->anchorY - m_animation->shadowFrame.anchorY;
     }
 
-    Texture* m_personTexture;
-    Texture* m_shadowTexture;
+    Texture* m_personTexture = nullptr;
+    Texture* m_shadowTexture = nullptr;
     PAD_Animation* m_animation = nullptr;
     uint32_t m_directionIndex = static_cast<uint32_t>(PAD_AnimationDirection::up);
 
