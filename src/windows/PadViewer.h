@@ -24,6 +24,7 @@ private:
     std::optional<PAD_Data> m_padData;
     int m_selectedAnimationIndex = -1;
     ImVec4 m_bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+    uint32_t m_animationDirectionIndex = -1;
 
     std::unordered_map<PAD_AnimationTypeMask, std::pair<Texture, Texture>> m_animationTextures;
 };

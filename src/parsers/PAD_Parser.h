@@ -74,6 +74,42 @@ static std::string_view animationTypeMaskToString(PAD_AnimationTypeMask type) {
     return "unknown";
 }
 
+static std::string_view animationDirectionToString(PAD_AnimationDirection type) {
+    switch (type) {
+        case PAD_AnimationDirection::up: return "up";
+        case PAD_AnimationDirection::up_left: return "up_left";
+        case PAD_AnimationDirection::left: return "left";
+        case PAD_AnimationDirection::down_left: return "down_left";
+        case PAD_AnimationDirection::down: return "down";
+        case PAD_AnimationDirection::down_right: return "down_right";
+        case PAD_AnimationDirection::right: return "right";
+        case PAD_AnimationDirection::up_right: return "up_right";
+    }
+    return "unknown";
+}
+
+static std::string_view animationDirectionGoToString(PAD_AnimationDirectionGo type) {
+    switch (type) {
+        case PAD_AnimationDirectionGo::up: return animationDirectionToString(PAD_AnimationDirection::up);
+        case PAD_AnimationDirectionGo::up_left: return animationDirectionToString(PAD_AnimationDirection::up_left);
+        case PAD_AnimationDirectionGo::left: return animationDirectionToString(PAD_AnimationDirection::left);
+        case PAD_AnimationDirectionGo::down_left: return animationDirectionToString(PAD_AnimationDirection::down_left);
+        case PAD_AnimationDirectionGo::down: return animationDirectionToString(PAD_AnimationDirection::down);
+        case PAD_AnimationDirectionGo::down_right: return animationDirectionToString(PAD_AnimationDirection::down_right);
+        case PAD_AnimationDirectionGo::right: return animationDirectionToString(PAD_AnimationDirection::right);
+        case PAD_AnimationDirectionGo::up_right: return animationDirectionToString(PAD_AnimationDirection::up_right);
+        case PAD_AnimationDirectionGo::up_up_left: return "up_up_left";
+        case PAD_AnimationDirectionGo::left_up_left: return "left_up_left";
+        case PAD_AnimationDirectionGo::left_down_left: return "left_down_left";
+        case PAD_AnimationDirectionGo::down_down_left: return "down_down_left";
+        case PAD_AnimationDirectionGo::down_down_right: return "down_down_right";
+        case PAD_AnimationDirectionGo::right_down_right: return "right_down_right";
+        case PAD_AnimationDirectionGo::right_up_right: return "right_up_right";
+        case PAD_AnimationDirectionGo::up_up_right: return "up_up_right";
+    }
+    return "unknown";
+}
+
 struct PAD_CropsFrame {
     int16_t x;
     int16_t y;
@@ -124,6 +160,68 @@ struct PAD_Data {
         PAD_AnimationTypeMask::hits1,
         PAD_AnimationTypeMask::hits2,
         PAD_AnimationTypeMask::hits3
+    };
+
+    static constexpr int kAnimationDirectionCount = 8;
+    static constexpr std::array<PAD_AnimationDirection, kAnimationDirectionCount> animationDirectionsPerson = {
+        PAD_AnimationDirection::up,
+        PAD_AnimationDirection::up_left,
+        PAD_AnimationDirection::left,
+        PAD_AnimationDirection::down_left,
+        PAD_AnimationDirection::down,
+        PAD_AnimationDirection::down_left, // mirror
+        PAD_AnimationDirection::left,      // mirror
+        PAD_AnimationDirection::up_left    // mirror
+    };
+
+    static constexpr std::array<PAD_AnimationDirection, kAnimationDirectionCount> animationDirectionsShadow = {
+        PAD_AnimationDirection::up,
+        PAD_AnimationDirection::up_left,
+        PAD_AnimationDirection::left,
+        PAD_AnimationDirection::down_left,
+        PAD_AnimationDirection::down,
+        PAD_AnimationDirection::down_right,
+        PAD_AnimationDirection::right,
+        PAD_AnimationDirection::up_right
+    };
+
+    static constexpr int kAnimationDirectionGoCount = 16;
+    static constexpr std::array<PAD_AnimationDirectionGo, kAnimationDirectionGoCount> animationDirectionsGoPerson = {
+        PAD_AnimationDirectionGo::up,
+        PAD_AnimationDirectionGo::up_up_left,
+        PAD_AnimationDirectionGo::up_left,
+        PAD_AnimationDirectionGo::left_up_left,
+        PAD_AnimationDirectionGo::left,
+        PAD_AnimationDirectionGo::left_down_left,
+        PAD_AnimationDirectionGo::down_left,
+        PAD_AnimationDirectionGo::down_down_left,
+        PAD_AnimationDirectionGo::down,
+        PAD_AnimationDirectionGo::down_down_left, // mirror
+        PAD_AnimationDirectionGo::down_left,      // mirror
+        PAD_AnimationDirectionGo::left_down_left, // mirror
+        PAD_AnimationDirectionGo::left,           // mirror
+        PAD_AnimationDirectionGo::left_up_left,   // mirror
+        PAD_AnimationDirectionGo::up_left,        // mirror
+        PAD_AnimationDirectionGo::up_up_left      // mirror
+    };
+
+    static constexpr std::array<PAD_AnimationDirectionGo, kAnimationDirectionGoCount> animationDirectionsGoShadow = {
+        PAD_AnimationDirectionGo::up,
+        PAD_AnimationDirectionGo::up_up_left,
+        PAD_AnimationDirectionGo::up_left,
+        PAD_AnimationDirectionGo::left_up_left,
+        PAD_AnimationDirectionGo::left,
+        PAD_AnimationDirectionGo::left_down_left,
+        PAD_AnimationDirectionGo::down_left,
+        PAD_AnimationDirectionGo::down_down_left,
+        PAD_AnimationDirectionGo::down,
+        PAD_AnimationDirectionGo::down_down_right,
+        PAD_AnimationDirectionGo::down_right,
+        PAD_AnimationDirectionGo::right_down_right,
+        PAD_AnimationDirectionGo::right,
+        PAD_AnimationDirectionGo::right_up_right,
+        PAD_AnimationDirectionGo::up_right,
+        PAD_AnimationDirectionGo::up_up_right
     };
 };
 

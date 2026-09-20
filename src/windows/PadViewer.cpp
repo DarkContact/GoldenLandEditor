@@ -70,6 +70,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                         needResetScroll = true;
                         m_selectedAnimationIndex = 0;
+                        m_animationDirectionIndex = 0;
                     }
                 }
                 ImGui::EndChild();
@@ -151,7 +152,43 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         std::string_view animationName =  animationTypeMaskToString(m_padData->animations[i].type);
                         if (ImGui::Selectable(animationName.data(), isSelected)) {
                             m_selectedAnimationIndex = i;
-                            // TODO: Логика обработки анимации
+
+                            // Логика обработки анимации
+                            m_animationDirectionIndex = 0;
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                bool isGoType = currentAnimationType == PAD_AnimationTypeMask::tb_go
+                                || currentAnimationType == PAD_AnimationTypeMask::rt_go;
+
+                std::string_view currentDirectionName;
+                if (isGoType) {
+                    currentDirectionName = animationDirectionGoToString(PAD_Data::animationDirectionsGoShadow[m_animationDirectionIndex]);
+                } else {
+                    currentDirectionName = animationDirectionToString(PAD_Data::animationDirectionsShadow[m_animationDirectionIndex]);
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::BeginCombo("##Directions", currentDirectionName.data(), ImGuiComboFlags_WidthFitPreview)) {
+                    for (int i = 0; i < currentAnimation.shadowRowCount; ++i) {
+                        bool isSelected = (i == m_animationDirectionIndex);
+
+                        std::string_view directionName;
+                        if (isGoType) {
+                            directionName = animationDirectionGoToString(PAD_Data::animationDirectionsGoShadow[i]);
+                        } else {
+                            directionName = animationDirectionToString(PAD_Data::animationDirectionsShadow[i]);
+                        }
+                        if (ImGui::Selectable(directionName.data(), isSelected)) {
+                            m_animationDirectionIndex = i;
+
+                            // Логика обработки направления
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -177,6 +214,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         m_padData = {};
         m_animationTextures.clear();
         m_selectedAnimationIndex = -1;
+        m_animationDirectionIndex = -1;
     }
 }
 
