@@ -86,7 +86,8 @@ private:
         m_shadowUvBottomRight.y = (shadowY + m_animation->shadowFrame.height) / static_cast<float>(m_shadowTexture->get()->h);
 
         if (isPersonMirrorX) {
-            m_shadowOffset.x = m_animation->anchorX - m_animation->shadowFrame.anchorX; // TODO: Исправить положение тени при отражении
+            int32_t mirrorAnchorX = m_animation->frameWidth - m_animation->anchorX - 1;
+            m_shadowOffset.x = mirrorAnchorX - m_animation->shadowFrame.anchorX;
         } else {
             m_shadowOffset.x = m_animation->anchorX - m_animation->shadowFrame.anchorX;
         }

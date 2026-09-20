@@ -96,53 +96,6 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 m_personAnimation.setAnimation(&personTexture, &shadowTexture, &currentAnimation);
                 m_personAnimation.update(m_animationCurrentTime, m_animationDirectionIndex);
 
-                /*ImVec2 startPosAnim = ImGui::GetCursorScreenPos();
-                ImGui::ImageWithBg((ImTextureID)personTexture.get(), ImVec2(personTexture->w, personTexture->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
-
-                ImVec2 startPosShadow = ImGui::GetCursorScreenPos();
-                ImGui::ImageWithBg((ImTextureID)shadowTexture.get(), ImVec2(shadowTexture->w, shadowTexture->h), ImVec2(0, 0), ImVec2(1, 1), m_bgColor);
-
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-                // For Animation
-                for (int row = 0; row < currentAnimation.rowCount; ++row) {
-                    for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
-                        ImVec2 chunkTopLeft = ImVec2(startPosAnim.x + currentAnimation.frameWidth * frame, startPosAnim.y + currentAnimation.frameHeight * row);
-                        ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.frameWidth, chunkTopLeft.y + currentAnimation.frameHeight);
-                        drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
-
-                        drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.anchorX, chunkTopLeft.y + currentAnimation.anchorY}, 2, IM_COL32(228, 0, 0, 255));
-
-                        const auto& cropRow = currentAnimation.crops[row];
-                        const auto& cropFrame = cropRow[frame];
-
-                        ImVec2 cropChuckTopLeft = ImVec2(chunkTopLeft.x + cropFrame.x, chunkTopLeft.y + cropFrame.y);
-                        ImVec2 cropChuckBottomRight = ImVec2(cropChuckTopLeft.x + cropFrame.width, cropChuckTopLeft.y + cropFrame.height);
-                        drawList->AddRect(cropChuckTopLeft, cropChuckBottomRight, IM_COL32(0, 220, 0, 255));
-                    }
-                }
-
-                // For Shadow
-                for (int row = 0; row < currentAnimation.shadowRowCount; ++row) {
-                    for (int frame = 0; frame < currentAnimation.framesPerRow; ++frame) {
-                        ImVec2 chunkTopLeft = ImVec2(startPosShadow.x + currentAnimation.shadowFrame.width * frame, startPosShadow.y + currentAnimation.shadowFrame.height * row);
-                        ImVec2 chunkBottomRight = ImVec2(chunkTopLeft.x + currentAnimation.shadowFrame.width, chunkTopLeft.y + currentAnimation.shadowFrame.height);
-                        drawList->AddRect(chunkTopLeft, chunkBottomRight, IM_COL32(228, 180, 0, 255));
-
-                        drawList->AddCircleFilled({chunkTopLeft.x + currentAnimation.shadowFrame.anchorX, chunkTopLeft.y + currentAnimation.shadowFrame.anchorY}, 2, IM_COL32(228, 0, 0, 255));
-
-                        const auto& cropRow = currentAnimation.shadowCrops[row];
-                        const auto& cropFrame = cropRow[frame];
-
-                        ImVec2 cropChuckTopLeft = ImVec2(chunkTopLeft.x + cropFrame.x, chunkTopLeft.y + cropFrame.y);
-                        ImVec2 cropChuckBottomRight = ImVec2(cropChuckTopLeft.x + cropFrame.width, cropChuckTopLeft.y + cropFrame.height);
-                        drawList->AddRect(cropChuckTopLeft, cropChuckBottomRight, IM_COL32(0, 220, 0, 255));
-                    }
-                }
-
-                ImGui::Text("delay: %d", currentAnimation.delay);
-                ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);*/
-
                 ImVec2 startPersonAnimation = ImGui::GetCursorScreenPos();
                 ImGui::ImageWithBg((ImTextureID)personTexture.get(),
                                    ImVec2(currentAnimation.frameWidth, currentAnimation.frameHeight),
@@ -158,6 +111,8 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                                    ImVec2(currentAnimation.shadowFrame.width, currentAnimation.shadowFrame.height),
                                    m_personAnimation.shadowUvTopLeft(),
                                    m_personAnimation.shadowUvBottomRight());
+
+                ImGui::Text("move x: %f, y: %f", currentAnimation.movementX, currentAnimation.movementY);
 
                 ImGui::EndChild();
 
