@@ -67,7 +67,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                         needResetScroll = true;
                         m_selectedAnimationIndex = 0;
-                        m_animationDirectionIndex = 0;
+                        m_animationDirectionIndex = static_cast<uint32_t>(PAD_AnimationDirection::down);
                     }
                 }
                 ImGui::EndChild();
@@ -127,6 +127,8 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 assert(!m_padData->animations.empty());
                 std::string_view currentAnimationName = animationTypeMaskToString(currentAnimationType);
 
+                bool isAnimationDirectionIndexChange = false;
+                uint32_t animationDirectionIndexChange = m_animationDirectionIndex;
                 if (ImGui::BeginCombo("##Animations", currentAnimationName.data(), ImGuiComboFlags_WidthFitPreview)) {
                     for (int i = 0; i < m_padData->animations.size(); ++i) {
                         bool isSelected = (i == m_selectedAnimationIndex);
@@ -137,9 +139,14 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             int32_t currentCount = m_padData->animations[i].shadowRowCount;
                             m_selectedAnimationIndex = i;
 
-                            // TODO: Не делать сброс направления, а делать пересчёт
+                            // Если несовпало количество строк в анимациях сделаем перерасчёт
                             if (prevCount != currentCount) {
-                                m_animationDirectionIndex = 0;
+                                isAnimationDirectionIndexChange = true;
+                                if (currentCount == PAD_Data::kAnimationGoRowCount) {
+                                    animationDirectionIndexChange *= 2;
+                                } else if (currentCount == PAD_Data::kAnimationRowCount) {
+                                    animationDirectionIndexChange /= 2;
+                                }
                             }
                         }
                         if (isSelected) {
@@ -189,6 +196,10 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                             m_animationCurrentTime = 0;
                         }
                     }
+                }
+
+                if (isAnimationDirectionIndexChange) {
+                    m_animationDirectionIndex = animationDirectionIndexChange;
                 }
 
             ImGui::EndGroup();

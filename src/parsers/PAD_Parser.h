@@ -149,6 +149,9 @@ struct PAD_Data {
                 || type == PAD_AnimationTypeMask::rt_go);
     }
 
+    static constexpr int kAnimationGoRowCount = 16;
+    static constexpr int kAnimationRowCount = 8;
+
     static constexpr int kTypeMasksCount = 14;
     static constexpr std::array<PAD_AnimationTypeMask, kTypeMasksCount> typeMasks = {
         PAD_AnimationTypeMask::rt_stay,
