@@ -129,31 +129,51 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                 bool isAnimationDirectionIndexChange = false;
                 uint32_t animationDirectionIndexChange = m_animationDirectionIndex;
-                if (ImGui::BeginCombo("##Animations", currentAnimationName.data(), ImGuiComboFlags_WidthFitPreview)) {
+
+                int nextSelectedAnimationIndex = m_selectedAnimationIndex;
+                int animsCount = static_cast<int>(m_padData->animations.size());
+
+                ImGui::SetNextItemWidth(80.0f);
+                if (ImGui::BeginCombo("##Animations", currentAnimationName.data())) {
                     for (int i = 0; i < m_padData->animations.size(); ++i) {
                         bool isSelected = (i == m_selectedAnimationIndex);
 
                         std::string_view animationName = animationTypeMaskToString(m_padData->animations[i].type);
                         if (ImGui::Selectable(animationName.data(), isSelected)) {
-                            int32_t prevCount = m_padData->animations[m_selectedAnimationIndex].shadowRowCount;
-                            int32_t currentCount = m_padData->animations[i].shadowRowCount;
-                            m_selectedAnimationIndex = i;
-
-                            // Если несовпало количество строк в анимациях сделаем перерасчёт
-                            if (prevCount != currentCount) {
-                                isAnimationDirectionIndexChange = true;
-                                if (currentCount == PAD_Data::kAnimationGoRowCount) {
-                                    animationDirectionIndexChange *= 2;
-                                } else if (currentCount == PAD_Data::kAnimationRowCount) {
-                                    animationDirectionIndexChange /= 2;
-                                }
-                            }
+                            nextSelectedAnimationIndex = i;
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
                         }
                     }
                     ImGui::EndCombo();
+                }
+                ImGui::SameLine();
+
+                if (ImGui::ArrowButton("##PrevAnim", ImGuiDir_Left)) {
+                    nextSelectedAnimationIndex = (m_selectedAnimationIndex - 1 + animsCount) % animsCount;
+                }
+                ImGui::SameLine();
+
+                if (ImGui::ArrowButton("##NextAnim", ImGuiDir_Right)) {
+                    nextSelectedAnimationIndex = (m_selectedAnimationIndex + 1) % animsCount;
+                }
+
+                // Единая точка обновления индекса и перерасчёта направлений при изменении выбора
+                if (nextSelectedAnimationIndex != m_selectedAnimationIndex) {
+                    int32_t prevCount = m_padData->animations[m_selectedAnimationIndex].shadowRowCount;
+                    int32_t currentCount = m_padData->animations[nextSelectedAnimationIndex].shadowRowCount;
+                    m_selectedAnimationIndex = nextSelectedAnimationIndex;
+
+                    // Если несовпало количество строк в анимациях сделаем перерасчёт
+                    if (prevCount != currentCount) {
+                        isAnimationDirectionIndexChange = true;
+                        if (currentCount == PAD_Data::kAnimationGoRowCount) {
+                            animationDirectionIndexChange *= 2;
+                        } else if (currentCount == PAD_Data::kAnimationRowCount) {
+                            animationDirectionIndexChange /= 2;
+                        }
+                    }
                 }
 
                 bool isGoType = PAD_Data::isGoType(currentAnimationType);
@@ -165,9 +185,10 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     currentDirectionName = animationDirectionToString(PAD_Data::animationDirectionsShadow[m_animationDirectionIndex]);
                 }
 
-                ImGui::SameLine();
+                ImGui::SameLine(0, 30.0f);
 
-                if (ImGui::BeginCombo("##Directions", currentDirectionName.data(), ImGuiComboFlags_WidthFitPreview)) {
+                ImGui::SetNextItemWidth(100.0f);
+                if (ImGui::BeginCombo("##Directions", currentDirectionName.data())) {
                     for (int i = 0; i < currentAnimation.shadowRowCount; ++i) {
                         bool isSelected = (i == m_animationDirectionIndex);
 
@@ -185,6 +206,25 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         }
                     }
                     ImGui::EndCombo();
+                }
+                ImGui::SameLine();
+
+                int dirSize = currentAnimation.shadowRowCount;
+                if (ImGui::Button("CCW")) {
+                    if (dirSize > 0) {
+                        int nextDirection = static_cast<int>(m_animationDirectionIndex);
+                        nextDirection = (nextDirection + 1) % dirSize;
+                        m_animationDirectionIndex = static_cast<uint32_t>(nextDirection);
+                    }
+                }
+                ImGui::SameLine();
+
+                if (ImGui::Button("CW")) {
+                    if (dirSize > 0) {
+                        int nextDirection = static_cast<int>(m_animationDirectionIndex);
+                        nextDirection = (nextDirection - 1 + dirSize) % dirSize;
+                        m_animationDirectionIndex = static_cast<uint32_t>(nextDirection);
+                    }
                 }
 
                 if (m_playAnimation) {
