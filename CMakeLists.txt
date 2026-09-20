@@ -121,6 +121,7 @@ add_executable(GoldenLandEditor WIN32
     src/windows/PadViewer.cpp
     src/parsers/PAD_Parser.h
     src/parsers/PAD_Parser.cpp
+    src/graphics/PersonAnimation.h
 )
 
 target_sources(GoldenLandEditor PRIVATE
