@@ -158,6 +158,9 @@ bool Application::hasActiveAnimations() const {
     if (m_mdfViewer.isAnimating()) {
         return true;
     }
+    if (m_padViewer.isAnimating()) {
+        return true;
+    }
     for (const auto& level : m_rootDirContext.levels) {
         if (m_levelViewer.isAnimating(level)) {
             return true;

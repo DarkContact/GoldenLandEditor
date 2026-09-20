@@ -83,7 +83,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         if (!padFiles.empty() && m_padData) {
             ImGui::BeginGroup();
 
-                ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() ), 0, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() * 2), 0, ImGuiWindowFlags_HorizontalScrollbar);
                 if (needResetScroll) {
                     ImGui::SetScrollX(0.0f);
                     ImGui::SetScrollY(0.0f);
@@ -142,6 +142,17 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 
                 ImGui::EndChild();
 
+                // Нижнее меню
+                int animationMaxTime = currentAnimation.delay * currentAnimation.framesPerRow;
+
+                ImGui::Checkbox("Play", &m_playAnimation);
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(400);
+
+                ImGui::BeginDisabled(m_playAnimation);
+                ImGui::SliderInt("Time", &m_animationCurrentTime, 0, animationMaxTime - 1, "%d ms", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::EndDisabled();
+
                 assert(!m_padData->animations.empty());
                 std::string_view currentAnimationName = animationTypeMaskToString(currentAnimationType);
 
@@ -197,6 +208,17 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     ImGui::EndCombo();
                 }
 
+                if (m_playAnimation) {
+                    m_animationCurrentTime += ImGui::GetIO().DeltaTime * 1000;
+                    if (m_animationCurrentTime >= animationMaxTime) {
+                        m_animationCurrentTime -= animationMaxTime;
+
+                        if (m_animationCurrentTime < 0 || m_animationCurrentTime >= animationMaxTime) {
+                            m_animationCurrentTime = 0;
+                        }
+                    }
+                }
+
             ImGui::EndGroup();
         } else if (m_selectedIndex >= 0) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "%s", m_error.c_str());
@@ -215,9 +237,10 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         m_animationTextures.clear();
         m_selectedAnimationIndex = -1;
         m_animationDirectionIndex = -1;
+        m_animationCurrentTime = 0;
     }
 }
 
 bool PadViewer::isAnimating() const {
-    return true;
+    return m_playAnimation && m_padData;
 }

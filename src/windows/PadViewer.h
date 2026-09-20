@@ -26,5 +26,8 @@ private:
     ImVec4 m_bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
     uint32_t m_animationDirectionIndex = -1;
 
+    bool m_playAnimation = true;
+    int m_animationCurrentTime = 0;
+
     std::unordered_map<PAD_AnimationTypeMask, std::pair<Texture, Texture>> m_animationTextures;
 };
