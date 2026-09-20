@@ -1,6 +1,5 @@
 #include "PadViewer.h"
 
-#include <algorithm>
 #include <cassert>
 #include <format>
 
@@ -10,14 +9,12 @@
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
-#include "utils/IoUtils.h"
 
 PadViewer::PadViewer() {}
 
 void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& padFiles)
 {
     Tracy_ZoneScoped;
-    using namespace IoUtils;
 
     if (showWindow && !padFiles.empty()) {
         m_onceWhenClose = false;
@@ -134,12 +131,16 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     for (int i = 0; i < m_padData->animations.size(); ++i) {
                         bool isSelected = (i == m_selectedAnimationIndex);
 
-                        std::string_view animationName =  animationTypeMaskToString(m_padData->animations[i].type);
+                        std::string_view animationName = animationTypeMaskToString(m_padData->animations[i].type);
                         if (ImGui::Selectable(animationName.data(), isSelected)) {
+                            int32_t prevCount = m_padData->animations[m_selectedAnimationIndex].shadowRowCount;
+                            int32_t currentCount = m_padData->animations[i].shadowRowCount;
                             m_selectedAnimationIndex = i;
 
-                            // Логика обработки анимации
-                            m_animationDirectionIndex = 0;
+                            // TODO: Не делать сброс направления, а делать пересчёт
+                            if (prevCount != currentCount) {
+                                m_animationDirectionIndex = 0;
+                            }
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -148,8 +149,7 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     ImGui::EndCombo();
                 }
 
-                bool isGoType = currentAnimationType == PAD_AnimationTypeMask::tb_go
-                                || currentAnimationType == PAD_AnimationTypeMask::rt_go;
+                bool isGoType = PAD_Data::isGoType(currentAnimationType);
 
                 std::string_view currentDirectionName;
                 if (isGoType) {
@@ -172,8 +172,6 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                         }
                         if (ImGui::Selectable(directionName.data(), isSelected)) {
                             m_animationDirectionIndex = i;
-
-                            // Логика обработки направления
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();

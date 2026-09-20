@@ -49,8 +49,7 @@ public:
 
 private:
     void calculateUvPoints() {
-        bool isGoType = m_animation->type == PAD_AnimationTypeMask::tb_go
-                        || m_animation->type == PAD_AnimationTypeMask::rt_go;
+        bool isGoType = PAD_Data::isGoType(m_animation->type);
 
         uint32_t rowPerson;
         uint32_t rowShadow;

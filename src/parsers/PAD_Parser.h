@@ -144,6 +144,11 @@ struct PAD_Animation {
 struct PAD_Data {
     std::vector<PAD_Animation> animations;
 
+    static bool isGoType(PAD_AnimationTypeMask type) {
+        return (type == PAD_AnimationTypeMask::tb_go
+                || type == PAD_AnimationTypeMask::rt_go);
+    }
+
     static constexpr int kTypeMasksCount = 14;
     static constexpr std::array<PAD_AnimationTypeMask, kTypeMasksCount> typeMasks = {
         PAD_AnimationTypeMask::rt_stay,
