@@ -26,6 +26,7 @@ private:
     int m_selectedAnimationIndex = -1;
     ImVec4 m_bgColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
     uint32_t m_animationDirectionIndex = -1;
+    bool m_windowIsShow = true;
 
     bool m_playAnimation = true;
     int m_animationCurrentTime = 0;

@@ -69,7 +69,7 @@ std::string MdfViewer::mdfInfoString(const MDF_Data& data) {
 MdfViewer::MdfViewer() {}
 
 bool MdfViewer::isAnimating() const {
-    return m_playAnimation && !m_animationLayers.empty();
+    return m_windowIsShow && m_playAnimation && !m_animationLayers.empty();
 }
 
 void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& mdfFiles)
@@ -88,7 +88,11 @@ void MdfViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         }
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
-        ImGui::Begin("MDF Viewer", &showWindow);
+        m_windowIsShow = ImGui::Begin("MDF Viewer", &showWindow);
+        if (!m_windowIsShow) {
+            ImGui::End();
+            return;
+        }
 
         // Left
         {

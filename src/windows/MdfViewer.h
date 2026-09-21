@@ -93,4 +93,5 @@ private:
     ImGuiTextFilter m_textFilter;
     bool m_onceWhenOpen = false;
     bool m_onceWhenClose = true;
+    bool m_windowIsShow = true;
 };

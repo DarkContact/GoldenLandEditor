@@ -10,6 +10,11 @@
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
+// TODO: Отзеркаленые текстуры сильно перескакивают (зеркалить нужно относительно якоря, а не центра)
+// TODO: Понимать размер всего контейнера с тенью, чтобы можно было отрисовать фон и была видна тень
+// TODO: Учитывать crops
+// TODO: Добавить отображение фонового рисунка
+
 PadViewer::PadViewer() {}
 
 void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& padFiles)
@@ -21,7 +26,11 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         bool needResetScroll = false;
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
-        ImGui::Begin("PAD Viewer", &showWindow);
+        m_windowIsShow = ImGui::Begin("PAD Viewer", &showWindow);
+        if (!m_windowIsShow) {
+            ImGui::End();
+            return;
+        }
 
         // Left
         {
@@ -265,5 +274,5 @@ void PadViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
 }
 
 bool PadViewer::isAnimating() const {
-    return m_playAnimation && m_padData;
+    return m_windowIsShow && m_playAnimation && m_padData;
 }
