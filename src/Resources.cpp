@@ -96,6 +96,12 @@ std::vector<std::string> Resources::csFiles() const
     return filesWithExtension({Scripts_Dialogs}, ".cs");
 }
 
+std::vector<std::string> Resources::padFiles() const
+{
+    Tracy_ZoneScoped;
+    return filesWithExtension({Persons}, ".pad");
+}
+
 StringHashTable<std::string> Resources::levelHumanNameDictionary() const
 {
     Tracy_ZoneScoped;

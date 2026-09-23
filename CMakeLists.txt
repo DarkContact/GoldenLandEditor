@@ -117,6 +117,11 @@ add_executable(GoldenLandEditor WIN32
     src/utils/RenderUtils.cpp
     src/Cache.h
     src/utils/Formatters.h
+    src/windows/PadViewer.h
+    src/windows/PadViewer.cpp
+    src/parsers/PAD_Parser.h
+    src/parsers/PAD_Parser.cpp
+    src/graphics/PersonAnimation.h
 )
 
 target_sources(GoldenLandEditor PRIVATE
@@ -184,7 +189,7 @@ if(GOLDENLAND_ENABLE_TRACY)
     FetchContent_Declare(
         tracy
         GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-        GIT_TAG 05cceee0df3b8d7c6fa87e9638af311dbabc63cb # v13.1
+        GIT_TAG 099df3de3dc37eca4712c06b8320fb9c53596edd # v14.0
         GIT_SHALLOW TRUE
     )
     FetchContent_MakeAvailable(tracy)

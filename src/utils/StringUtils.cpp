@@ -170,6 +170,13 @@ std::string_view StringUtils::filename(std::string_view path) noexcept
                                            : path.substr(pos + 1);
 }
 
+std::string_view StringUtils::parentPath(std::string_view path) noexcept
+{
+    auto pos = path.find_last_of("/\\");
+    return (pos == std::string_view::npos) ? ""
+                                           : path.substr(0, pos);
+}
+
 std::u8string_view StringUtils::toUtf8View(std::string_view input) noexcept {
     return {(char8_t*)input.data(), input.size()};
 }

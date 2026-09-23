@@ -25,6 +25,7 @@
   #include "utils/FileUtils.h"
   #include "utils/StringUtils.h"
   #include "utils/DialogTests.h"
+  #include "parsers/PAD_Parser.h"
 #endif
 
 Application::Application() {
@@ -157,6 +158,9 @@ bool Application::hasActiveAnimations() const {
     if (m_mdfViewer.isAnimating()) {
         return true;
     }
+    if (m_padViewer.isAnimating()) {
+        return true;
+    }
     for (const auto& level : m_rootDirContext.levels) {
         if (m_levelViewer.isAnimating(level)) {
             return true;
@@ -245,6 +249,9 @@ void Application::mainLoop() {
                 if (ImGui::MenuItem("CS Viewer", NULL, false, !m_rootDirContext.csFiles().empty())) {
                     m_rootDirContext.showCsWindow = true;
                 }
+                if (ImGui::MenuItem("PAD Viewer", NULL, false, !m_rootDirContext.padFiles().empty())) {
+                    m_rootDirContext.showPadWindow = true;
+                }
 
                 ImGui::EndDisabled();
                 ImGui::EndMenu();
@@ -298,6 +305,16 @@ void Application::mainLoop() {
                         if (level) {
                             m_rootDirContext.levels.push_back(std::move(*level));
                         } else {
+                            uiError = std::move(error);
+                        }
+                    }
+                }
+
+                if (ImGui::MenuItem("Load all PADS")) {
+                    for (const auto& padFile : m_rootDirContext.padFiles()) {
+                        std::string error;
+                        auto padData = PAD_Parser::parse(std::format("{}/{}", m_rootDirContext.rootDirectory(), padFile), &error);
+                        if (!padData) {
                             uiError = std::move(error);
                         }
                     }
@@ -453,6 +470,8 @@ void Application::mainLoop() {
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csViewer.update(m_rootDirContext.showCsWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.csFiles(),
                               m_rootDirContext.dialogPhrases(), m_rootDirContext.globalVars());
+            ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
+            m_padViewer.update(m_rootDirContext.showPadWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.padFiles());
 
             if (showSettingsWindow) {
                 m_fontSettings->update(showSettingsWindow);

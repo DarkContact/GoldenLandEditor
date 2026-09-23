@@ -17,6 +17,7 @@ public:
     std::vector<std::string> csxFiles() const;
     std::vector<std::string> mdfFiles() const;
     std::vector<std::string> csFiles() const;
+    std::vector<std::string> padFiles() const;
 
     StringHashTable<std::string> levelHumanNameDictionary() const;
     std::map<int, std::string> dialogPhrases() const;

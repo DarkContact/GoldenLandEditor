@@ -39,7 +39,9 @@ public:
     template <LineCallback Callback>
     static void forEachLine(std::string_view buffer, Callback&& callback) noexcept;
 
-    static std::string_view filename(std::string_view path) noexcept;
+    static std::string_view filename(std::string_view path) noexcept; // persons/l0.a20_goose1/l0.a20_goose1.pad -> l0.a20_goose1.pad
+    static std::string_view parentPath(std::string_view path) noexcept; // persons/l0.a20_goose1/l0.a20_goose1.pad -> persons/l0.a20_goose1
+
     static std::u8string_view toUtf8View(std::string_view input) noexcept;
     static std::string_view fromUtf8View(std::u8string_view input) noexcept;
 
