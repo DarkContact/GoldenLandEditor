@@ -1,168 +1,71 @@
-# Таблица встроенных функций Age Script
+## Встроенные функции Age Script
 
-| Функция                                                   | Описание                                                                       |
-|-----------------------------------------------------------|--------------------------------------------------------------------------------|
-| [Exit](#exit)                                             | Прерывает выполнение скрипта                                                   |
-| [Signal](#signal)                                         | Отображает отдельное диалоговое окно Windows с текстом                         |
-| [Console](#console)                                       | Отобразить текст в отладочной консоли                                          |
-| [Cmd](#cmd)                                               | Выполнить строку в отладочной консоли [ConsoleCommands.md](ConsoleCommands.md) |
-| [D_Say](#d_say)                                           |                                                                                |
-| [D_CloseDialog](#d_closedialog)                           |                                                                                |
-| [D_Answer](#d_answer)                                     |                                                                                |
-| [D_PlaySound](#d_playsound)                               |                                                                                |
-| [LE_CastEffect](#le_casteffect)                           |                                                                                |
-| [LE_DelEffect](#le_deleffect)                             |                                                                                |
-| [LE_CastMagic](#le_castmagic)                             |                                                                                |
-| [WD_LoadArea](#wd_loadarea)                               |                                                                                |
-| [WD_SetCellsGroupFlag](#wd_setcellsgroupflag)             |                                                                                |
-| [RS_SetTribesRelation](#rs_settribesrelation)             |                                                                                |
-| [RS_GetTribesRelation](#rs_gettribesrelation)             |                                                                                |
-| [RS_StartDialog](#rs_startdialog)                         |                                                                                |
-| [WD_SetVisible](#wd_setvisible)                           |                                                                                |
-| [C_FINISHED](#c_finished)                                 |                                                                                |
-| [WD_TitlesAndLoadArea](#wd_titlesandloadarea)             |                                                                                |
-| [C_TitlesAndFINISHED](#c_titlesandfinished)               |                                                                                |
-| [RS_GetPersonParameterI](#rs_getpersonparameteri)         |                                                                                |
-| [RS_SetPersonParameterI](#rs_setpersonparameteri)         |                                                                                |
-| [RS_AddPerson_1](#rs_addperson_1)                         |                                                                                |
-| [RS_AddPerson_2](#rs_addperson_2)                         |                                                                                |
-| [RS_IsPersonExistsI](#rs_ispersonexistsi)                 |                                                                                |
-| [RS_AddExp](#rs_addexp)                                   |                                                                                |
-| [RS_DelPerson](#rs_delperson)                             |                                                                                |
-| [RS_AddToHeroPartyName](#rs_addtoheropartyname)           |                                                                                |
-| [RS_RemoveFromHeroPartyName](#rs_removefromheropartyname) |                                                                                |
-| [RS_TestHeroHasPartyName](#rs_testherohaspartyname)       |                                                                                |
-| [RS_AllyCmd](#rs_allycmd)                                 |                                                                                |
-| [RS_ShowMessage](#rs_showmessage)                         |                                                                                |
-| [RS_GetPersonSkillI](#rs_getpersonskilli)                 |                                                                                |
-| [RS_TestPersonHasItem](#rs_testpersonhasitem)             |                                                                                |
-| [RS_PersonTransferItemI](#rs_persontransferitemi)         |                                                                                |
-| [RS_GetItemCountI](#rs_getitemcounti)                     |                                                                                |
-| [RS_PersonTransferAllItemsI](#rs_persontransferallitemsi) |                                                                                |
-| [RS_PersonAddItem](#rs_personadditem)                     |                                                                                |
-| [RS_PersonRemoveItem](#rs_personremoveitem)               |                                                                                |
-| [RS_PersonAddItemToTrade](#rs_personadditemtotrade)       |                                                                                |
-| [RS_PersonRemoveItemToTrade](#rs_personremoveitemtotrade) |                                                                                |
-| [RS_GetMoney](#rs_getmoney)                               |                                                                                |
-| [RS_GetDayOrNight](#rs_getdayornight)                     |                                                                                |
-| [RS_GetCurrentTimeOfDayI](#rs_getcurrenttimeofdayi)       |                                                                                |
-| [RS_GetDaysFromBeginningI](#rs_getdaysfrombeginningi)     |                                                                                |
-| [RS_AddTime](#rs_addtime)                                 |                                                                                |
-| [RS_QuestComplete](#rs_questcomplete)                     |                                                                                |
-| [RS_StageEnable](#rs_stageenable)                         |                                                                                |
-| [RS_QuestEnable](#rs_questenable)                         |                                                                                |
-| [RS_StageComplete](#rs_stagecomplete)                     |                                                                                |
-| [RS_StorylineQuestEnable](#rs_storylinequestenable)       |                                                                                |
-| [RS_SetEvent](#rs_setevent)                               |                                                                                |
-| [RS_GetEvent](#rs_getevent)                               |                                                                                |
-| [RS_ClearEvent](#rs_clearevent)                           |                                                                                |
-| [RS_SetLocationAccess](#rs_setlocationaccess)             |                                                                                |
-| [RS_EnableTrigger](#rs_enabletrigger)                     |                                                                                |
-| [RS_GetRandMinMaxI](#rs_getrandminmaxi)                   |                                                                                |
-| [RS_SetWeather](#rs_setweather)                           |                                                                                |
-| [RS_SetSpecialPerk](#rs_setspecialperk)                   |                                                                                |
-| [RS_PassToTradePanel](#rs_passtotradepanel)               |                                                                                |
-| [RS_GetDialogEnabled](#rs_getdialogenabled)               |                                                                                |
-| [RS_SetUndeadState](#rs_setundeadstate)                   |                                                                                |
-| [RS_GlobalMap](#rs_globalmap)                             |                                                                                |
-| [RS_SetInjured](#rs_setinjured)                           |                                                                                |
-| [RS_SetDoorState](#rs_setdoorstate)                       |                                                                                |
+### Системные
+* **[Exit](functions/Exit.md)** - Прервать выполнение скрипта
+* **[Signal](functions/Signal.md)** - Показать диалоговое окно Windows с текстом
+* **[Console](functions/Console.md)** - Напечатать текст в отладочной консоли
+* **[Cmd](functions/Cmd.md)** - Выполнить строку в отладочной консоли ([Список консольных команд](ConsoleCommands.md))
 
-
-
-## Exit
-```c
-int Exit(int bNeedExit)
-```
-
-### Описание
-Прерывает выполнение скрипта
-
-### Параметры
-| Имя         | Описание                              |
-|-------------|---------------------------------------|
-| `bNeedExit` | Если > 0, то функция будет вызвана    |
-
-### Возвращаемое значение
-Функция выполнится раньше чем будет записано возвращаемое значение
-
-### Пример
-```c
-// По итогу в диалоге будет только 1 вариант ответа
-result = D_Say(10);
-result = D_Answer(8);
-result = Exit(1);
-result = D_Answer(6); // Выполнено не будет
-```
-
-------
-
-## Signal
-```c
-int Signal(string message)
-```
-
-### Описание
-Отображает отдельное диалоговое окно Windows с текстом
-
-### Параметры
-| Имя         | Описание                              |
-|-------------|---------------------------------------|
-| `message`   | Текст сообщения в диалоговом окне     |
-
-### Возвращаемое значение
-Возвращает 0
-
-### Пример
-```c
-// Отображить диалоговое окно
-result = Signal("Hello!");
-```
-
-------
-
-## Console
-```c
-int Console(string message)
-```
-
-### Описание
-Отобразить текст в отладочной консоли
-
-### Параметры
-| Имя         | Описание                              |
-|-------------|---------------------------------------|
-| `message`   | Текст сообщения в консоли             |
-
-### Возвращаемое значение
-Возвращает 0
-
-### Пример
-```c
-// Отображить текст в консоли
-result = Console("Hello!");
-```
-
-------
-
-## Cmd
-```c
-int Cmd(string command)
-```
-
-### Описание
-Выполнить строку в отладочной консоли
-
-### Параметры
-| Имя         | Описание                              |
-|-------------|---------------------------------------|
-| `command`   | Команда для выполнения через консоль  |
-
-### Возвращаемое значение
-Возвращает 0
-
-### Пример
-```c
-// Скрыть игровую панель
-result = Cmd("show_panel 0");
-```
+| Функция                                                               | Описание                                                                       |
+|-----------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [D_Say](functions/D_Say.md)                                           |                                                                                |
+| [D_CloseDialog](functions/D_CloseDialog.md)                           |                                                                                |
+| [D_Answer](functions/D_Answer.md)                                     |                                                                                |
+| [D_PlaySound](functions/D_PlaySound.md)                               |                                                                                |
+| [LE_CastEffect](functions/LE_CastEffect.md)                           |                                                                                |
+| [LE_DelEffect](functions/LE_DelEffect.md)                             |                                                                                |
+| [LE_CastMagic](functions/LE_CastMagic.md)                             |                                                                                |
+| [WD_LoadArea](functions/WD_LoadArea.md)                               |                                                                                |
+| [WD_SetCellsGroupFlag](functions/WD_SetCellsGroupFlag.md)             |                                                                                |
+| [RS_SetTribesRelation](functions/RS_SetTribesRelation.md)             |                                                                                |
+| [RS_GetTribesRelation](functions/RS_GetTribesRelation.md)             |                                                                                |
+| [RS_StartDialog](functions/RS_StartDialog.md)                         |                                                                                |
+| [WD_SetVisible](functions/WD_SetVisible.md)                           |                                                                                |
+| [C_FINISHED](functions/C_FINISHED.md)                                 |                                                                                |
+| [WD_TitlesAndLoadArea](functions/WD_TitlesAndLoadArea.md)             |                                                                                |
+| [C_TitlesAndFINISHED](functions/C_TitlesAndFINISHED.md)               |                                                                                |
+| [RS_GetPersonParameterI](functions/RS_GetPersonParameterI.md)         |                                                                                |
+| [RS_SetPersonParameterI](functions/RS_SetPersonParameterI.md)         |                                                                                |
+| [RS_AddPerson_1](functions/RS_AddPerson_1.md)                         |                                                                                |
+| [RS_AddPerson_2](functions/RS_AddPerson_2.md)                         |                                                                                |
+| [RS_IsPersonExistsI](functions/RS_IsPersonExistsI.md)                 |                                                                                |
+| [RS_AddExp](functions/RS_AddExp.md)                                   |                                                                                |
+| [RS_DelPerson](functions/RS_DelPerson.md)                             |                                                                                |
+| [RS_AddToHeroPartyName](functions/RS_AddToHeroPartyName.md)           |                                                                                |
+| [RS_RemoveFromHeroPartyName](functions/RS_RemoveFromHeroPartyName.md) |                                                                                |
+| [RS_TestHeroHasPartyName](functions/RS_TestHeroHasPartyName.md)       |                                                                                |
+| [RS_AllyCmd](functions/RS_AllyCmd.md)                                 |                                                                                |
+| [RS_ShowMessage](functions/RS_ShowMessage.md)                         |                                                                                |
+| [RS_GetPersonSkillI](functions/RS_GetPersonSkillI.md)                 |                                                                                |
+| [RS_TestPersonHasItem](functions/RS_TestPersonHasItem.md)             |                                                                                |
+| [RS_PersonTransferItemI](functions/RS_PersonTransferItemI.md)         |                                                                                |
+| [RS_GetItemCountI](functions/RS_GetItemCountI.md)                     |                                                                                |
+| [RS_PersonTransferAllItemsI](functions/RS_PersonTransferAllItemsI.md) |                                                                                |
+| [RS_PersonAddItem](functions/RS_PersonAddItem.md)                     |                                                                                |
+| [RS_PersonRemoveItem](functions/RS_PersonRemoveItem.md)               |                                                                                |
+| [RS_PersonAddItemToTrade](functions/RS_PersonAddItemToTrade.md)       |                                                                                |
+| [RS_PersonRemoveItemToTrade](functions/RS_PersonRemoveItemToTrade.md) |                                                                                |
+| [RS_GetMoney](functions/RS_GetMoney.md)                               |                                                                                |
+| [RS_GetDayOrNight](functions/RS_GetDayOrNight.md)                     |                                                                                |
+| [RS_GetCurrentTimeOfDayI](functions/RS_GetCurrentTimeOfDayI.md)       |                                                                                |
+| [RS_GetDaysFromBeginningI](functions/RS_GetDaysFromBeginningI.md)     |                                                                                |
+| [RS_AddTime](functions/RS_AddTime.md)                                 |                                                                                |
+| [RS_QuestComplete](functions/RS_QuestComplete.md)                     |                                                                                |
+| [RS_StageEnable](functions/RS_StageEnable.md)                         |                                                                                |
+| [RS_QuestEnable](functions/RS_QuestEnable.md)                         |                                                                                |
+| [RS_StageComplete](functions/RS_StageComplete.md)                     |                                                                                |
+| [RS_StorylineQuestEnable](functions/RS_StorylineQuestEnable.md)       |                                                                                |
+| [RS_SetEvent](functions/RS_SetEvent.md)                               |                                                                                |
+| [RS_GetEvent](functions/RS_GetEvent.md)                               |                                                                                |
+| [RS_ClearEvent](functions/RS_ClearEvent.md)                           |                                                                                |
+| [RS_SetLocationAccess](functions/RS_SetLocationAccess.md)             |                                                                                |
+| [RS_EnableTrigger](functions/RS_EnableTrigger.md)                     |                                                                                |
+| [RS_GetRandMinMaxI](functions/RS_GetRandMinMaxI.md)                   |                                                                                |
+| [RS_SetWeather](functions/RS_SetWeather.md)                           |                                                                                |
+| [RS_SetSpecialPerk](functions/RS_SetSpecialPerk.md)                   |                                                                                |
+| [RS_PassToTradePanel](functions/RS_PassToTradePanel.md)               |                                                                                |
+| [RS_GetDialogEnabled](functions/RS_GetDialogEnabled.md)               |                                                                                |
+| [RS_SetUndeadState](functions/RS_SetUndeadState.md)                   |                                                                                |
+| [RS_GlobalMap](functions/RS_GlobalMap.md)                             |                                                                                |
+| [RS_SetInjured](functions/RS_SetInjured.md)                           |                                                                                |
+| [RS_SetDoorState](functions/RS_SetDoorState.md)                       |                                                                                |
