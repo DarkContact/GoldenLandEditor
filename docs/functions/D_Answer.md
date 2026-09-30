@@ -8,7 +8,7 @@ int D_Answer(int dialogPhraseId)
 Задать реплику, которая отображается в диалоге с номером ответа и обозначает вариант ответа игрока
 
 ### Параметры
-**dialogPhraseId** - id строки диалога из файла `sdb\dialogs\dialogsphrases.sdb`
+* **dialogPhraseId** - id строки диалога из файла `sdb\dialogs\dialogsphrases.sdb`
 
 ### Заметки
 [Особенности выполнения диалогов](../AgeScript.md#особенности-выполнения-диалогов).  

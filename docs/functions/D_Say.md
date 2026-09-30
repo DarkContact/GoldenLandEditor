@@ -8,7 +8,7 @@ int D_Say(int dialogPhraseId)
 Задать реплику, которая отображается в диалоге синим шрифтом и обозначает то что говорят игроку
 
 ### Параметры
-**dialogPhraseId** - id строки диалога из файла `sdb\dialogs\dialogsphrases.sdb`
+* **dialogPhraseId** - id строки диалога из файла `sdb\dialogs\dialogsphrases.sdb`
 
 ### Заметки
 [Особенности выполнения диалогов](../AgeScript.md#особенности-выполнения-диалогов).  
