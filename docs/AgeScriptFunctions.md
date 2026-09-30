@@ -17,13 +17,13 @@
 * **[D_Answer](functions/D_Answer.md)** - Задать реплику, которая отображается в диалоге с номером ответа и обозначает вариант ответа игрока
 * **[D_PlaySound](functions/D_PlaySound.md)** - Воспроизвести звук во время выполнения диалога
 * **[D_CloseDialog](functions/D_CloseDialog.md)** - Завершить выполнение диалога
-* **[RS_GetDialogEnabled](functions/RS_GetDialogEnabled.md)**
-* **[RS_PassToTradePanel](functions/RS_PassToTradePanel.md)**
+* **[RS_GetDialogEnabled](functions/RS_GetDialogEnabled.md)** - Выполнить проверку на убеждение
+* **[RS_PassToTradePanel](functions/RS_PassToTradePanel.md)** - Открыть окно торговли c говорящим
 
 ### Квесты
 * **[RS_StorylineQuestEnable](functions/RS_StorylineQuestEnable.md)** - Начать сюжетный квест
 * **[RS_QuestEnable](functions/RS_QuestEnable.md)** - Начать второстепенный квест
-* **[RS_StageEnable](functions/RS_StageEnable.md)** - Активировать этап выполнения квеста
+* **[RS_StageEnable](functions/RS_StageEnable.md)** - Начать этап выполнения квеста
 * **[RS_StageComplete](functions/RS_StageComplete.md)** - Завершить этап выполнения квеста
 * **[RS_QuestComplete](functions/RS_QuestComplete.md)** - Завершить квест
 
