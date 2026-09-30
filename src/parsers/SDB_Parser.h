@@ -12,4 +12,5 @@ public:
     SDB_Parser() = delete;
 
     static bool parse(std::string_view sdbPath, SDB_Data& data, std::string* error = nullptr);
+    static bool save(std::string_view sdbPath, const SDB_Data& data, std::string* error = nullptr);
 };

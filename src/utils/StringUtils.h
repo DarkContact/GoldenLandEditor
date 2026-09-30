@@ -35,6 +35,7 @@ public:
     static std::string_view extractQuotedValue(std::string_view line) noexcept;
     static std::string decodeWin1251ToUtf8(std::string_view input) noexcept;
     static size_t decodeWin1251ToUtf8Buffer(std::string_view input, std::span<char> buffer) noexcept;
+    static std::string decodeUtf8ToWin1251(std::string_view input) noexcept;
 
     template <LineCallback Callback>
     static void forEachLine(std::string_view buffer, Callback&& callback) noexcept;

@@ -2,6 +2,9 @@
 
 #include <format>
 
+#include <SDL3/SDL_dialog.h>
+#include <SDL3/SDL_render.h>
+
 #include "utils/TracyProfiler.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
@@ -38,7 +41,7 @@ size_t makeVisibleSymbols(std::string_view sv, std::span<char> out) {
     return writePos;
 }
 
-void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files)
+void SdbViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& files)
 {
     Tracy_ZoneScoped;
     
@@ -226,6 +229,36 @@ void SdbViewer::update(bool& showWindow, std::string_view rootDirectory, const s
             if (ImGui::Checkbox("Show formatted symbols", &m_showFormattedSymbols)) {
                 m_filterNeedsUpdate = true;
             }
+
+            ImGui::SameLine();
+
+            ImGui::BeginDisabled(m_sdbRecords.strings.empty());
+            if (ImGui::Button("Save as...")) {
+                std::string_view filename = StringUtils::filename(files[m_selectedIndex]);
+                std::string savePath = std::format("{}/{}", rootDirectory, filename);
+
+                SDL_ShowSaveFileDialog([] (void* userdata, const char* const* filelist, int filter) {
+                    SdbViewer* self = static_cast<SdbViewer*>(userdata);
+                    if (!filelist) {
+                        LogFmt("Folder dialog error: {}", SDL_GetError());
+                        return;
+                    } else if (!*filelist) {
+                        Log("Dialog was canceled");
+                        // Dialog was canceled.
+                        return;
+                    } else if ((*filelist)[0] == '\0') {
+                        Log("Filelist empty");
+                        return;
+                    }
+
+                    std::string_view sdbPath(*filelist);
+                    std::string error;
+                    if (!SDB_Parser::save(sdbPath, self->m_sdbRecords, &error)) {
+                         LogFmt("SDB_Parser::save error: {}", error);
+                    }
+                }, this, SDL_GetRenderWindow(renderer), NULL, 0, savePath.c_str());
+            }
+            ImGui::EndDisabled();
         }
         ImGui::EndGroup();
 

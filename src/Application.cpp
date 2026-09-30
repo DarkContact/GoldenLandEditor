@@ -464,7 +464,7 @@ void Application::mainLoop() {
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_csxViewer.update(m_rootDirContext.showCsxWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.csxFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
-            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles());
+            m_sdbViewer.update(m_rootDirContext.showSdbWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.sdbFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);
             m_mdfViewer.update(m_rootDirContext.showMdfWindow, m_renderer, m_rootDirContext.rootDirectory(), m_rootDirContext.mdfFiles());
             ImGui::SetNextWindowDockID(mainDockSpace, ImGuiCond_FirstUseEver);

@@ -48,3 +48,19 @@ bool SDB_Parser::parse(std::string_view sdbPath, SDB_Data& data, std::string* er
     assert(fileData.size() == offset);
     return true;
 }
+
+bool SDB_Parser::save(std::string_view sdbPath, const SDB_Data& data, std::string* error)
+{
+    using namespace IoUtils;
+
+    Tracy_ZoneScoped;
+    std::vector<uint8_t> saveData;
+
+    writeString(saveData, "SDB ");
+    for (const auto& [id, text] : data.strings) {
+        writeInt32(saveData, id);
+        writeStringWithSize(saveData, StringUtils::decodeUtf8ToWin1251(text));
+    }
+
+    return FileUtils::saveFile(sdbPath, saveData, error);
+}

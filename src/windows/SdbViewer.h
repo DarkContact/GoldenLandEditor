@@ -6,11 +6,13 @@
 
 #include "parsers/SDB_Parser.h"
 
+struct SDL_Renderer;
+
 class SdbViewer {
 public:
     SdbViewer();
 
-    void update(bool& showWindow, std::string_view rootDirectory, const std::vector<std::string>& files);
+    void update(bool& showWindow, SDL_Renderer* renderer, std::string_view rootDirectory, const std::vector<std::string>& files);
 
 private:
     enum SearchByType {
