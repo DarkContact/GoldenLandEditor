@@ -28,9 +28,9 @@
 * **[RS_QuestComplete](functions/RS_QuestComplete.md)** - Завершить квест
 
 ### Party
-* **[RS_AddToHeroPartyName](functions/RS_AddToHeroPartyName.md)**
-* **[RS_RemoveFromHeroPartyName](functions/RS_RemoveFromHeroPartyName.md)**
-* **[RS_TestHeroHasPartyName](functions/RS_TestHeroHasPartyName.md)**
+* **[RS_AddToHeroPartyName](functions/RS_AddToHeroPartyName.md)** - Добавить NPC в группу
+* **[RS_RemoveFromHeroPartyName](functions/RS_RemoveFromHeroPartyName.md)** - Убрать NPC из группы
+* **[RS_TestHeroHasPartyName](functions/RS_TestHeroHasPartyName.md)** - Проверить состоит ли NPC в группе
 * **[RS_AllyCmd](functions/RS_AllyCmd.md)**
 
 ### NPC
