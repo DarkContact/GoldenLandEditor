@@ -13,8 +13,8 @@ public:
 
     static bool ComboBoxWithIndex(std::string_view label, const std::vector<std::string>& items, int& selectedIndex);
     static void Loader(std::string_view label, bool& showWindow);
-    static void ShowMessageModal(std::string_view title, std::string& message);
-    static bool ShowMessageModalEx(std::string_view title, const std::function<void()>& callback);
+    static void ShowMessageModal(std::string_view title, std::string& message, bool showOkButton = true);
+    static bool ShowMessageModalEx(std::string_view title, const std::function<void (bool&)>& callback, bool showOkButton = true);
 
     static void SetTooltipStacked(const char* fmt, ...) IM_FMTARGS(1);
 

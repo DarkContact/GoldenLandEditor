@@ -478,7 +478,7 @@ void Application::mainLoop() {
             }
 
             if (showAboutWindow) {
-                showAboutWindow = ImGuiWidgets::ShowMessageModalEx("About", [&aboutMessage] () {
+                showAboutWindow = ImGuiWidgets::ShowMessageModalEx("About", [&aboutMessage] (bool&) {
                     ImGui::TextLinkOpenURL("GitHub repository", "https://github.com/DarkContact/GoldenLandEditor");
                     ImGui::TextUnformatted(aboutMessage.data(), aboutMessage.data() + aboutMessage.size());
                 });

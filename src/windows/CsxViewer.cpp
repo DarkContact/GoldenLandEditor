@@ -87,11 +87,10 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                     SDL_ShowSaveFileDialog([] (void* userdata, const char* const* filelist, int filter) {
                         CsxViewer* self = static_cast<CsxViewer*>(userdata);
                         if (!filelist) {
-                            LogFmt("Folder dialog error: {}", SDL_GetError());
+                            LogFmt("Save dialog error: {}", SDL_GetError());
                             return;
                         } else if (!*filelist) {
                             Log("Dialog was canceled");
-                            // Dialog was canceled.
                             return;
                         } else if ((*filelist)[0] == '\0') {
                             Log("Filelist empty");

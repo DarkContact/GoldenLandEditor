@@ -5,7 +5,10 @@
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_render.h>
 
+#include "misc/cpp/imgui_stdlib.h"
+
 #include "utils/TracyProfiler.h"
+#include "utils/ImGuiWidgets.h"
 #include "utils/StringUtils.h"
 #include "utils/DebugLog.h"
 
@@ -233,6 +236,15 @@ void SdbViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
             ImGui::SameLine();
 
             ImGui::BeginDisabled(m_sdbRecords.strings.empty());
+            if (ImGui::Button("Add record")) {
+                m_addRecordId = m_sdbRecords.strings.rbegin()->first + 1;
+                m_addRecordText.clear();
+
+                m_showAddRecordWindow = true;
+            }
+
+            ImGui::SameLine();
+
             if (ImGui::Button("Save as...")) {
                 std::string_view filename = StringUtils::filename(files[m_selectedIndex]);
                 std::string savePath = std::format("{}/{}", rootDirectory, filename);
@@ -240,11 +252,10 @@ void SdbViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
                 SDL_ShowSaveFileDialog([] (void* userdata, const char* const* filelist, int filter) {
                     SdbViewer* self = static_cast<SdbViewer*>(userdata);
                     if (!filelist) {
-                        LogFmt("Folder dialog error: {}", SDL_GetError());
+                        LogFmt("Save dialog error: {}", SDL_GetError());
                         return;
                     } else if (!*filelist) {
                         Log("Dialog was canceled");
-                        // Dialog was canceled.
                         return;
                     } else if ((*filelist)[0] == '\0') {
                         Log("Filelist empty");
@@ -263,6 +274,30 @@ void SdbViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         ImGui::EndGroup();
 
         ImGui::End();
+    }
+
+    if (m_showAddRecordWindow) {
+        m_showAddRecordWindow = ImGuiWidgets::ShowMessageModalEx("Add record", [this] (bool& isShow) {
+            ImGui::InputInt("ID", &m_addRecordId);
+            ImGui::InputText("Text", &m_addRecordText);
+
+            if (ImGui::Button("Add or replace")) {
+                auto [_, isInsert] = m_sdbRecords.strings.insert_or_assign(m_addRecordId, m_addRecordText);
+                if (isInsert) {
+                    m_filteredKeys.push_back(m_addRecordId);
+                }
+
+                ImGui::CloseCurrentPopup();
+                isShow = false;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel")) {
+                ImGui::CloseCurrentPopup();
+                isShow = false;
+            }
+        }, false);
     }
 
     // Очистка

@@ -30,4 +30,8 @@ private:
     bool m_onceWhenClose = true;
     bool m_showFormattedSymbols = true;
     bool m_filterNeedsUpdate = false;
+
+    bool m_showAddRecordWindow = false;
+    int m_addRecordId = 0;
+    std::string m_addRecordText;
 };
