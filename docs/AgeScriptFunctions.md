@@ -31,7 +31,7 @@
 * **[RS_AddToHeroPartyName](functions/RS_AddToHeroPartyName.md)** - Добавить NPC в группу
 * **[RS_RemoveFromHeroPartyName](functions/RS_RemoveFromHeroPartyName.md)** - Убрать NPC из группы
 * **[RS_TestHeroHasPartyName](functions/RS_TestHeroHasPartyName.md)** - Проверить состоит ли NPC в группе
-* **[RS_AllyCmd](functions/RS_AllyCmd.md)**
+* **[RS_AllyCmd](functions/RS_AllyCmd.md)** - Изменить поведение NPC из группы
 
 ### NPC
 * **[RS_AddPerson_1](functions/RS_AddPerson_1.md)**
