@@ -34,8 +34,8 @@
 * **[RS_AllyCmd](functions/RS_AllyCmd.md)** - Изменить поведение NPC из группы
 
 ### NPC
-* **[RS_AddPerson_1](functions/RS_AddPerson_1.md)**
-* **[RS_AddPerson_2](functions/RS_AddPerson_2.md)**
+* **[RS_AddPerson_1](functions/RS_AddPerson_1.md)** - Добавить NPC в текущую локацию
+* **[RS_AddPerson_2](functions/RS_AddPerson_2.md)** - Добавить NPC в текущую локацию
 * **[RS_DelPerson](functions/RS_DelPerson.md)**
 * **[RS_IsPersonExistsI](functions/RS_IsPersonExistsI.md)**
 * **[RS_GetPersonSkillI](functions/RS_GetPersonSkillI.md)**

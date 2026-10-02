@@ -8,7 +8,7 @@ int RS_AddToHeroPartyName(string npcTechName)
 Добавить NPC в группу
 
 ### Параметры
-* **npcTechName** - техническое имя NPC из sef файла локации
+* **npcTechName** - техническое имя NPC
 
 ### Заметки
 Возможно добавление в группу существ с одинаковыми `npcTechName`, сначала будет выбран тот что был раньше описан в sef файле.  
