@@ -36,9 +36,9 @@
 ### NPC
 * **[RS_AddPerson_1](functions/RS_AddPerson_1.md)** - Добавить NPC в текущую локацию
 * **[RS_AddPerson_2](functions/RS_AddPerson_2.md)** - Добавить NPC в текущую локацию
-* **[RS_DelPerson](functions/RS_DelPerson.md)**
-* **[RS_IsPersonExistsI](functions/RS_IsPersonExistsI.md)**
-* **[RS_GetPersonSkillI](functions/RS_GetPersonSkillI.md)**
+* **[RS_DelPerson](functions/RS_DelPerson.md)** - Удалить NPC из текущей локации
+* **[RS_IsPersonExistsI](functions/RS_IsPersonExistsI.md)** - Проверить существует ли NPC
+* **[RS_GetPersonSkillI](functions/RS_GetPersonSkillI.md)** - Проверить значение навыка NPC
 * **[RS_GetPersonParameterI](functions/RS_GetPersonParameterI.md)**
 * **[RS_SetPersonParameterI](functions/RS_SetPersonParameterI.md)**
 * **[RS_GetTribesRelation](functions/RS_GetTribesRelation.md)**
