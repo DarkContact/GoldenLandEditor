@@ -1,11 +1,11 @@
 ## RS_GetPersonSkillI
 
 ```c
-int RS_GetPersonSkillI(sstring npcTechName, string skillName)
+int RS_GetPersonSkillI(string npcTechName, string skillName)
 ```
 
 ### Описание
-Проверить существует ли NPC
+Получить значение навыка NPC
 
 ### Параметры
 * **npcTechName** - техническое имя NPC
