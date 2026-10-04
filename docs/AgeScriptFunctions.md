@@ -54,11 +54,11 @@
 * **[RS_TestPersonHasItem](functions/RS_TestPersonHasItem.md)**
 * **[RS_GetItemCountI](functions/RS_GetItemCountI.md)**
 
-### Infos
-* **[RS_GetMoney](functions/RS_GetMoney.md)**
-* **[RS_GetDayOrNight](functions/RS_GetDayOrNight.md)**
-* **[RS_GetCurrentTimeOfDayI](functions/RS_GetCurrentTimeOfDayI.md)**
+### Время
 * **[RS_GetDaysFromBeginningI](functions/RS_GetDaysFromBeginningI.md)**
+* **[RS_GetCurrentTimeOfDayI](functions/RS_GetCurrentTimeOfDayI.md)**
+* **[RS_GetDayOrNight](functions/RS_GetDayOrNight.md)**
+* **[RS_AddTime](functions/RS_AddTime.md)**
 
 ### Глобальная карта
 * **[RS_GlobalMap](functions/RS_GlobalMap.md)**
@@ -69,16 +69,16 @@
 * **[WD_TitlesAndLoadArea](functions/WD_TitlesAndLoadArea.md)**
 
 ### Конец игры
-* **[C_FINISHED](functions/C_FINISHED.md)**
-* **[C_TitlesAndFINISHED](functions/C_TitlesAndFINISHED.md)**
+* **[C_FINISHED](functions/C_FINISHED.md)** - Завершить игру и показать финальные титры
+* **[C_TitlesAndFINISHED](functions/C_TitlesAndFINISHED.md)** - Показать анимацию текста и завершить игру
 
 ### Прочие
+* **[RS_GetMoney](functions/RS_GetMoney.md)**
 * **[RS_GetRandMinMaxI](functions/RS_GetRandMinMaxI.md)**
 * **[WD_SetCellsGroupFlag](functions/WD_SetCellsGroupFlag.md)**
 * **[WD_SetVisible](functions/WD_SetVisible.md)**
 * **[RS_AddExp](functions/RS_AddExp.md)**
 * **[RS_ShowMessage](functions/RS_ShowMessage.md)**
-* **[RS_AddTime](functions/RS_AddTime.md)**
 * **[RS_EnableTrigger](functions/RS_EnableTrigger.md)**
 * **[RS_SetWeather](functions/RS_SetWeather.md)**
 * **[RS_SetSpecialPerk](functions/RS_SetSpecialPerk.md)**
