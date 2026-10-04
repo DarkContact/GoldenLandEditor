@@ -75,7 +75,6 @@
 ### Прочие
 * **[RS_GetMoney](functions/RS_GetMoney.md)**
 * **[RS_GetRandMinMaxI](functions/RS_GetRandMinMaxI.md)**
-* **[WD_SetCellsGroupFlag](functions/WD_SetCellsGroupFlag.md)**
 * **[WD_SetVisible](functions/WD_SetVisible.md)**
 * **[RS_AddExp](functions/RS_AddExp.md)**
 * **[RS_ShowMessage](functions/RS_ShowMessage.md)**
@@ -86,7 +85,9 @@
 * **[RS_SetInjured](functions/RS_SetInjured.md)**
 * **[RS_SetDoorState](functions/RS_SetDoorState.md)**
 
-### Events (Не работают)
+* **[WD_SetCellsGroupFlag](functions/WD_SetCellsGroupFlag.md)** - Нигде в игре не вызывается. Предположительно не работает
+
+### Events (Предположительно не работают)
 * **[RS_SetEvent](functions/RS_SetEvent.md)**
 * **[RS_GetEvent](functions/RS_GetEvent.md)**
-* **[RS_ClearEvent](functions/RS_ClearEvent.md)**
+* **[RS_ClearEvent](functions/RS_ClearEvent.md)** - Вызывается в Златогорье 2 в файле `scripts\dialogs\l6_1\l6_1.p471_hospital_leader.d471.age.cs`
