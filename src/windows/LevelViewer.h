@@ -27,7 +27,7 @@ private:
 
     void levelScrollTo(Level& level, ImVec2 targetPos, ImVec2 targetSize);
     void handleLevelDragScroll(Level& level);
-    void drawSelectionHighlight(Level& level, ImVec2 drawPosition);
+    void drawSelectionObjectAnimation(Level& level, ImVec2 drawPosition);
     void drawMinimap(Level& level, const ImRect& levelRect, ImRect& minimapRect);
     void drawInfo(Level& level, const ImRect& levelRect, ImVec2 drawPosition);
 

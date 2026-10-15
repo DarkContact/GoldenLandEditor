@@ -135,7 +135,7 @@ void LevelViewer::update(bool& showWindow, std::string_view rootDirectory, Level
                 drawMapTiles(level, startPos);
             }
 
-            drawSelectionHighlight(level, startPos);
+            drawSelectionObjectAnimation(level, startPos);
 
             ImRect minimapRect;
             const ImRect levelRect(startPos, {startPos.x + level.data().background->w,
@@ -652,7 +652,7 @@ void LevelViewer::handleLevelDragScroll(Level& level) {
     }
 }
 
-void LevelViewer::drawSelectionHighlight(Level& level, ImVec2 drawPosition)
+void LevelViewer::drawSelectionObjectAnimation(Level& level, ImVec2 drawPosition) // Анимация при выборе из списка объектов
 {
     auto& imgui = level.data().imgui;
     if (!imgui.showSelectionHighlight) return;
@@ -683,10 +683,10 @@ void LevelViewer::drawSelectionHighlight(Level& level, ImVec2 drawPosition)
     
     if (isVisibleInWindow(rect)) {
         ImDrawList* drawList = ImGui::GetWindowDrawList();
-        drawList->AddRect(rect.Min, rect.Max, IM_COL32(255, 228, 0, 255), 0.0f, 0, 2.0f);
+        drawList->AddRect(rect.Min, rect.Max, IM_COL32(255, 228, 0, 255), 0.0f, 2.0f);
         ImRect rectShadow(rect);
         rectShadow.Expand(1);
-        drawList->AddRect(rectShadow.Min, rectShadow.Max, IM_COL32(0, 0, 0, 160), 0.0f, 0, 1.0f);
+        drawList->AddRect(rectShadow.Min, rectShadow.Max, IM_COL32(0, 0, 0, 160), 0.0f, 1.0f);
     }
 }
 
@@ -1212,9 +1212,6 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    auto drawListFlags = drawList->Flags;
-    drawList->Flags &= ~ImDrawListFlags_AntiAliasedLines; // Disable flag
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
         level.data().imgui.highlightCellGroudIndex = std::nullopt;
@@ -1245,8 +1242,6 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
             ++groupIndex;
         }
     }
-
-    drawList->Flags = drawListFlags;
 }
 
 void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine)
@@ -1278,7 +1273,7 @@ void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const Ce
         polylineRect.Expand(thickness);
 
         if (isVisibleInWindow(polylineRect)) {
-            drawList->AddPolyline(centers.data(), centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 36) : 64), 0, thickness);
+            drawList->AddPolyline(centers.data(), centers.size(), IM_COL32(0, 0, 0, fullAlpha ? (color.a - 36) : 64), thickness);
         }
     }
 
