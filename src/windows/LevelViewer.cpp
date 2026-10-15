@@ -1212,6 +1212,10 @@ void LevelViewer::drawPointsEntrance(Level& level, ImVec2 drawPosition)
 void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
 {
     Tracy_ZoneScoped;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    auto drawListFlags = drawList->Flags;
+    // Линии с AA получаются непредсказуемой прозрачности, хотя после обновления 1.93.0 выглядят в разы лучше (Возможно сделать включение опцией)
+    drawList->Flags &= ~ImDrawFlags_AALines; // Disable flag
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
         level.data().imgui.highlightCellGroudIndex = std::nullopt;
@@ -1242,6 +1246,8 @@ void LevelViewer::drawCellGroups(Level& level, ImVec2 drawPosition)
             ++groupIndex;
         }
     }
+
+    drawList->Flags = drawListFlags;
 }
 
 void LevelViewer::drawCellGroup(LevelImgui& imgui, ImVec2 drawPosition, const CellGroup& group, int groupIndex, SDL_Color color, bool drawConnectedLine)
