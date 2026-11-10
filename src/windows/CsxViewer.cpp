@@ -28,22 +28,37 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         // Left
         {
             ImGui::BeginChild("left pane", ImVec2(400, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
-            m_textFilter.Draw();
-            ImGui::Separator();
-                ImGui::BeginChild("file list");
-                for (int i = 0; i < static_cast<int>(csxFiles.size()); ++i)
-                {
-                    if (m_textFilter.PassFilter(csxFiles[i].c_str())
-                        && ImGui::Selectable(csxFiles[i].c_str(), m_selectedIndex == i))
-                    {
-                        m_selectedIndex = i;
-
-                        m_csxTextures.clear();
-                        TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]), renderer, m_csxTextures, &m_csxTextureError);
-
-                        needResetScroll = true;
+            bool filterChanged = m_textFilter.Draw();
+            if (filterChanged || m_filteredIndices.empty()) {
+                m_filteredIndices.clear();
+                m_filteredIndices.reserve(csxFiles.size());
+                for (int i = 0; i < static_cast<int>(csxFiles.size()); ++i) {
+                    if (m_textFilter.PassFilter(csxFiles[i].c_str())) {
+                        m_filteredIndices.push_back(i);
                     }
                 }
+            }
+            ImGui::Separator();
+                ImGui::BeginChild("file list");
+                ImGuiListClipper clipper;
+                clipper.Begin(static_cast<int>(m_filteredIndices.size()));
+                while (clipper.Step())
+                {
+                    for (int n = clipper.DisplayStart; n < clipper.DisplayEnd; n++)
+                    {
+                        int i = m_filteredIndices[n];
+                        if (ImGui::Selectable(csxFiles[i].c_str(), m_selectedIndex == i))
+                        {
+                            m_selectedIndex = i;
+
+                            m_csxTextures.clear();
+                            TextureLoader::loadTexturesFromCsxFile(std::format("{}/{}", rootDirectory, csxFiles[i]), renderer, m_csxTextures, &m_csxTextureError);
+
+                            needResetScroll = true;
+                        }
+                    }
+                }
+                clipper.End();
                 ImGui::EndChild();
             ImGui::EndChild();
         }
@@ -147,6 +162,7 @@ void CsxViewer::update(bool& showWindow, SDL_Renderer* renderer, std::string_vie
         m_csxTextures.clear();
         m_csxTextureError.clear();
         m_textFilter.Clear();
+        m_filteredIndices.clear();
         m_onceWhenClose = true;
     }
 }
