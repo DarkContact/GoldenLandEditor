@@ -12,7 +12,7 @@ class DebugLog {
 public:
     DebugLog() = delete;
 
-    static void print(const std::source_location& location, std::string_view msg) {
+    static void print(const std::source_location& location, std::string_view msg) noexcept {
         toOutput(location, msg);
     }
 
@@ -32,12 +32,13 @@ public:
             buffer[std::min((size_t)result.size, kBufferSizeWithoutZero)] = '\0';
             toOutput(location, buffer);
         } catch (const std::format_error& ex) {
-            fputs(ex.what(), stderr);
+            toOutputMessage(ex.what(), stderr);
         }
     }
 
 private:
-    static void toOutput(const std::source_location& location, std::string_view msg);
+    static void toOutput(const std::source_location& location, std::string_view msg) noexcept;
+    static void toOutputMessage(std::string_view msg, FILE* fstream) noexcept;
 };
 
 #if defined(NDEBUG) && !defined(DEBUG_LOG_ENABLE)

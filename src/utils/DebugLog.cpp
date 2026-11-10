@@ -17,13 +17,15 @@
   #include <windows.h>
 #endif
 
-void DebugLog::toOutput(const std::source_location& location, std::string_view msg) {
+void DebugLog::toOutput(const std::source_location& location, std::string_view msg) noexcept {
 #ifdef DEBUG_LOG_TIMESTAMP
     // Время в формате UTC: [10:30:25.367]
     using namespace std::chrono;
     auto now = system_clock::now();
+
     constexpr size_t kBufferNowSize = 24;
     char bufferNow[kBufferNowSize];
+
     auto resultNow = std::format_to_n(bufferNow, kBufferNowSize, "[{:%T}]: ", time_point_cast<milliseconds>(now));
     assert(resultNow.size < kBufferNowSize);
     bufferNow[resultNow.size] = '\0';
@@ -31,14 +33,7 @@ void DebugLog::toOutput(const std::source_location& location, std::string_view m
 #endif
 
     // Сообщение
-    Tracy_Message(msg.data(), msg.size());
-    fputs(msg.data(), stdout);
-
-#ifdef _WIN32
-    if (IsDebuggerPresent()) {
-        OutputDebugStringA(msg.data());
-    }
-#endif
+    toOutputMessage(msg, stdout);
 
 #ifdef DEBUG_LOG_CONTEXT
     // Информация о расположении в исходниках: [main.cpp:35]
@@ -54,4 +49,15 @@ void DebugLog::toOutput(const std::source_location& location, std::string_view m
 
     fputc('\n', stdout);
     fflush(stdout);
+}
+
+void DebugLog::toOutputMessage(std::string_view msg, FILE* fstream) noexcept {
+    Tracy_Message(msg.data(), msg.size());
+    fputs(msg.data(), fstream);
+
+#ifdef _WIN32
+    if (IsDebuggerPresent()) {
+        OutputDebugStringA(msg.data());
+    }
+#endif
 }
