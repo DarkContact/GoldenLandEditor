@@ -38,6 +38,14 @@ void CsExecutorViewer::update(bool& showWindow,
                 }
             }
 
+            if (ImGui::CollapsingHeader("Functions"))
+            {
+                auto& funcs = m_pExecutor->functionsRetValues();
+                for (auto& [name, value] : funcs) {
+                    ImGui::InputScalar(name.c_str(), ImGuiDataType_S32, &value);
+                }
+            }
+
             if (ImGui::CollapsingHeader("Variables", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 auto& scriptVars = m_pExecutor->scriptVars();

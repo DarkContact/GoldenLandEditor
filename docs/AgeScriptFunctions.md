@@ -73,7 +73,7 @@
 * **[C_TitlesAndFINISHED](functions/C_TitlesAndFINISHED.md)** - Показать анимацию текста и завершить игру
 
 ### Прочие
-* **[RS_GetMoney](functions/RS_GetMoney.md)**
+* **[RS_GetMoney](functions/RS_GetMoney.md)** - Получить количество золотых у героя
 * **[RS_GetRandMinMaxI](functions/RS_GetRandMinMaxI.md)**
 * **[WD_SetVisible](functions/WD_SetVisible.md)**
 * **[RS_AddExp](functions/RS_AddExp.md)**
