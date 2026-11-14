@@ -44,11 +44,14 @@ public:
     ExecuteStatus currentStatus() const;
     const char* currentStatusString() const;
 
+    StringHashTable<int>& heroStats();
+
     bool isNodeExecuted(int index) const;
     float executedPercent() const;
 
 private:
     void readScriptVariables();
+    void initHeroStats();
 
     bool logicalOpcode(const CS_Node& node);
     bool compareOpcode(const CS_Node& node);
@@ -67,7 +70,7 @@ private:
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
 
-    StringHashTable<int> m_heroStats; // TODO: Нужна реализация
+    StringHashTable<int> m_heroStats;
     std::set<int> m_executedNodeIndexes;
 
     int m_currentNodeIndex = 0;

@@ -21,6 +21,7 @@ CsExecutor::CsExecutor(std::span<const CS_Node> nodes, const StringHashTable<Age
     assert(!m_globalVars.empty());
 
     readScriptVariables();
+    initHeroStats();
 }
 
 bool parse3(std::string_view line,
@@ -103,6 +104,22 @@ void CsExecutor::readScriptVariables()
             }
         }
     }
+}
+
+void CsExecutor::initHeroStats()
+{
+    m_heroStats.emplace("ENERGY", 40);
+    m_heroStats.emplace("LIFE", 50);
+    m_heroStats.emplace("MAXIMUM LIFE", 50);
+    m_heroStats.emplace("PERCEPTION", 10);
+    m_heroStats.emplace("LUCK", 11);
+    m_heroStats.emplace("DEXTERITY", 12);
+    m_heroStats.emplace("CONSTITUTION", 13);
+    m_heroStats.emplace("STRENGTH", 14);
+    m_heroStats.emplace("WISDOM", 15);
+    m_heroStats.emplace("INTELLIGENCE", 16);
+    m_heroStats.emplace("REPUTATION", 0);
+    m_heroStats.emplace("EXPERIENCE", 0);
 }
 
 void CsExecutor::restart(bool resetAll)
@@ -539,6 +556,10 @@ const char* CsExecutor::currentStatusString() const
         case kInfinity: return "Infinity";
     }
     return "Unknown";
+}
+
+StringHashTable<int>& CsExecutor::heroStats() {
+    return m_heroStats;
 }
 
 bool CsExecutor::isNodeExecuted(int index) const {

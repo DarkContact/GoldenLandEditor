@@ -30,6 +30,14 @@ void CsExecutorViewer::update(bool& showWindow,
         StringUtils::formatToBuffer(titleBuffer, "{}###CsExecutorViewer", title);
         if (ImGui::Begin(titleBuffer, &showWindow, ImGuiWindowFlags_HorizontalScrollbar)) {
 
+            if (ImGui::CollapsingHeader("Hero"))
+            {
+                auto& stats = m_pExecutor->heroStats();
+                for (auto& [name, value] : stats) {
+                    ImGui::InputScalar(name.c_str(), ImGuiDataType_S32, &value);
+                }
+            }
+
             if (ImGui::CollapsingHeader("Variables", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 auto& scriptVars = m_pExecutor->scriptVars();
