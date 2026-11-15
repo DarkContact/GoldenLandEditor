@@ -12,14 +12,14 @@ int RS_StageComplete(string questTechName, string questStageTechName)
 * **questStageTechName** - название шага выполнения квеста, задаётся из `sdb\diary\single_quest_tech.sdb`
 
 ### Заметки
-Зачёркивает выполненую часть квеста в дневнике.
+Зачёркивает выполненную часть квеста в дневнике.
 
 ### Возвращаемое значение
 Возвращает 0
 
 ### Пример
 ```c
-result = RS_StageComplete("starosta", "starosta_1"); // Зачёркивает выполненый этап задания в дневнике
+result = RS_StageComplete("starosta", "starosta_1"); // Зачёркивает выполненный этап задания в дневнике
 ```
 
 ### Смотри также

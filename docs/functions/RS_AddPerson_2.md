@@ -10,7 +10,7 @@ int RS_AddPerson_2(string npcTechName, int positionX, int positionY, string dire
 ### Параметры
 * **npcTechName** - техническое имя NPC
 * **positionX** - позиция NPC по x (в кол-ве big cell)
-* **positionY** - позиция NPC по x (в кол-ве big cell)
+* **positionY** - позиция NPC по y (в кол-ве big cell)
 * **direction** - направление взгляда NPC (см. раздел [Direction](#Direction))
 * **litName** - имя NPC которое отображается в UI
 * **tribe** - группа отношений (описаны в `scripts\tribes.scr`)

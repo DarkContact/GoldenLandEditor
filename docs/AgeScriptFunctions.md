@@ -8,12 +8,12 @@
 
 ### Визуальные эффекты
 * **[LE_CastMagic](functions/LE_CastMagic.md)** - Отобразить визуальный эффект в локации 1 раз
-* **[LE_CastEffect](functions/LE_CastEffect.md)** - Отобразить закицленный визуальный эффект в локации
+* **[LE_CastEffect](functions/LE_CastEffect.md)** - Отобразить зацикленный визуальный эффект в локации
 * **[LE_DelEffect](functions/LE_DelEffect.md)** - Удалить эффекты заданные идентификатором в `LE_CastEffect`
 
 ### Диалоги с NPC
 * **[RS_StartDialog](functions/RS_StartDialog.md)** - Начать диалог
-* **[D_Say](functions/D_Say.md)** - Задать реплику, которая отображается в диалоге синим шрифтом и обозначает то что говорят игроку
+* **[D_Say](functions/D_Say.md)** - Задать реплику, которая отображается в диалоге синим шрифтом и обозначает то, что говорят игроку
 * **[D_Answer](functions/D_Answer.md)** - Задать реплику, которая отображается в диалоге с номером ответа и обозначает вариант ответа игрока
 * **[D_PlaySound](functions/D_PlaySound.md)** - Воспроизвести звук во время выполнения диалога
 * **[D_CloseDialog](functions/D_CloseDialog.md)** - Завершить выполнение диалога

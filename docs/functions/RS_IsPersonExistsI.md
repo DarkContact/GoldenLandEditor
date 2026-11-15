@@ -12,7 +12,7 @@ int RS_IsPersonExistsI(string levelName, string npcTechName)
 * **npcTechName** - техническое имя NPC
 
 ### Возвращаемое значение
-Возвращает 0 если NPC не существует и 1 если существует
+Возвращает 0, если NPC не существует, и 1, если существует
 
 ### Пример
 ```c
