@@ -85,3 +85,4 @@ CMakeLists.txt.user*
 
 /external/SDL3_*
 /external/tracy
+GEMINI.md

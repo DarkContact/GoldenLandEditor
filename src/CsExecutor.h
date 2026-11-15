@@ -44,11 +44,16 @@ public:
     ExecuteStatus currentStatus() const;
     const char* currentStatusString() const;
 
+    StringHashTable<int>& heroStats();
+    StringHashTable<int>& functionsRetValues();
+
     bool isNodeExecuted(int index) const;
     float executedPercent() const;
 
 private:
     void readScriptVariables();
+    void initHeroStats();
+    void initFunctionsRetValues();
 
     bool logicalOpcode(const CS_Node& node);
     bool compareOpcode(const CS_Node& node);
@@ -59,6 +64,11 @@ private:
     void fatalError(const std::string& message) const;
 
     int RS_GetPersonParameterI(std::string_view person, std::string_view param);
+    int RS_IsPersonExistsI(std::string_view levelName, std::string_view npcTechName);
+    int RS_GetDialogEnabled(int param);
+    int RS_GetMoney();
+    int RS_GetItemCountI(std::string_view npcTechName, std::string_view itemTechName);
+    int RS_TestPersonHasItem(std::string_view npcTechName, std::string_view itemTechName);
     int D_CloseDialog(int param);
 
     std::span<const CS_Node> m_nodes;
@@ -67,7 +77,8 @@ private:
     std::vector<CS_Node> m_funcs;
     std::vector<CS_Node> m_dialogFuncs;
 
-    StringHashTable<int> m_heroStats; // TODO: Нужна реализация
+    StringHashTable<int> m_heroStats;
+    StringHashTable<int> m_functionsRetValues;
     std::set<int> m_executedNodeIndexes;
 
     int m_currentNodeIndex = 0;

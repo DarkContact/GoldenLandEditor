@@ -163,6 +163,73 @@ size_t StringUtils::decodeWin1251ToUtf8Buffer(std::string_view input, std::span<
     return pos;
 }
 
+std::string StringUtils::decodeUtf8ToWin1251(std::string_view input) noexcept {
+    std::string result;
+    result.reserve(input.size());
+
+    for (size_t i = 0; i < input.size(); ++i) {
+        unsigned char c = input[i];
+
+        // 1. Символы ASCII (0x00 - 0x7F) совпадают в UTF-8 и Windows-1251
+        if (c < 0x80) {
+            result.push_back(static_cast<char>(c));
+        }
+        // 2. Обработка двухбайтовых последовательностей UTF-8 (Кириллица)
+        else if ((c & 0xE0) == 0xC0 && (i + 1 < input.size())) {
+            unsigned char next = input[i + 1];
+            if ((next & 0xC0) == 0x80) {
+                // Вычисляем Unicode кодовую точку (Unicode code point)
+                char32_t unicode = ((c & 0x1F) << 6) | (next & 0x3F);
+                i++; // Пропускаем второй байт
+
+                // Диапазон основной кириллицы 'А'-'я' (Unicode 0x0410 - 0x044F)
+                if (unicode >= 0x0410 && unicode <= 0x044F) {
+                    result.push_back(static_cast<char>(unicode - 0x0410 + 0xC0));
+                }
+                // Символ 'Ё' (Unicode 0x0401 -> Win-1251 0xA8)
+                else if (unicode == 0x0401) {
+                    result.push_back(static_cast<char>(0xA8));
+                }
+                // Символ 'ё' (Unicode 0x0451 -> Win-1251 0xB8)
+                else if (unicode == 0x0451) {
+                    result.push_back(static_cast<char>(0xB8));
+                }
+                // Символы 'Ґ', 'Є', 'І', 'Ї' и их строчные варианты (украинский/белорусский алфавиты)
+                else if (unicode == 0x0404) result.push_back(static_cast<char>(0xAA)); // Є
+                else if (unicode == 0x0454) result.push_back(static_cast<char>(0xBA)); // є
+                else if (unicode == 0x0407) result.push_back(static_cast<char>(0xAF)); // Ї
+                else if (unicode == 0x0457) result.push_back(static_cast<char>(0xBF)); // ї
+                else if (unicode == 0x0406) result.push_back(static_cast<char>(0xB2)); // І
+                else if (unicode == 0x0456) result.push_back(static_cast<char>(0xB3)); // і
+                else if (unicode == 0x0411 && unicode == 0x0490) result.push_back(static_cast<char>(0xA5)); // Ґ
+                else if (unicode == 0x0411 && unicode == 0x0491) result.push_back(static_cast<char>(0xB4)); // ґ
+                else {
+                    // Символ из Unicode, которого нет в таблице Windows-1251
+                    result.push_back('?');
+                }
+            } else {
+                // Некорректный UTF-8 (отсутствует байт продолжения)
+                result.push_back('?');
+            }
+        }
+        // 3. Более длинные последовательности (3-4 байта) не помещаются в Win-1251
+        else if ((c & 0xF0) == 0xE0) { // 3 байта
+            if (i + 2 < input.size()) i += 2;
+            result.push_back('?');
+        }
+        else if ((c & 0xF8) == 0xF0) { // 4 байта
+            if (i + 3 < input.size()) i += 3;
+            result.push_back('?');
+        }
+        else {
+            // Некорректный начальный байт UTF-8
+            result.push_back('?');
+        }
+    }
+
+    return result;
+}
+
 std::string_view StringUtils::filename(std::string_view path) noexcept
 {
     auto pos = path.find_last_of("/\\");

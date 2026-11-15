@@ -21,6 +21,8 @@ CsExecutor::CsExecutor(std::span<const CS_Node> nodes, const StringHashTable<Age
     assert(!m_globalVars.empty());
 
     readScriptVariables();
+    initHeroStats();
+    initFunctionsRetValues();
 }
 
 bool parse3(std::string_view line,
@@ -103,6 +105,32 @@ void CsExecutor::readScriptVariables()
             }
         }
     }
+}
+
+void CsExecutor::initHeroStats()
+{
+    m_heroStats.emplace("ENERGY", 40);
+    m_heroStats.emplace("LIFE", 50);
+    m_heroStats.emplace("MAXIMUM LIFE", 50);
+    m_heroStats.emplace("PERCEPTION", 10);
+    m_heroStats.emplace("LUCK", 11);
+    m_heroStats.emplace("DEXTERITY", 12);
+    m_heroStats.emplace("CONSTITUTION", 13);
+    m_heroStats.emplace("STRENGTH", 14);
+    m_heroStats.emplace("WISDOM", 15);
+    m_heroStats.emplace("INTELLIGENCE", 16);
+    m_heroStats.emplace("REPUTATION", 0);
+    m_heroStats.emplace("EXPERIENCE", 0);
+
+    m_heroStats.emplace("Money", 1000);
+}
+
+void CsExecutor::initFunctionsRetValues()
+{
+    m_functionsRetValues.emplace("RS_IsPersonExistsI", 1);
+    m_functionsRetValues.emplace("RS_GetDialogEnabled", 1);
+    m_functionsRetValues.emplace("RS_GetItemCountI", 1);
+    m_functionsRetValues.emplace("RS_TestPersonHasItem", 1);
 }
 
 void CsExecutor::restart(bool resetAll)
@@ -496,6 +524,33 @@ int CsExecutor::funcOpcode(const CS_Node& node)
             return RS_GetPersonParameterI(arg0, arg1);
         }
 
+        case kRS_IsPersonExistsI: {
+            std::string_view arg0 = m_nodes[node.args[0]].text;
+            std::string_view arg1 = m_nodes[node.args[1]].text;
+            return RS_IsPersonExistsI(arg0, arg1);
+        }
+
+        case kRS_GetDialogEnabled: {
+            int arg0 = m_nodes[node.args[0]].value;
+            return RS_GetDialogEnabled(arg0);
+        }
+
+        case kRS_GetMoney: {
+            return RS_GetMoney();
+        }
+
+        case kRS_GetItemCountI: {
+            std::string_view arg0 = m_nodes[node.args[0]].text;
+            std::string_view arg1 = m_nodes[node.args[1]].text;
+            return RS_GetItemCountI(arg0, arg1);
+        }
+
+        case kRS_TestPersonHasItem: {
+            std::string_view arg0 = m_nodes[node.args[0]].text;
+            std::string_view arg1 = m_nodes[node.args[1]].text;
+            return RS_TestPersonHasItem(arg0, arg1);
+        }
+
         case kD_CloseDialog: {
             int arg0 = m_nodes[node.args[0]].value;
             return D_CloseDialog(arg0);
@@ -520,6 +575,30 @@ int CsExecutor::RS_GetPersonParameterI(std::string_view person, std::string_view
     return 0;
 }
 
+int CsExecutor::RS_IsPersonExistsI(std::string_view levelName, std::string_view npcTechName) {
+    return m_functionsRetValues.at("RS_IsPersonExistsI");
+}
+
+int CsExecutor::RS_GetDialogEnabled(int param) {
+    return m_functionsRetValues.at("RS_GetDialogEnabled");
+}
+
+int CsExecutor::RS_GetMoney() {
+    return m_heroStats.at("Money");
+}
+
+int CsExecutor::RS_GetItemCountI(std::string_view npcTechName, std::string_view itemTechName) {
+    if (npcTechName == "Hero" && itemTechName == "MON_1_0_1") {
+        return m_heroStats.at("Money");
+    }
+    return m_functionsRetValues.at("RS_GetItemCountI");
+}
+
+int CsExecutor::RS_TestPersonHasItem(std::string_view npcTechName, std::string_view itemTechName)
+{
+    return m_functionsRetValues.at("RS_TestPersonHasItem");
+}
+
 int CsExecutor::D_CloseDialog(int param) {
     return 0;
 }
@@ -539,6 +618,14 @@ const char* CsExecutor::currentStatusString() const
         case kInfinity: return "Infinity";
     }
     return "Unknown";
+}
+
+StringHashTable<int>& CsExecutor::heroStats() {
+    return m_heroStats;
+}
+
+StringHashTable<int>& CsExecutor::functionsRetValues() {
+    return m_functionsRetValues;
 }
 
 bool CsExecutor::isNodeExecuted(int index) const {

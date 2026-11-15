@@ -26,6 +26,7 @@ private:
     ImVec4 m_bgColor = ImVec4(1.0f, 1.0f, 1.0f, 0.0f);
     int m_activeButtonIndex = 0;
     ImGuiTextFilter m_textFilter;
+    std::vector<int> m_filteredIndices;
     SaveDialogData m_saveDialogData;
     bool m_onceWhenClose = true;
 };

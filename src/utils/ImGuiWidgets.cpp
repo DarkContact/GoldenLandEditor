@@ -48,7 +48,7 @@ void ImGuiWidgets::Loader(std::string_view label, bool& showWindow)
     }
 }
 
-void ImGuiWidgets::ShowMessageModal(std::string_view title, std::string& message)
+void ImGuiWidgets::ShowMessageModal(std::string_view title, std::string& message, bool showOkButton)
 {
     assert(!title.empty());
 
@@ -65,24 +65,26 @@ void ImGuiWidgets::ShowMessageModal(std::string_view title, std::string& message
     if (ImGui::BeginPopupModal(title.data())) {
         ImGui::TextWrapped("%s", message.c_str());
 
-        // Центрируем кнопку "OK"
-        float buttonWidth = 60.0f;
-        float availableWidth = ImGui::GetContentRegionAvail().x;
-        float offset = (availableWidth - buttonWidth) * 0.5f;
-        if (offset > 0.0f)
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
+        if (showOkButton) {
+            // Центрируем кнопку "OK"
+            float buttonWidth = 60.0f;
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            float offset = (availableWidth - buttonWidth) * 0.5f;
+            if (offset > 0.0f)
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
 
-        if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
-            ImGui::CloseCurrentPopup();
-            message.clear();
-            isShow = false;
+            if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
+                ImGui::CloseCurrentPopup();
+                message.clear();
+                isShow = false;
+            }
         }
 
         ImGui::EndPopup();
     }
 }
 
-bool ImGuiWidgets::ShowMessageModalEx(std::string_view title, const std::function<void()>& callback)
+bool ImGuiWidgets::ShowMessageModalEx(std::string_view title, const std::function<void(bool&)>& callback, bool showOkButton)
 {
     assert(!title.empty());
     assert(callback);
@@ -97,18 +99,20 @@ bool ImGuiWidgets::ShowMessageModalEx(std::string_view title, const std::functio
 
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal(title.data(), &isShow, ImGuiWindowFlags_AlwaysAutoResize)) {
-        callback();
+        callback(isShow);
 
-        // Центрируем кнопку "OK"
-        float buttonWidth = 60.0f;
-        float availableWidth = ImGui::GetContentRegionAvail().x;
-        float offset = (availableWidth - buttonWidth) * 0.5f;
-        if (offset > 0.0f)
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
+        if (showOkButton) {
+            // Центрируем кнопку "OK"
+            float buttonWidth = 60.0f;
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            float offset = (availableWidth - buttonWidth) * 0.5f;
+            if (offset > 0.0f)
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);
 
-        if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
-            ImGui::CloseCurrentPopup();
-            isShow = false;
+            if (ImGui::Button("OK", ImVec2(buttonWidth, 0))) {
+                ImGui::CloseCurrentPopup();
+                isShow = false;
+            }
         }
 
         ImGui::EndPopup();
