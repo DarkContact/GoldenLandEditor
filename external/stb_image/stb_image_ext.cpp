@@ -37,12 +37,85 @@ void stbi_set_allocator_functions(StbiMemAllocFunc allocFunc, StbiMemReallocFunc
 // Расширение для загрузки JPEG напрямую в RGB565 с переиспользованием буфера
 // ============================================================================
 
-// TODO: stbi__YCbCr_to_RGB565_simd
-
 static void stbi__YCbCr_to_RGB565_row(stbi_uc *out, const stbi_uc *y, const stbi_uc *pcb, const stbi_uc *pcr, int count, int step)
 {
-   int i;
-   for (i = 0; i < count; ++i) {
+   int i = 0;
+
+#ifdef STBI_SSE2
+   if (count >= 8) {
+      __m128i signflip  = _mm_set1_epi8(-0x80);
+      __m128i cr_const0 = _mm_set1_epi16((short)(1.40200f * 4096.0f + 0.5f));
+      __m128i cr_const1 = _mm_set1_epi16(-(short)(0.71414f * 4096.0f + 0.5f));
+      __m128i cb_const0 = _mm_set1_epi16(-(short)(0.34414f * 4096.0f + 0.5f));
+      __m128i cb_const1 = _mm_set1_epi16((short)(1.77200f * 4096.0f + 0.5f));
+      __m128i y_bias    = _mm_set1_epi8((char)128);
+
+      for (; i + 7 < count; i += 8) {
+         __m128i y_bytes  = _mm_loadl_epi64((const __m128i *)(y + i));
+         __m128i cr_bytes = _mm_loadl_epi64((const __m128i *)(pcr + i));
+         __m128i cb_bytes = _mm_loadl_epi64((const __m128i *)(pcb + i));
+
+         __m128i cr_biased = _mm_xor_si128(cr_bytes, signflip);
+         __m128i cb_biased = _mm_xor_si128(cb_bytes, signflip);
+
+         __m128i yw  = _mm_unpacklo_epi8(y_bias, y_bytes);
+         __m128i crw = _mm_unpacklo_epi8(_mm_setzero_si128(), cr_biased);
+         __m128i cbw = _mm_unpacklo_epi8(_mm_setzero_si128(), cb_biased);
+
+         __m128i yws = _mm_srli_epi16(yw, 4);
+         __m128i cr0 = _mm_mulhi_epi16(cr_const0, crw);
+         __m128i cb0 = _mm_mulhi_epi16(cb_const0, cbw);
+         __m128i cb1 = _mm_mulhi_epi16(cbw, cb_const1);
+         __m128i cr1 = _mm_mulhi_epi16(crw, cr_const1);
+
+         __m128i rws = _mm_add_epi16(cr0, yws);
+         __m128i gwt = _mm_add_epi16(cb0, yws);
+         __m128i bws = _mm_add_epi16(yws, cb1);
+         __m128i gws = _mm_add_epi16(gwt, cr1);
+
+         __m128i rw = _mm_srai_epi16(rws, 4);
+         __m128i bw = _mm_srai_epi16(bws, 4);
+         __m128i gw = _mm_srai_epi16(gws, 4);
+
+         __m128i rw_clamped = _mm_packus_epi16(rw, _mm_setzero_si128());
+         __m128i gw_clamped = _mm_packus_epi16(gw, _mm_setzero_si128());
+         __m128i bw_clamped = _mm_packus_epi16(bw, _mm_setzero_si128());
+
+         // _mm_packus_epi16 пакует 8 элементов из первого аргумента в младшие 8 байт, а из второго (у нас ноль) в старшие 8 байт.
+         // Значит, байты лежат в младших 8 байтах каждого из векторов _clamped.
+         // Распакуем байты правильно в 16-битные слова без сдвига байт местами:
+         __m128i r16 = _mm_unpacklo_epi8(rw_clamped, _mm_setzero_si128());
+         __m128i g16 = _mm_unpacklo_epi8(gw_clamped, _mm_setzero_si128());
+         __m128i b16 = _mm_unpacklo_epi8(bw_clamped, _mm_setzero_si128());
+
+         // Упаковка в RGB565:
+         // R: (r & 0xF8) -> сдвиг влево на 8 (получаем биты в позициях 11-15)
+         // G: (g & 0xFC) -> сдвиг влево на 3 (позиции 5-10)
+         // B: b -> сдвиг вправо на 3 (позиции 0-4)
+         __m128i r_masked = _mm_slli_epi16(_mm_and_si128(r16, _mm_set1_epi16(0xF8)), 8);
+         __m128i g_masked = _mm_slli_epi16(_mm_and_si128(g16, _mm_set1_epi16(0xFC)), 3);
+         __m128i b_masked = _mm_srli_epi16(_mm_and_si128(b16, _mm_set1_epi16(0xFF)), 3);
+
+         __m128i rgb565_vec = _mm_or_si128(_mm_or_si128(r_masked, g_masked), b_masked);
+
+         // Сохраняем 8 шестнадцатибитных значений (16 байт) в выходной буфер
+         if (step == 2) {
+            _mm_storeu_si128((__m128i *)(out + i * 2), rgb565_vec);
+         } else {
+            // Если step != 2 (например, пишем в плотный буфер побайтово с шагом)
+            uint16_t temp[8];
+            _mm_storeu_si128((__m128i *)temp, rgb565_vec);
+            for (int j = 0; j < 8; ++j) {
+               uint16_t val = temp[j];
+               out[(i + j) * step]     = (stbi_uc)(val & 0xFF);
+               out[(i + j) * step + 1] = (stbi_uc)(val >> 8);
+            }
+         }
+      }
+   }
+#endif
+
+   for (; i < count; ++i) {
       int y_fixed = (y[i] << 20) + (1 << 19);
       int r, g, b;
       int cr = pcr[i] - 128;
@@ -59,9 +132,8 @@ static void stbi__YCbCr_to_RGB565_row(stbi_uc *out, const stbi_uc *y, const stbi
 
       // Упаковка в 16-битный RGB565 (Little Endian)
       uint16_t rgb565 = (uint16_t)(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3));
-      out[0] = (stbi_uc)(rgb565 & 0xFF);
-      out[1] = (stbi_uc)(rgb565 >> 8);
-      out += step;
+      out[i * step]     = (stbi_uc)(rgb565 & 0xFF);
+      out[i * step + 1] = (stbi_uc)(rgb565 >> 8);
    }
 }
 
