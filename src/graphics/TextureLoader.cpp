@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "stb_image.h"
+#include "stb_image_ext.h"
 
 #include "parsers/CSX_Parser.h"
 #include "Texture.h"
@@ -41,10 +41,13 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
 
     int imageWidth = 0;
     int imageHeight = 0;
-    int channels = have16BitSupport ? 3 : 4;
+    using StbiLoadFromMemoryFn = stbi_uc* (*)(stbi_uc const*, int, int*, int*, int*, int);
+    StbiLoadFromMemoryFn loadFunc = have16BitSupport ? stbi_load_rgb565_from_memory
+                                                     : stbi_load_from_memory;
+
     Tracy_ZoneStartN("stbImageLoad");
     std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> imageDataPtr = {
-        stbi_load_from_memory((const stbi_uc*)memory.data(), (int)memory.size(), &imageWidth, &imageHeight, NULL, channels),
+        loadFunc((const stbi_uc*)memory.data(), (int)memory.size(), &imageWidth, &imageHeight, NULL, 4),
         stbi_image_free
     };
     Tracy_ZoneEnd();
@@ -66,24 +69,8 @@ bool TextureLoader::loadTextureFromMemory(std::span<const uint8_t> memory, SDL_R
         return false;
     }
 
-    {
-        if (have16BitSupport) {
-            Tracy_ZoneScopedN("convertPixels");
-            const int srcPitch = 3 * imageWidth;
-            const int dstPitch = 2 * imageWidth;
-            bool isOk = SDL_ConvertPixels(imageWidth, imageHeight,
-                                          SDL_PIXELFORMAT_RGB24, imageDataPtr.get(), srcPitch,
-                                          SDL_PIXELFORMAT_RGB565, imageDataPtr.get(), dstPitch);
-            if (!isOk) {
-                if (error)
-                    *error = std::string(SDL_GetError());
-                return false;
-            }
-        }
-
-        if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
-            return false;
-        }
+    if (!texture.updatePixels(imageDataPtr.get(), nullptr, error)) {
+        return false;
     }
 
     setTextureModes(texture);
