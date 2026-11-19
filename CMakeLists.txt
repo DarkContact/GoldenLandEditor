@@ -136,9 +136,10 @@ set_source_files_properties(
     PROPERTIES HEADER_FILE_ONLY TRUE
 )
 
-set_source_files_properties(
-    src/Application.cpp
-    PROPERTIES COMPILE_DEFINITIONS
+set_property(
+    SOURCE src/Application.cpp
+    APPEND PROPERTY COMPILE_DEFINITIONS
+    STB_IMAGE_VERSION_STRING="${STB_IMAGE_VERSION}"
     GOLDENLAND_VERSION_STRING="${PROJECT_VERSION}"
 )
 

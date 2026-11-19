@@ -192,6 +192,7 @@ void Application::mainLoop() {
                                            "3rd-party libraries:\n"
                                            "SDL v{}.{}.{}\n"
                                            "ImGui v{}\n"
+                                           "stb_image v{}\n"
                                            "\n"
                                            "GoldenLand Editor v{}\n"
                                            "© DarkContact 2026\n",
@@ -201,6 +202,7 @@ void Application::mainLoop() {
                                            SDL_MINOR_VERSION,
                                            SDL_MICRO_VERSION,
                                            IMGUI_VERSION,
+                                           STB_IMAGE_VERSION_STRING,
                                            GOLDENLAND_VERSION_STRING);
 
     bool showLevelsWindow = false;

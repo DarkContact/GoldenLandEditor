@@ -23,8 +23,6 @@ void stbi_set_allocator_functions(StbiMemAllocFunc allocFunc, StbiMemReallocFunc
 #define STBI_FREE(p)              gFreeFunc(p)
 
 #define STBI_ONLY_JPEG
-#define STBI_ONLY_PNG
-#define STBI_ONLY_BMP
 
 #define STBI_NO_STDIO
 #define STBI_FAILURE_USERMSG
@@ -41,7 +39,7 @@ static void stbi__YCbCr_to_RGB565_row(stbi_uc *out, const stbi_uc *y, const stbi
 {
    int i = 0;
 
-#ifdef STBI_SSE2
+#if defined(STBI_SSE2) || defined(STBI__SSE2)
    if (count >= 8) {
       __m128i signflip  = _mm_set1_epi8(-0x80);
       __m128i cr_const0 = _mm_set1_epi16((short)(1.40200f * 4096.0f + 0.5f));
